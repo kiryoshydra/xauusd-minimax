@@ -3,25 +3,101 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<meta name="theme-color" content="#0a0e14" />
-<title>XAUUSD · Signal 15 min</title>
+<meta name="theme-color" content="#08090c" />
+<meta name="description" content="XAUUSD — Signal & analytics. Outil privé d'aide à la décision sur prop firm." />
+<title>XAUUSD — Signal &amp; Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <style>
+  /* ========================================================================
+   XAUUSD — Signal & Analytics
+   Premium UI · Private banking meets Bloomberg Terminal
+   Palette : deep ink, champagne gold, refined emerald, soft coral
+   Type   : Inter (UI) · Instrument Serif (display) · JetBrains Mono (data)
+   ======================================================================== */
+
+  /* ---------- Design tokens ---------- */
+  :root {
+    /* Surfaces */
+    --bg:           #08090c;
+    --bg-2:         #0c0e14;
+    --surface:      #14171f;
+    --surface-2:    #1a1d27;
+    --surface-3:    #21252f;
+    /* Lines */
+    --border:       #232733;
+    --border-soft:  #1a1d26;
+    --border-strong:#2f3441;
+    /* Type */
+    --text:         #ece8db;
+    --text-2:       #b8b3a3;
+    --text-3:       #7c7868;
+    --text-4:       #4f4c42;
+    /* Accents */
+    --gold:         #c9a961;
+    --gold-soft:    #d8bb73;
+    --gold-deep:    #9a7d42;
+    --bull:         #5fa47e;
+    --bull-soft:    #82bd9c;
+    --bull-deep:    #2a5343;
+    --bear:         #c46b5c;
+    --bear-soft:    #d88c7e;
+    --bear-deep:    #6a3c35;
+    --info:         #6f8caf;
+    --warn:         #c9a961;
+    /* Effects */
+    --shadow:       0 4px 24px rgba(0,0,0,0.5);
+    --shadow-lg:    0 18px 48px rgba(0,0,0,0.55);
+    --shadow-glow:  0 0 36px rgba(201,169,97,0.12);
+    --r-sm:         10px;
+    --r:            16px;
+    --r-lg:         22px;
+    --ease:         cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
   /* ---------- Reset & base ---------- */
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:#0a0e14;color:#e6e9ef;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased}
-  body{min-height:100vh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-  a{color:#4a9eff;text-decoration:none}
-  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
-  input,select,textarea{font:inherit;color:inherit}
-  .mono{font-family:"JetBrains Mono","Fira Code","SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
-  .num{font-family:"JetBrains Mono","Fira Code","SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  html{
+    background:var(--bg);
+    color-scheme:dark;
+  }
+  body{
+    min-height:100vh;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    background:var(--bg);
+    background-image:
+      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(201,169,97,0.05) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 35% at 100% 100%, rgba(95,164,126,0.025) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 35% at 0% 100%, rgba(196,107,92,0.02) 0%, transparent 60%);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-weight:400;
+    font-size:14px;
+    line-height:1.5;
+    letter-spacing:-0.005em;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    text-rendering:optimizeLegibility;
+    font-feature-settings:'cv11','ss01','ss03';
+  }
+  a{color:var(--gold-soft);text-decoration:none;transition:color .2s var(--ease)}
+  a:hover{color:var(--gold)}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  input,select,textarea{font:inherit;color:inherit;background:transparent;border:none;outline:none}
+  *::selection{background:rgba(201,169,97,0.25);color:var(--text)}
+
+  .serif{font-family:'Instrument Serif',Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-0.01em}
+  .mono{font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;font-weight:400}
+  .num{font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;font-weight:500}
   .hide{display:none!important}
 
   /* ---------- Layout ---------- */
-  .app{max-width:1180px;margin:0 auto;padding:16px}
-  @media (min-width:760px){.app{padding:24px}}
-  .row{display:flex;gap:12px;flex-wrap:wrap}
-  .grid{display:grid;gap:12px}
+  .app{max-width:1200px;margin:0 auto;padding:24px 20px 80px}
+  @media (min-width:760px){.app{padding:40px 32px 100px}}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .grid{display:grid;gap:18px}
   .grid-2{grid-template-columns:1fr}
   .grid-3{grid-template-columns:1fr}
   .grid-4{grid-template-columns:repeat(2,1fr)}
@@ -30,199 +106,1335 @@
     .grid-3{grid-template-columns:repeat(3,1fr)}
     .grid-4{grid-template-columns:repeat(4,1fr)}
   }
-  .col{display:flex;flex-direction:column;gap:12px}
+  .col{display:flex;flex-direction:column;gap:18px}
   .spread{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .center{text-align:center}
-  .muted{color:#8a94a6}
-  .dim{color:#5d6675}
+  .muted{color:var(--text-2)}
+  .dim{color:var(--text-3)}
   .small{font-size:12px}
   .tiny{font-size:11px}
-  .upper{text-transform:uppercase;letter-spacing:.08em;font-size:11px;color:#8a94a6}
+  .upper{
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:10.5px;
+    color:var(--text-3);
+    font-weight:500;
+  }
 
   /* ---------- Header ---------- */
-  header.top{display:flex;justify-content:space-between;align-items:center;padding:8px 4px 16px;gap:10px;flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:.02em}
-  .brand .dot{width:10px;height:10px;border-radius:50%;background:#00d68f;box-shadow:0 0 12px #00d68f}
-  .brand small{color:#8a94a6;font-weight:400;margin-left:6px}
+  header.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:6px 0 28px;
+    gap:14px;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--border-soft);
+    margin-bottom:24px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    font-weight:300;
+    letter-spacing:-0.01em;
+  }
+  .brand .mark{
+    font-family:'Instrument Serif',Georgia,serif;
+    font-size:26px;
+    font-weight:400;
+    color:var(--text);
+    letter-spacing:0.01em;
+    line-height:1;
+  }
+  .brand .mark em{
+    font-style:italic;
+    color:var(--gold);
+  }
+  .brand .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 12px var(--gold);
+    align-self:center;
+  }
+  .brand small{
+    color:var(--text-3);
+    font-weight:400;
+    font-size:11.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
 
   /* ---------- Session badge ---------- */
-  .session{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:#131820;border:1px solid #1f2731;font-size:13px}
-  .session .pulse{width:8px;height:8px;border-radius:50%;background:#5d6675}
-  .session.active{background:rgba(0,214,143,.08);border-color:rgba(0,214,143,.4);color:#7df0c1}
-  .session.active .pulse{background:#00d68f;box-shadow:0 0 8px #00d68f;animation:pulse 2s infinite}
-  .session.closed{background:rgba(255,59,105,.08);border-color:rgba(255,59,105,.35);color:#ff8aa0}
-  .session.closed .pulse{background:#ff3b69}
-  .session.weekend{background:rgba(255,170,0,.08);border-color:rgba(255,170,0,.35);color:#ffd071}
-  .session.weekend .pulse{background:#ffaa00}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .session{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    padding:7px 14px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--border);
+    font-size:12.5px;
+    font-weight:500;
+    color:var(--text-2);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    transition:all .25s var(--ease);
+  }
+  .session .pulse{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--text-3);
+    transition:all .25s var(--ease);
+  }
+  .session.active{
+    background:rgba(95,164,126,0.06);
+    border-color:rgba(95,164,126,0.3);
+    color:var(--bull-soft);
+  }
+  .session.active .pulse{
+    background:var(--bull);
+    box-shadow:0 0 8px rgba(95,164,126,0.6);
+    animation:pulse 2s infinite;
+  }
+  .session.closed{
+    background:rgba(196,107,92,0.06);
+    border-color:rgba(196,107,92,0.3);
+    color:var(--bear-soft);
+  }
+  .session.closed .pulse{background:var(--bear)}
+  .session.weekend{
+    background:rgba(201,169,97,0.06);
+    border-color:rgba(201,169,97,0.3);
+    color:var(--gold-soft);
+  }
+  .session.weekend .pulse{background:var(--gold)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
 
-  .icon-btn{width:38px;height:38px;border-radius:10px;background:#131820;border:1px solid #1f2731;display:inline-flex;align-items:center;justify-content:center;color:#8a94a6;transition:all .15s}
-  .icon-btn:hover{color:#e6e9ef;border-color:#2a3441}
-  .icon-btn svg{width:18px;height:18px}
+  /* ---------- Icon button ---------- */
+  .icon-btn{
+    width:40px;height:40px;
+    border-radius:12px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--border);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-2);
+    transition:all .2s var(--ease);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+  }
+  .icon-btn:hover{
+    color:var(--text);
+    border-color:var(--border-strong);
+    background:rgba(255,255,255,0.04);
+  }
+  .icon-btn:active{transform:scale(0.96)}
+  .icon-btn svg{width:18px;height:18px;stroke-width:1.5}
 
-  /* ---------- Card ---------- */
-  .card{background:#131820;border:1px solid #1f2731;border-radius:14px;padding:14px}
-  .card h2{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#8a94a6;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+/* ---------- Card ---------- */
+  .card{
+    position:relative;
+    background:linear-gradient(180deg, rgba(255,255,255,0.012) 0%, transparent 60%), var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--r);
+    padding:18px 20px;
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    box-shadow:0 1px 0 rgba(255,255,255,0.02) inset, var(--shadow);
+    transition:border-color .2s var(--ease);
+  }
+  .card:hover{border-color:var(--border-strong)}
+  .card h2{
+    font-size:10.5px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.16em;
+    color:var(--text-3);
+    margin-bottom:14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
   .card h2 .label-tools{display:flex;gap:6px;align-items:center}
-  .card h2 .badge{font-size:10px;padding:2px 7px;border-radius:6px;background:#1f2731;color:#8a94a6;font-weight:500;letter-spacing:.04em;text-transform:none}
+  .card h2 .badge{
+    font-size:10px;
+    padding:3px 9px;
+    border-radius:6px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--border);
+    color:var(--text-2);
+    font-weight:500;
+    letter-spacing:0.06em;
+    text-transform:none;
+  }
 
-  /* ---------- Verdict zone (single source of truth) ---------- */
-  .verdict{position:relative;padding:22px 18px;border-radius:18px;border:1px solid #1f2731;background:linear-gradient(180deg,#131820 0%,#0f141b 100%);overflow:hidden}
-  .verdict::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at top,rgba(255,255,255,.04),transparent 60%);pointer-events:none}
-  .verdict.buy{background:linear-gradient(180deg,rgba(0,214,143,.12) 0%,#0f141b 70%);border-color:rgba(0,214,143,.5)}
-  .verdict.sell{background:linear-gradient(180deg,rgba(255,59,105,.12) 0%,#0f141b 70%);border-color:rgba(255,59,105,.5)}
-  .verdict.loading::after{content:"";position:absolute;top:0;left:-100%;width:100%;height:2px;background:linear-gradient(90deg,transparent,#4a9eff,transparent);animation:scan 1.4s linear infinite}
+  /* ---------- Verdict (single source of truth) ---------- */
+  .verdict{
+    position:relative;
+    padding:36px 24px 28px;
+    border-radius:var(--r-lg);
+    border:1px solid var(--border);
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(201,169,97,0.06) 0%, transparent 60%),
+      linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+    overflow:hidden;
+    box-shadow:var(--shadow-lg), var(--shadow-glow);
+  }
+  .verdict::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:radial-gradient(ellipse at top, rgba(255,255,255,0.025), transparent 60%);
+    pointer-events:none;
+  }
+  .verdict.buy{
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(95,164,126,0.12) 0%, transparent 60%),
+      linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+    border-color:rgba(95,164,126,0.35);
+    box-shadow:var(--shadow-lg), 0 0 40px rgba(95,164,126,0.1);
+  }
+  .verdict.sell{
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(196,107,92,0.12) 0%, transparent 60%),
+      linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+    border-color:rgba(196,107,92,0.35);
+    box-shadow:var(--shadow-lg), 0 0 40px rgba(196,107,92,0.1);
+  }
+  .verdict.loading::after{
+    content:"";
+    position:absolute;
+    top:0;left:-100%;width:100%;height:1px;
+    background:linear-gradient(90deg, transparent, var(--gold), transparent);
+    animation:scan 1.6s linear infinite;
+  }
   @keyframes scan{to{left:100%}}
-  .verdict .vlabel{font-size:11px;text-transform:uppercase;letter-spacing:.18em;color:#8a94a6;text-align:center;margin-bottom:6px}
-  .verdict .vdir{font-size:64px;font-weight:800;letter-spacing:-.02em;text-align:center;line-height:1;font-family:"JetBrains Mono","SF Mono",monospace}
-  @media (min-width:760px){.verdict .vdir{font-size:96px}}
-  .verdict.buy .vdir{color:#00d68f;text-shadow:0 0 30px rgba(0,214,143,.4)}
-  .verdict.sell .vdir{color:#ff3b69;text-shadow:0 0 30px rgba(255,59,105,.4)}
-  .verdict.idle .vdir{color:#5d6675;font-size:48px}
-  @media (min-width:760px){.verdict.idle .vdir{font-size:72px}}
-  .verdict .vprice{text-align:center;font-size:18px;color:#e6e9ef;margin-top:8px}
-  .verdict .vprice .sub{color:#8a94a6;font-size:13px;margin-left:8px}
-  .verdict .vconfidence{display:flex;justify-content:center;gap:6px;margin-top:14px;flex-wrap:wrap}
-  .vchip{padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;letter-spacing:.04em;background:#1f2731;color:#8a94a6;border:1px solid #2a3441}
-  .vchip.fort{background:rgba(0,214,143,.15);color:#7df0c1;border-color:rgba(0,214,143,.4)}
-  .vchip.moy{background:rgba(255,170,0,.12);color:#ffd071;border-color:rgba(255,170,0,.35)}
-  .vchip.faible{background:rgba(255,59,105,.12);color:#ff8aa0;border-color:rgba(255,59,105,.35)}
-  .vchip.zero{background:rgba(93,102,117,.15);color:#8a94a6;border-color:#2a3441}
-  .verdict .vraison{text-align:center;font-size:14px;color:#cdd3dc;margin-top:12px;max-width:560px;margin-left:auto;margin-right:auto;min-height:1.2em}
-  .verdict .vts{text-align:center;font-size:11px;color:#5d6675;margin-top:8px;font-family:"JetBrains Mono",monospace}
+  .verdict .vlabel{
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.22em;
+    color:var(--text-3);
+    text-align:center;
+    margin-bottom:10px;
+    font-weight:500;
+  }
+  .verdict .vdir{
+    font-family:'Instrument Serif',Georgia,serif;
+    font-size:88px;
+    font-weight:400;
+    letter-spacing:-0.02em;
+    text-align:center;
+    line-height:1;
+    font-style:italic;
+  }
+  @media (min-width:760px){.verdict .vdir{font-size:128px}}
+  .verdict.buy .vdir{color:var(--bull-soft);text-shadow:0 0 40px rgba(95,164,126,0.3)}
+  .verdict.sell .vdir{color:var(--bear-soft);text-shadow:0 0 40px rgba(196,107,92,0.3)}
+  .verdict.idle .vdir{color:var(--text-4);font-size:64px}
+  @media (min-width:760px){.verdict.idle .vdir{font-size:96px}}
+  .verdict .vprice{
+    text-align:center;
+    font-size:16px;
+    color:var(--text-2);
+    margin-top:14px;
+    font-weight:300;
+  }
+  .verdict .vprice .sub{
+    color:var(--text-3);
+    font-size:12.5px;
+    margin-left:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+  .verdict .vprice .num{font-size:18px;color:var(--text);font-weight:500}
+  .verdict .vconfidence{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .vchip{
+    padding:6px 14px;
+    border-radius:8px;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    background:rgba(255,255,255,0.03);
+    color:var(--text-3);
+    border:1px solid var(--border);
+  }
+  .vchip.fort{
+    background:rgba(95,164,126,0.1);
+    color:var(--bull-soft);
+    border-color:rgba(95,164,126,0.3);
+  }
+  .vchip.moy{
+    background:rgba(201,169,97,0.08);
+    color:var(--gold-soft);
+    border-color:rgba(201,169,97,0.3);
+  }
+  .vchip.faible{
+    background:rgba(196,107,92,0.1);
+    color:var(--bear-soft);
+    border-color:rgba(196,107,92,0.3);
+  }
+  .vchip.zero{
+    background:rgba(255,255,255,0.02);
+    color:var(--text-3);
+  }
+  .verdict .vraison{
+    text-align:center;
+    font-size:14px;
+    color:var(--text-2);
+    margin-top:18px;
+    max-width:600px;
+    margin-left:auto;
+    margin-right:auto;
+    min-height:1.2em;
+    line-height:1.55;
+    font-weight:300;
+  }
+  .verdict .vts{
+    text-align:center;
+    font-size:10.5px;
+    color:var(--text-3);
+    margin-top:14px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+  }
 
   /* ---------- Risk flags ---------- */
-  .flags{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;background:#131820;border:1px solid #1f2731;border-radius:12px;min-height:46px;align-items:center}
-  .flags:empty::before{content:"Aucun signal d'alerte — conditions standard";color:#5d6675;font-size:12px}
-  .flag{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:500;border:1px solid;line-height:1.3}
-  .flag.r{background:rgba(255,59,105,.1);border-color:rgba(255,59,105,.4);color:#ff8aa0}
-  .flag.y{background:rgba(255,170,0,.1);border-color:rgba(255,170,0,.4);color:#ffd071}
-  .flag.b{background:rgba(74,158,255,.1);border-color:rgba(74,158,255,.35);color:#9bc4ff}
-  .flag.g{background:rgba(0,214,143,.1);border-color:rgba(0,214,143,.35);color:#7df0c1}
-  .flag .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+  .flags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    padding:14px 18px;
+    background:rgba(255,255,255,0.015);
+    border:1px solid var(--border);
+    border-radius:var(--r-sm);
+    min-height:52px;
+    align-items:center;
+    backdrop-filter:blur(8px);
+  }
+  .flags:empty::before{
+    content:"Aucun signal d'alerte — conditions standard";
+    color:var(--text-3);
+    font-size:12px;
+    letter-spacing:0.04em;
+  }
+  .flag{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:5px 10px;
+    border-radius:6px;
+    font-size:11px;
+    font-weight:500;
+    border:1px solid;
+    line-height:1.3;
+    letter-spacing:0.02em;
+  }
+  .flag.r{
+    background:rgba(196,107,92,0.08);
+    border-color:rgba(196,107,92,0.3);
+    color:var(--bear-soft);
+  }
+  .flag.y{
+    background:rgba(201,169,97,0.08);
+    border-color:rgba(201,169,97,0.3);
+    color:var(--gold-soft);
+  }
+  .flag.b{
+    background:rgba(111,140,175,0.08);
+    border-color:rgba(111,140,175,0.3);
+    color:#9fb6cf;
+  }
+  .flag.g{
+    background:rgba(95,164,126,0.08);
+    border-color:rgba(95,164,126,0.3);
+    color:var(--bull-soft);
+  }
+  .flag .dot{
+    width:5px;height:5px;border-radius:50%;
+    background:currentColor;
+  }
 
   /* ---------- Score bar ---------- */
-  .scorewrap{display:flex;flex-direction:column;gap:8px}
-  .scorebar{position:relative;height:14px;background:#0a0e14;border-radius:7px;overflow:hidden;border:1px solid #1f2731}
-  .scorebar .zero{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:#2a3441;z-index:1}
-  .scorebar .fill{position:absolute;top:0;bottom:0;transition:all .4s cubic-bezier(.4,0,.2,1);border-radius:7px}
-  .scorebar .fill.pos{right:50%;background:linear-gradient(90deg,#00d68f,#7df0c1);box-shadow:0 0 12px rgba(0,214,143,.4)}
-  .scorebar .fill.neg{left:50%;background:linear-gradient(90deg,#ff8aa0,#ff3b69);box-shadow:0 0 12px rgba(255,59,105,.4)}
-  .scorebar .label{position:absolute;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#0a0e14;padding:0 6px;z-index:2;font-family:"JetBrains Mono",monospace}
-  .scaleticks{display:flex;justify-content:space-between;font-size:10px;color:#5d6675;font-family:"JetBrains Mono",monospace;padding:0 2px}
-  .scorecomp{display:grid;gap:4px;margin-top:6px}
-  .scorecomp .sc{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px dashed #1f2731}
+  .scorewrap{display:flex;flex-direction:column;gap:10px}
+  .scorebar{
+    position:relative;
+    height:10px;
+    background:var(--bg-2);
+    border-radius:5px;
+    overflow:hidden;
+    border:1px solid var(--border-soft);
+  }
+  .scorebar .zero{
+    position:absolute;
+    left:50%;top:0;bottom:0;
+    width:1px;
+    background:var(--text-4);
+    z-index:1;
+  }
+  .scorebar .fill{
+    position:absolute;
+    top:0;bottom:0;
+    transition:all .6s var(--ease);
+    border-radius:5px;
+  }
+  .scorebar .fill.pos{
+    right:50%;
+    background:linear-gradient(90deg, var(--bull-deep), var(--bull));
+    box-shadow:0 0 12px rgba(95,164,126,0.3);
+  }
+  .scorebar .fill.neg{
+    left:50%;
+    background:linear-gradient(90deg, var(--bear), var(--bear-deep));
+    box-shadow:0 0 12px rgba(196,107,92,0.3);
+  }
+  .scorebar .label{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:10px;
+    font-weight:700;
+    color:#0a0b10;
+    padding:0 6px;
+    z-index:2;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .scaleticks{
+    display:flex;
+    justify-content:space-between;
+    font-size:10px;
+    color:var(--text-3);
+    font-family:'JetBrains Mono',monospace;
+    padding:0 2px;
+    letter-spacing:0.05em;
+  }
+  .scorecomp{display:grid;gap:2px;margin-top:8px}
+  .scorecomp .sc{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:12px;
+    padding:8px 0;
+    border-bottom:1px solid var(--border-soft);
+  }
   .scorecomp .sc:last-child{border-bottom:none}
-  .scorecomp .sc .name{color:#8a94a6}
-  .scorecomp .sc .val{font-family:"JetBrains Mono",monospace;font-weight:600}
-  .scorecomp .sc .val.pos{color:#00d68f}
-  .scorecomp .sc .val.neg{color:#ff3b69}
-  .scorecomp .sc .val.zero{color:#5d6675}
+  .scorecomp .sc .name{color:var(--text-2);font-weight:400}
+  .scorecomp .sc .val{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:12.5px}
+  .scorecomp .sc .val.pos{color:var(--bull-soft)}
+  .scorecomp .sc .val.neg{color:var(--bear-soft)}
+  .scorecomp .sc .val.zero{color:var(--text-3)}
 
-  /* ---------- Indicators grid ---------- */
-  .ind{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dashed #1f2731;font-size:13px;gap:8px}
+/* ---------- Indicators grid ---------- */
+  .ind{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:9px 0;
+    border-bottom:1px solid var(--border-soft);
+    font-size:13px;
+    gap:8px;
+  }
   .ind:last-child{border-bottom:none}
-  .ind .n{color:#8a94a6;display:flex;align-items:center;gap:6px;min-width:0;flex:1}
-  .ind .v{font-family:"JetBrains Mono",monospace;font-weight:600;text-align:right;white-space:nowrap}
-  .ind .v.up{color:#00d68f}
-  .ind .v.dn{color:#ff3b69}
-  .ind .v.ne{color:#8a94a6}
-  .ind .pill{display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;background:#1f2731;color:#8a94a6;margin-left:4px;font-weight:500}
+  .ind .n{
+    color:var(--text-2);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+    flex:1;
+  }
+  .ind .v{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:500;
+    text-align:right;
+    white-space:nowrap;
+    font-size:12.5px;
+  }
+  .ind .v.up{color:var(--bull-soft)}
+  .ind .v.dn{color:var(--bear-soft)}
+  .ind .v.ne{color:var(--text-2)}
+  .ind .pill{
+    display:inline-block;
+    font-size:9.5px;
+    padding:2px 7px;
+    border-radius:4px;
+    background:rgba(255,255,255,0.04);
+    color:var(--text-3);
+    margin-left:4px;
+    font-weight:500;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+  }
 
   /* ---------- Trend / DXY cards ---------- */
-  .tftrend{display:flex;align-items:center;gap:10px;padding:8px 0}
-  .tftrend .arrow{font-size:24px;font-weight:700;font-family:"JetBrains Mono",monospace}
-  .tftrend.up .arrow{color:#00d68f}
-  .tftrend.down .arrow{color:#ff3b69}
-  .tftrend.flat .arrow{color:#ffaa00}
-  .tftrend .lbl{font-size:13px;color:#8a94a6}
-  .tftrend .desc{font-size:14px;font-weight:600;margin-top:2px}
-  .dxybig{font-size:24px;font-weight:700;font-family:"JetBrains Mono",monospace}
-  .dxybig.up{color:#ff3b69}   /* DXY up = gold down */
-  .dxybig.down{color:#00d68f} /* DXY down = gold up */
+  .tftrend{display:flex;align-items:center;gap:14px;padding:4px 0}
+  .tftrend .arrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:28px;
+    font-weight:500;
+    line-height:1;
+  }
+  .tftrend.up .arrow{color:var(--bull-soft)}
+  .tftrend.down .arrow{color:var(--bear-soft)}
+  .tftrend.flat .arrow{color:var(--gold-soft)}
+  .tftrend .lbl{font-size:11px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase}
+  .tftrend .desc{font-size:15px;font-weight:400;margin-top:4px;color:var(--text);font-family:'Instrument Serif',Georgia,serif;font-style:italic}
+  .dxybig{
+    font-family:'Instrument Serif',Georgia,serif;
+    font-size:32px;
+    font-weight:400;
+    line-height:1;
+  }
+  .dxybig.up{color:var(--bear-soft)}
+  .dxybig.down{color:var(--bull-soft)}
 
   /* ---------- Chart ---------- */
-  .chartwrap{position:relative;width:100%;overflow:hidden;border-radius:10px;background:#0a0e14;border:1px solid #1f2731;padding:8px}
+  .chartwrap{
+    position:relative;
+    width:100%;
+    overflow:hidden;
+    border-radius:var(--r-sm);
+    background:linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 100%);
+    border:1px solid var(--border-soft);
+    padding:14px;
+  }
   .chartwrap svg{display:block;width:100%;height:auto}
-  .chartlegend{display:flex;gap:14px;font-size:11px;color:#8a94a6;margin-bottom:6px;flex-wrap:wrap;align-items:center}
-  .chartlegend .item{display:flex;align-items:center;gap:5px}
-  .chartlegend .swatch{width:12px;height:3px;border-radius:2px;display:inline-block}
-  .chartlegend .swatch.box{border:1px solid currentColor;width:10px;height:10px}
+  .chartlegend{
+    display:flex;
+    gap:16px;
+    font-size:11px;
+    color:var(--text-3);
+    margin-bottom:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    letter-spacing:0.04em;
+  }
+  .chartlegend .item{display:flex;align-items:center;gap:6px}
+  .chartlegend .swatch{width:14px;height:2px;border-radius:2px;display:inline-block}
+  .chartlegend .swatch.box{border:1px solid currentColor;width:10px;height:10px;border-radius:2px}
 
-  /* ---------- AI analysis ---------- */
-  .aibox{font-size:14px;line-height:1.55;color:#cdd3dc}
-  .aibox p{margin-bottom:8px}
-  .aibox .analyse{color:#e6e9ef}
-  .aibox .risque{padding:8px 10px;background:rgba(255,170,0,.07);border-left:3px solid #ffaa00;border-radius:4px;color:#ffd071;font-size:13px;margin-top:6px}
-  .aibox.empty{color:#5d6675;font-style:italic}
+  /* ---------- AI / Synthesis box ---------- */
+  .aibox{font-size:14px;line-height:1.65;color:var(--text-2);font-weight:300}
+  .aibox p{margin-bottom:10px}
+  .aibox p:last-child{margin-bottom:0}
+  .aibox .analyse{color:var(--text)}
+  .aibox .risque{
+    padding:10px 14px;
+    background:rgba(201,169,97,0.06);
+    border-left:2px solid var(--gold);
+    border-radius:4px;
+    color:var(--gold-soft);
+    font-size:12.5px;
+    margin-top:12px;
+    line-height:1.5;
+  }
+  .aibox.empty{color:var(--text-3);font-style:italic;font-weight:300}
 
   /* ---------- Buttons ---------- */
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;border-radius:12px;font-weight:600;font-size:15px;background:#4a9eff;color:#0a0e14;transition:all .15s;border:1px solid #4a9eff;min-height:50px}
-  .btn:hover:not(:disabled){background:#6cb1ff;border-color:#6cb1ff;transform:translateY(-1px)}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .btn.ghost{background:transparent;color:#e6e9ef;border-color:#2a3441}
-  .btn.ghost:hover:not(:disabled){background:#1a2230;border-color:#3a4451}
-  .btn.danger{background:#ff3b69;color:#fff;border-color:#ff3b69}
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:14px 22px;
+    border-radius:12px;
+    font-weight:500;
+    font-size:14px;
+    letter-spacing:0.02em;
+    background:linear-gradient(180deg, var(--gold-soft) 0%, var(--gold) 100%);
+    color:#0a0b10;
+    transition:all .2s var(--ease);
+    border:1px solid var(--gold);
+    min-height:52px;
+    font-family:'Inter',sans-serif;
+    box-shadow:0 1px 0 rgba(255,255,255,0.15) inset, 0 4px 16px rgba(201,169,97,0.15);
+  }
+  .btn:hover:not(:disabled){
+    background:linear-gradient(180deg, #e3c988 0%, var(--gold-soft) 100%);
+    transform:translateY(-1px);
+    box-shadow:0 1px 0 rgba(255,255,255,0.2) inset, 0 6px 20px rgba(201,169,97,0.25);
+  }
+  .btn:active:not(:disabled){transform:translateY(0)}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none}
+  .btn.ghost{
+    background:rgba(255,255,255,0.02);
+    color:var(--text-2);
+    border:1px solid var(--border);
+    box-shadow:none;
+  }
+  .btn.ghost:hover:not(:disabled){
+    background:rgba(255,255,255,0.05);
+    color:var(--text);
+    border-color:var(--border-strong);
+    box-shadow:none;
+    transform:translateY(-1px);
+  }
+  .btn.danger{
+    background:rgba(196,107,92,0.08);
+    color:var(--bear-soft);
+    border:1px solid rgba(196,107,92,0.3);
+    box-shadow:none;
+  }
   .btn.full{width:100%}
-  .btnbar{display:flex;gap:8px;flex-wrap:wrap}
-  @media (min-width:760px){.btnbar{gap:12px}}
+  .btnbar{display:flex;gap:10px;flex-wrap:wrap}
+  @media (min-width:760px){.btnbar{gap:14px}}
 
   /* ---------- History ---------- */
-  .hist{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px}
-  .hist::-webkit-scrollbar{width:6px}
-  .hist::-webkit-scrollbar-thumb{background:#1f2731;border-radius:3px}
-  .histi{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0f141b;border:1px solid #1f2731;border-radius:8px;font-size:12px;gap:8px}
-  .histi .dir{font-weight:700;font-family:"JetBrains Mono",monospace;min-width:42px}
-  .histi .dir.buy{color:#00d68f}
-  .histi .dir.sell{color:#ff3b69}
-  .histi .price{color:#8a94a6;font-family:"JetBrains Mono",monospace;min-width:80px;text-align:right}
-  .histi .conf{font-size:10px;padding:2px 6px;border-radius:4px;background:#1f2731;color:#8a94a6}
-  .histi .conf.faible{background:rgba(255,59,105,.15);color:#ff8aa0}
-  .histi .conf.moy{background:rgba(255,170,0,.12);color:#ffd071}
-  .histi .conf.fort{background:rgba(0,214,143,.12);color:#7df0c1}
-  .histi .ts{color:#5d6675;font-family:"JetBrains Mono",monospace;font-size:11px}
-  .histi .score{color:#8a94a6;font-family:"JetBrains Mono",monospace;font-size:11px}
-  .histempty{text-align:center;padding:30px 10px;color:#5d6675;font-size:13px}
+  .hist{
+    max-height:300px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    padding-right:4px;
+  }
+  .hist::-webkit-scrollbar{width:5px}
+  .hist::-webkit-scrollbar-track{background:transparent}
+  .hist::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+  .hist::-webkit-scrollbar-thumb:hover{background:var(--text-4)}
+  .histi{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 14px;
+    background:rgba(255,255,255,0.015);
+    border:1px solid var(--border-soft);
+    border-radius:8px;
+    font-size:12px;
+    gap:10px;
+    transition:background .2s var(--ease), border-color .2s var(--ease);
+  }
+  .histi:hover{
+    background:rgba(255,255,255,0.03);
+    border-color:var(--border);
+  }
+  .histi .dir{font-weight:600;font-family:'JetBrains Mono',monospace;min-width:48px;font-size:12px;letter-spacing:0.04em}
+  .histi .dir.buy{color:var(--bull-soft)}
+  .histi .dir.sell{color:var(--bear-soft)}
+  .histi .price{color:var(--text-2);font-family:'JetBrains Mono',monospace;min-width:84px;text-align:right}
+  .histi .conf{
+    font-size:9.5px;
+    padding:2px 7px;
+    border-radius:4px;
+    background:rgba(255,255,255,0.04);
+    color:var(--text-3);
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    font-weight:500;
+  }
+  .histi .conf.faible{background:rgba(196,107,92,0.12);color:var(--bear-soft)}
+  .histi .conf.moy{background:rgba(201,169,97,0.1);color:var(--gold-soft)}
+  .histi .conf.fort{background:rgba(95,164,126,0.1);color:var(--bull-soft)}
+  .histi .ts{color:var(--text-3);font-family:'JetBrains Mono',monospace;font-size:10.5px}
+  .histi .score{color:var(--text-2);font-family:'JetBrains Mono',monospace;font-size:11px}
+  .histempty{text-align:center;padding:40px 16px;color:var(--text-3);font-size:13px;font-style:italic}
 
   /* ---------- Modal (settings) ---------- */
-  .modal{position:fixed;inset:0;background:rgba(5,8,12,.85);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+  .modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.7);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:16px;
+    animation:fadeIn .2s var(--ease);
+  }
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   .modal.hidden{display:none}
-  .modalbox{background:#131820;border:1px solid #1f2731;border-radius:16px;padding:20px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto}
-  .modalbox h3{font-size:16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
-  .field{margin-bottom:14px}
-  .field label{display:block;font-size:12px;color:#8a94a6;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
-  .field input,.field select{width:100%;padding:11px 12px;background:#0a0e14;border:1px solid #1f2731;border-radius:8px;color:#e6e9ef;font-size:14px;font-family:"JetBrains Mono",monospace}
-  .field input:focus,.field select:focus{outline:none;border-color:#4a9eff}
-  .field .hint{font-size:11px;color:#5d6675;margin-top:4px;line-height:1.5}
-  .field .row-cb{display:flex;align-items:center;gap:8px;font-size:13px;color:#cdd3dc;cursor:pointer}
+  .modalbox{
+    background:linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
+    border:1px solid var(--border-strong);
+    border-radius:var(--r-lg);
+    padding:28px 28px 24px;
+    max-width:520px;
+    width:100%;
+    max-height:90vh;
+    overflow-y:auto;
+    box-shadow:var(--shadow-lg);
+    animation:slideUp .3s var(--ease);
+  }
+  @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .modalbox h3{
+    font-size:18px;
+    margin-bottom:22px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-weight:400;
+    font-family:'Instrument Serif',Georgia,serif;
+    letter-spacing:-0.01em;
+  }
+  .field{margin-bottom:18px}
+  .field label{
+    display:block;
+    font-size:10.5px;
+    color:var(--text-3);
+    margin-bottom:8px;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-weight:500;
+  }
+  .field input,.field select{
+    width:100%;
+    padding:12px 14px;
+    background:var(--bg-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    color:var(--text);
+    font-size:13px;
+    font-family:'JetBrains Mono',monospace;
+    transition:border-color .2s var(--ease);
+  }
+  .field input:focus,.field select:focus{outline:none;border-color:var(--gold)}
+  .field input::placeholder{color:var(--text-4)}
+  .field .hint{
+    font-size:11.5px;
+    color:var(--text-3);
+    margin-top:6px;
+    line-height:1.5;
+    font-weight:300;
+  }
+  .field .row-cb{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:13px;
+    color:var(--text-2);
+    cursor:pointer;
+    padding:4px 0;
+  }
   .field .row-cb input{width:auto;margin:0;cursor:pointer}
 
+  /* Sync entre appareils */
+  .sync-field{
+    margin-top:24px;
+    padding-top:20px;
+    border-top:1px solid var(--border-soft);
+  }
+  .sync-field > label{
+    display:block;
+    font-size:10.5px;
+    color:var(--text-3);
+    margin-bottom:6px;
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-weight:500;
+  }
+  .sync-sub{
+    font-size:11.5px;
+    color:var(--text-3);
+    line-height:1.5;
+    margin-bottom:12px;
+    font-weight:300;
+  }
+  .sync-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .sync-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:11px 14px;
+    border-radius:10px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--border);
+    color:var(--text-2);
+    font-size:12.5px;
+    font-weight:500;
+    letter-spacing:0.02em;
+    cursor:pointer;
+    transition:all .2s var(--ease);
+  }
+  .sync-btn svg{width:15px;height:15px;stroke-width:1.7}
+  .sync-btn:hover{
+    background:rgba(255,255,255,0.05);
+    color:var(--text);
+    border-color:var(--border-strong);
+  }
+  .sync-btn-import:hover{border-color:var(--gold);color:var(--gold-soft)}
+
+  /* Danger zone */
+  .danger-field{
+    margin-top:24px;
+    padding-top:20px;
+    border-top:1px solid var(--border-soft);
+  }
+  .danger-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    width:100%;
+    padding:11px 14px;
+    border-radius:10px;
+    background:transparent;
+    border:1px solid rgba(196,107,92,0.3);
+    color:var(--bear-soft);
+    font-size:12.5px;
+    font-weight:500;
+    letter-spacing:0.02em;
+    cursor:pointer;
+    transition:all .2s var(--ease);
+  }
+  .danger-btn svg{width:15px;height:15px;stroke-width:1.7}
+  .danger-btn:hover{
+    background:rgba(196,107,92,0.1);
+    color:var(--bear-soft);
+    border-color:rgba(196,107,92,0.5);
+  }
+
+  /* Help modal */
+  .helpbox{max-width:560px}
+  .help-section{
+    display:flex;
+    gap:16px;
+    padding:14px 0;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .help-section:last-of-type{border-bottom:none}
+  .help-num{
+    flex-shrink:0;
+    width:32px;height:32px;
+    border-radius:50%;
+    background:linear-gradient(180deg, var(--gold-soft) 0%, var(--gold) 100%);
+    color:#0a0b10;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Instrument Serif',Georgia,serif;
+    font-size:18px;
+    font-weight:500;
+    box-shadow:0 2px 8px rgba(201,169,97,0.25);
+  }
+  .help-body{flex:1;min-width:0}
+  .help-title{
+    font-size:14px;
+    font-weight:500;
+    color:var(--text);
+    margin-bottom:4px;
+    letter-spacing:0.01em;
+  }
+  .help-text{
+    font-size:12.5px;
+    line-height:1.55;
+    color:var(--text-2);
+    font-weight:300;
+  }
+  .help-text strong{color:var(--text);font-weight:500}
+  .help-text em{color:var(--text-3);font-style:italic}
+  .help-text kbd{
+    display:inline-block;
+    padding:1px 6px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--border);
+    border-radius:4px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    color:var(--text-2);
+    margin:0 1px;
+  }
+  .help-tip-block{
+    margin-top:18px;
+    padding:14px 16px;
+    background:rgba(201,169,97,0.06);
+    border:1px solid rgba(201,169,97,0.2);
+    border-left:3px solid var(--gold);
+    border-radius:8px;
+    font-size:12.5px;
+    line-height:1.55;
+    color:var(--gold-soft);
+    font-weight:300;
+  }
+  .help-tip-block strong{color:var(--text);font-weight:500}
+  .diagnostic-results{
+    margin-top:14px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    line-height:1.6;
+    color:var(--text-2);
+  }
+  .diag-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 12px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--border-soft);
+    border-radius:6px;
+    margin-bottom:4px;
+  }
+  .diag-item .label{color:var(--text-2)}
+  .diag-item .status{font-weight:500;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.04em}
+  .diag-item.ok .status{color:var(--bull-soft)}
+  .diag-item.warn .status{color:var(--gold-soft)}
+  .diag-item.err .status{color:var(--bear-soft)}
+
   /* ---------- Toast ---------- */
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:#131820;border:1px solid #2a3441;padding:12px 18px;border-radius:10px;font-size:13px;z-index:200;transition:transform .3s;max-width:90vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(140%);
+    background:rgba(20,23,31,0.95);
+    border:1px solid var(--border-strong);
+    padding:14px 22px;
+    border-radius:14px;
+    font-size:13px;
+    z-index:200;
+    transition:transform .4s var(--ease);
+    max-width:90vw;
+    text-align:center;
+    box-shadow:var(--shadow-lg);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    font-weight:400;
+  }
   .toast.show{transform:translateX(-50%) translateY(0)}
-  .toast.err{border-color:rgba(255,59,105,.5);color:#ff8aa0}
-  .toast.ok{border-color:rgba(0,214,143,.4);color:#7df0c1}
-  .toast.info{border-color:rgba(74,158,255,.4);color:#9bc4ff}
+  .toast.err{border-color:rgba(196,107,92,0.5);color:var(--bear-soft)}
+  .toast.ok{border-color:rgba(95,164,126,0.5);color:var(--bull-soft)}
+  .toast.info{border-color:rgba(111,140,175,0.4);color:#9fb6cf}
 
   /* ---------- Cycle / cooldown ---------- */
-  .cycle{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#0f141b;border:1px solid #1f2731;border-radius:10px;font-size:12px;color:#8a94a6}
-  .cycle strong{color:#e6e9ef;font-family:"JetBrains Mono",monospace}
-  .cycle.cool strong{color:#ff8aa0}
+  .cycle{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 16px;
+    background:rgba(255,255,255,0.015);
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    font-size:12px;
+    color:var(--text-2);
+  }
+  .cycle strong{
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-weight:500;
+    letter-spacing:0.02em;
+  }
+  .cycle.cool strong{color:var(--bear-soft)}
 
   /* ---------- Misc ---------- */
-  .skeleton{background:linear-gradient(90deg,#1f2731 0%,#2a3441 50%,#1f2731 100%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;color:transparent;min-width:40px;display:inline-block;height:1em}
+  .skeleton{
+    background:linear-gradient(90deg, var(--border-soft) 0%, var(--surface-3) 50%, var(--border-soft) 100%);
+    background-size:200% 100%;
+    animation:shimmer 1.6s infinite;
+    border-radius:6px;
+    color:transparent;
+    min-width:40px;
+    display:inline-block;
+    height:1em;
+  }
   @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-  .pulse-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#4a9eff;animation:pulse 2s infinite;margin-right:6px;vertical-align:middle}
+  .pulse-dot{
+    display:inline-block;
+    width:7px;height:7px;
+    border-radius:50%;
+    background:var(--gold);
+    animation:pulse 2s infinite;
+    margin-right:6px;
+    vertical-align:middle;
+    box-shadow:0 0 8px var(--gold);
+  }
 
-  footer.legal{text-align:center;color:#5d6675;font-size:11px;margin-top:24px;padding:16px 8px;border-top:1px solid #1f2731;line-height:1.6}
-  footer.legal strong{color:#8a94a6}
+  footer.legal{
+    text-align:center;
+    color:var(--text-3);
+    font-size:11px;
+    margin-top:48px;
+    padding:24px 8px 0;
+    border-top:1px solid var(--border-soft);
+    line-height:1.7;
+    letter-spacing:0.04em;
+  }
+  footer.legal strong{color:var(--text-2);font-weight:500;letter-spacing:0.06em}
 
   /* ---------- Helpers ---------- */
   .gap-12{gap:12px}
   .gap-16{gap:16px}
-  .mb-12{margin-bottom:12px}
+  .mb-12{margin-bottom:18px}
   .mt-12{margin-top:12px}
   .mt-16{margin-top:16px}
+
+  /* ---------- Capture Hydratrade ---------- */
+  .capture-card{
+    position:relative;
+    overflow:hidden;
+  }
+  .capture-card.active{
+    border-color:rgba(201,169,97,0.35);
+    box-shadow:0 0 0 1px rgba(201,169,97,0.15) inset, 0 8px 32px rgba(201,169,97,0.08);
+  }
+  .capture-card.active::before{
+    content:"";
+    position:absolute;
+    top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity:0.6;
+  }
+  .capture-title{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    color:var(--text);
+    text-transform:none;
+    letter-spacing:0.04em;
+    font-size:13px;
+    font-weight:500;
+  }
+  .capture-title-icon{
+    width:18px;height:18px;
+    color:var(--gold);
+    flex-shrink:0;
+  }
+  .capture-status{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:5px 12px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--border);
+    font-size:10.5px;
+    font-weight:500;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--text-3);
+    transition:all .25s var(--ease);
+  }
+  .capture-status .status-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--text-3);
+    transition:all .25s var(--ease);
+  }
+  .capture-status[data-state="empty"] .status-dot{background:var(--text-3)}
+  .capture-status[data-state="loaded"]{
+    background:rgba(201,169,97,0.08);
+    border-color:rgba(201,169,97,0.35);
+    color:var(--gold-soft);
+  }
+  .capture-status[data-state="loaded"] .status-dot{
+    background:var(--gold);
+    box-shadow:0 0 8px rgba(201,169,97,0.6);
+  }
+
+  .capture-zone{
+    position:relative;
+    border:1.5px dashed var(--border-strong);
+    border-radius:var(--r);
+    text-align:center;
+    cursor:pointer;
+    transition:all .25s var(--ease);
+    background:rgba(255,255,255,0.012);
+    min-height:160px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .capture-zone::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:radial-gradient(ellipse at center, rgba(201,169,97,0.05) 0%, transparent 70%);
+    opacity:0;
+    transition:opacity .25s var(--ease);
+  }
+  .capture-zone:hover{
+    border-color:var(--gold);
+    background:rgba(201,169,97,0.04);
+  }
+  .capture-zone:hover::before{opacity:1}
+  .capture-zone.dragover{
+    border-color:var(--bull);
+    border-style:solid;
+    background:rgba(95,164,126,0.06);
+    box-shadow:0 0 0 4px rgba(95,164,126,0.12), inset 0 0 30px rgba(95,164,126,0.08);
+  }
+  .capture-zone.dragover::before{
+    opacity:1;
+    background:radial-gradient(ellipse at center, rgba(95,164,126,0.12) 0%, transparent 70%);
+  }
+
+  .capture-empty{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:28px 20px;
+    color:var(--text-2);
+  }
+  .upload-icon{
+    width:54px;height:54px;
+    border-radius:14px;
+    background:linear-gradient(180deg, rgba(201,169,97,0.12) 0%, rgba(201,169,97,0.04) 100%);
+    border:1px solid rgba(201,169,97,0.2);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--gold-soft);
+    margin-bottom:6px;
+    transition:all .25s var(--ease);
+  }
+  .upload-icon svg{width:22px;height:22px;stroke-width:1.4}
+  .capture-zone:hover .upload-icon{
+    transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(201,169,97,0.2);
+  }
+  .upload-title{
+    font-family:'Instrument Serif',Georgia,serif;
+    font-size:20px;
+    color:var(--text);
+    letter-spacing:-0.01em;
+  }
+  .upload-subtitle{
+    font-size:12.5px;
+    color:var(--text-3);
+    font-weight:300;
+  }
+  .upload-formats{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:8px;
+    font-size:10.5px;
+    color:var(--text-3);
+    letter-spacing:0.06em;
+  }
+  .fmt-pill{
+    padding:2px 8px;
+    border-radius:4px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--border);
+    color:var(--text-2);
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    font-weight:500;
+  }
+  .fmt-pill-sep{color:var(--text-4);padding:0 2px}
+  .fmt-max{font-style:italic;font-weight:300}
+
+  /* Preview state */
+  .capture-preview{
+    width:100%;
+    padding:14px;
+  }
+  .preview-frame{
+    position:relative;
+    display:block;
+    width:100%;
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    background:var(--bg-2);
+    box-shadow:var(--shadow), 0 0 0 1px rgba(201,169,97,0.08) inset;
+  }
+  .preview-frame img{
+    display:block;
+    width:100%;
+    max-height:380px;
+    object-fit:contain;
+    background:#000;
+  }
+  .preview-badge{
+    position:absolute;
+    top:12px;left:12px;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:6px 12px;
+    background:rgba(8,9,12,0.85);
+    border:1px solid rgba(201,169,97,0.4);
+    border-radius:999px;
+    color:var(--gold-soft);
+    font-size:10.5px;
+    font-weight:500;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    z-index:2;
+  }
+  .preview-badge .status-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--bull);
+    box-shadow:0 0 8px var(--bull);
+  }
+  .capture-del{
+    position:absolute;
+    top:12px;right:12px;
+    width:34px;height:34px;
+    border-radius:50%;
+    background:rgba(8,9,12,0.85);
+    border:1px solid var(--border-strong);
+    color:var(--text-2);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:all .2s var(--ease);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    z-index:2;
+  }
+  .capture-del svg{width:14px;height:14px}
+  .capture-del:hover{
+    background:var(--bear);
+    color:#0a0b10;
+    border-color:var(--bear);
+    transform:scale(1.05);
+  }
+
+  /* Metadata grid */
+  .capture-meta{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:1px;
+    margin-top:14px;
+    background:var(--border-soft);
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .meta-item{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    padding:12px 14px;
+    background:var(--surface);
+  }
+  .meta-label{
+    font-size:9.5px;
+    text-transform:uppercase;
+    letter-spacing:0.16em;
+    color:var(--text-3);
+    font-weight:500;
+  }
+  .meta-value{
+    font-size:12.5px;
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-weight:500;
+    letter-spacing:-0.01em;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  /* Actions */
+  .capture-actions{
+    display:flex;
+    gap:10px;
+    margin-top:18px;
+  }
+  .capture-btn-primary{
+    flex:1;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:14px 20px;
+    border-radius:12px;
+    background:linear-gradient(180deg, var(--gold-soft) 0%, var(--gold) 100%);
+    color:#0a0b10;
+    font-weight:500;
+    font-size:13.5px;
+    letter-spacing:0.02em;
+    border:1px solid var(--gold);
+    cursor:pointer;
+    transition:all .2s var(--ease);
+    box-shadow:0 1px 0 rgba(255,255,255,0.15) inset, 0 4px 16px rgba(201,169,97,0.18);
+    font-family:'Inter',sans-serif;
+  }
+  .capture-btn-primary svg{width:16px;height:16px;stroke-width:1.7}
+  .capture-btn-primary:hover{
+    background:linear-gradient(180deg, #e3c988 0%, var(--gold-soft) 100%);
+    transform:translateY(-1px);
+    box-shadow:0 1px 0 rgba(255,255,255,0.2) inset, 0 6px 20px rgba(201,169,97,0.28);
+  }
+  .capture-btn-primary:active{transform:translateY(0)}
+  .capture-btn-primary kbd{
+    display:inline-flex;
+    align-items:center;
+    padding:2px 6px;
+    background:rgba(10,11,16,0.25);
+    border:1px solid rgba(10,11,16,0.4);
+    border-radius:4px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    font-weight:600;
+    color:rgba(10,11,16,0.7);
+    margin-left:4px;
+  }
+  .capture-btn-secondary{
+    width:48px;
+    flex-shrink:0;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:14px;
+    border-radius:12px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--border);
+    color:var(--text-2);
+    cursor:pointer;
+    transition:all .2s var(--ease);
+  }
+  .capture-btn-secondary svg{width:18px;height:18px;stroke-width:1.6}
+  .capture-btn-secondary:hover{
+    background:rgba(255,255,255,0.05);
+    color:var(--text);
+    border-color:var(--border-strong);
+  }
+
+  /* Tip */
+  .capture-tip{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    margin-top:16px;
+    padding:12px 14px;
+    background:rgba(255,255,255,0.015);
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    font-size:12px;
+    line-height:1.55;
+    color:var(--text-3);
+  }
+  .capture-tip svg{
+    width:15px;height:15px;
+    color:var(--gold);
+    flex-shrink:0;
+    margin-top:2px;
+  }
+  .capture-tip strong{color:var(--text-2);font-weight:500}
+  .capture-tip kbd{
+    display:inline-block;
+    padding:1px 6px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--border);
+    border-radius:4px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    color:var(--text-2);
+    margin:0 1px;
+  }
 </style>
 </head>
 <body>
@@ -233,13 +1445,20 @@
   <header class="top">
     <div class="brand">
       <span class="dot"></span>
-      <span>XAUUSD<span class="small">· signal 15 min</span></span>
+      <span class="mark">XAU<em>USD</em></span>
+      <small>Signal &amp; Analytics</small>
     </div>
     <div class="row gap-12" style="align-items:center">
       <div id="sessionBadge" class="session">
         <span class="pulse"></span>
         <span id="sessionText">…</span>
       </div>
+      <button id="btnCapture" class="icon-btn" title="Ajouter une capture Hydratrade" aria-label="Capture Hydratrade">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </button>
+      <button id="btnHelp" class="icon-btn" title="Aide / Comment ça marche" aria-label="Aide">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </button>
       <button id="btnSettings" class="icon-btn" title="Réglages" aria-label="Réglages">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
@@ -273,10 +1492,89 @@
   <!-- ============== RISK FLAGS ============== -->
   <div id="flags" class="flags mb-12"></div>
 
-  <!-- ============== AI ANALYSIS ============== -->
+  <!-- ============== CAPTURE HYDRATRADE ============== -->
+  <section class="card mb-12 capture-card" id="captureCard">
+    <h2>
+      <span class="capture-title">
+        <svg class="capture-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span>Capture Hydratrade</span>
+      </span>
+      <span class="capture-status" id="captureStatus" data-state="empty">
+        <span class="status-dot"></span>
+        <span class="status-text">En attente</span>
+      </span>
+    </h2>
+
+    <div id="captureZone" class="capture-zone" role="button" tabindex="0" aria-label="Ajouter une capture d'écran">
+      <input type="file" id="captureInput" accept="image/png,image/jpeg,image/webp" hidden />
+
+      <!-- Empty state -->
+      <div class="capture-empty" id="capturePrompt">
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div class="upload-title">Déposez votre capture</div>
+        <div class="upload-subtitle">ou cliquez pour parcourir vos fichiers</div>
+        <div class="upload-formats">
+          <span class="fmt-pill">PNG</span>
+          <span class="fmt-pill">JPG</span>
+          <span class="fmt-pill">WebP</span>
+          <span class="fmt-pill-sep">·</span>
+          <span class="fmt-max">max 5 Mo</span>
+        </div>
+      </div>
+
+      <!-- Active state -->
+      <div id="capturePreview" class="capture-preview hide">
+        <div class="preview-frame">
+          <div class="preview-badge">
+            <span class="status-dot ok"></span>
+            <span>Capture chargée</span>
+          </div>
+          <button id="captureDel" class="capture-del" title="Remplacer cette capture" aria-label="Supprimer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <img id="captureImg" alt="Capture Hydratrade" />
+        </div>
+
+        <div class="capture-meta">
+          <div class="meta-item">
+            <span class="meta-label">Fichier</span>
+            <span class="meta-value" id="metaName">—</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Taille</span>
+            <span class="meta-value" id="metaSize">—</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Chargée</span>
+            <span class="meta-value" id="metaTime">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="captureActions" class="capture-actions hide">
+      <button id="btnCopyCapture" class="capture-btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copier pour Mavis</span>
+        <kbd>⌘C</kbd>
+      </button>
+      <button id="btnReplaceCapture" class="capture-btn-secondary" title="Charger une autre image">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+    </div>
+
+    <div class="capture-tip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span>Après <kbd>Copier pour Mavis</kbd>, <strong>colle (<kbd>⌘V</kbd> / <kbd>Ctrl V</kbd>) dans notre chat</strong>. Mavis reçoit l'image et te répond avec analyse succincte + direction Buy/Sell.</span>
+    </div>
+  </section>
+
+  <!-- ============== SYNTHÈSE TECHNIQUE ============== -->
   <section class="card mb-12">
-    <h2>Analyse IA <span class="badge" id="aiBadge">en attente</span></h2>
-    <div id="aiBox" class="aibox empty">L'analyse détaillée de Claude apparaîtra ici après chaque « Analyser ».</div>
+    <h2>Synthèse technique <span class="badge" id="synthBadge">en attente</span></h2>
+    <div id="synthBox" class="aibox empty">La synthèse issue des indicateurs techniques apparaîtra ici après chaque « Analyser ».</div>
   </section>
 
   <!-- ============== SCORE (INDICATIF) ============== -->
@@ -382,12 +1680,6 @@
     </h3>
 
     <div class="field">
-      <label for="apiAnthropic">Clé API Anthropic (Claude)</label>
-      <input type="password" id="apiAnthropic" placeholder="sk-ant-…" autocomplete="off" />
-      <div class="hint">Stockée uniquement dans votre navigateur (localStorage). Jamais transmise ailleurs qu'à api.anthropic.com.</div>
-    </div>
-
-    <div class="field">
       <label for="apiTwelve">Clé API Twelve Data <span class="muted">(recommandé)</span></label>
       <input type="password" id="apiTwelve" placeholder="Optionnel — fallback Yahoo" autocomplete="off" />
       <div class="hint">Gratuit sur <a href="https://twelvedata.com/" target="_blank" rel="noopener">twelvedata.com</a>. Si vide, l'app utilise Yahoo Finance via proxies CORS.</div>
@@ -408,13 +1700,91 @@
     </div>
 
     <div class="btnbar mt-12">
-      <button id="btnTestKey" class="btn ghost" style="flex:1">Tester la clé</button>
-      <button id="btnSave" class="btn" style="flex:1">Enregistrer</button>
+      <button id="btnSave" class="btn full">Enregistrer</button>
+    </div>
+
+    <div class="field sync-field">
+      <label>Sync entre appareils</label>
+      <div class="sync-sub">Transfère tes données (réglages, capture, historique) entre tes navigateurs ou ordinateurs.</div>
+      <div class="sync-actions">
+        <button id="btnExport" class="sync-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exporter
+        </button>
+        <button id="btnImport" class="sync-btn sync-btn-import" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Importer
+        </button>
+        <input type="file" id="importInput" accept="application/json" hidden />
+      </div>
     </div>
 
     <div class="small muted mt-16">
       <strong>Prop firm :</strong> 1 trade/cycle (3 h) · TP ≈ 150 $ · SL ≈ 118 $ · 4 steps max · 0 position après 18 h · fermeture avant 22 h (21 h ven) · pas de week-end.
     </div>
+
+    <div class="field danger-field">
+      <button id="btnReset" class="danger-btn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        Tout effacer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============== HELP MODAL ============== -->
+<div id="helpModal" class="modal hidden">
+  <div class="modalbox helpbox">
+    <h3>
+      <span>Comment ça marche</span>
+      <button id="btnCloseHelp" class="icon-btn" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </h3>
+
+    <div class="help-section">
+      <div class="help-num">1</div>
+      <div class="help-body">
+        <div class="help-title">Capture Hydratrade</div>
+        <div class="help-text">Prends une capture d'écran de Hydratrade et <strong>dépose-la</strong> dans la zone, ou clique pour parcourir. La capture reste sauvegardée localement (même après rechargement).</div>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-num">2</div>
+      <div class="help-body">
+        <div class="help-title">Analyser maintenant</div>
+        <div class="help-text">Clique sur <strong>Analyser maintenant</strong>. Le site récupère les bougies 15m/1h + DXY, calcule un score technique, applique les garde-fous (session, jour, volatilité) et affiche un verdict <strong>BUY</strong> ou <strong>SELL</strong>. <em>Pas de cooldown — tu peux relancer quand tu veux.</em></div>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-num">3</div>
+      <div class="help-body">
+        <div class="help-title">Copier pour Mavis</div>
+        <div class="help-text">La copie place l'image dans ton presse-papier. <strong>Va dans notre chat Mavis</strong> et colle (<kbd>⌘V</kbd> / <kbd>Ctrl V</kbd>). Mavis analyse visuellement le chandelier, la structure, les niveaux — et te donne une analyse succincte + direction Buy/Sell avec son raisonnement.</div>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-num">4</div>
+      <div class="help-body">
+        <div class="help-title">Sync entre appareils</div>
+        <div class="help-text">Dans <strong>Réglages</strong>, utilise <em>Exporter</em> pour télécharger un JSON de tes données (réglages + capture + historique), puis <em>Importer</em> ce fichier sur un autre navigateur ou ordinateur pour synchroniser.</div>
+      </div>
+    </div>
+
+    <div class="help-tip-block">
+      <strong>Règle d'or :</strong> le site donne le <em>squelette technique</em>, Mavis donne <em>l'œil et l'intuition</em>. Les deux ensemble = décision éclairée.
+    </div>
+
+    <div class="btnbar mt-16">
+      <button id="btnRunDiagnostic" class="capture-btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Lancer un diagnostic
+      </button>
+    </div>
+    <div id="diagnosticResults" class="diagnostic-results"></div>
   </div>
 </div>
 
@@ -430,7 +1800,7 @@
    XAUUSD SIGNAL — single-file app
    Helder · prop firm XAUUSD 15min
    - Données: Twelve Data (XAU/USD) + Yahoo (GC=F, DX-Y.NYB) via cascade CORS
-   - IA: Anthropic Claude Sonnet 4.6 (appel direct navigateur)
+   - Synthèse technique locale (indicateurs + score + garde-fous)
    - Indicateurs: RSI, MACD, BB, ADX, EMA, ATR, S/R, VWAP, Ichimoku,
      StochRSI, MFI, Williams %R, CCI, Pivots journaliers, Fibo
    - Calibration 20 trades: BUY 14% / SELL 46%, sessions, jours
@@ -438,9 +1808,6 @@
 
 /* ---------- CONSTANTS ---------- */
 const APP_VERSION = "1.0.0";
-const ANTHROPIC_MODEL = "claude-sonnet-4-6";
-const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const ANTHROPIC_VERSION = "2023-06-01";
 const TD_URL = "https://api.twelvedata.com/time_series";
 const TD_SYMBOL = "XAU/USD";
 const YF_GOLD = "https://query1.finance.yahoo.com/v8/finance/chart/GC=F";
@@ -454,7 +1821,7 @@ const PROXIES = [
 const REQ_TIMEOUT_MS = 8000;
 const REFRESH_MS = 4 * 60 * 1000;
 const MAX_HISTORY = 50;
-const COOLDOWN_MS = 3 * 60 * 60 * 1000;     // 3h entre 2 décisions
+const COOLDOWN_MS = 0;                     // 0 = pas de cooldown, Analyser toujours dispo
 const BUY_SCORE_GATE = 55;                  // BUY exige score >= 55
 const TF_ALIGN_WEIGHT = 20;                 // bonus/malus alignement 1h
 
@@ -480,7 +1847,6 @@ const PROP_FIRM = {
 
 /* ---------- STATE ---------- */
 const state = {
-  anthropicKey: "",
   twelveKey: "",
   notifLevel: "fort",
   autoRefresh: false,
@@ -493,8 +1859,11 @@ const state = {
   autoTimer: null,
   scheduleTimer: null,
   cooldownUntil: 0,
-  refreshCountdown: REFRESH_MS / 1000
+  refreshCountdown: REFRESH_MS / 1000,
+  capture: null                 // {dataUrl, name, ts}  — capture Hydratrade unique
 };
+
+const MAX_CAPTURE_BYTES = 5 * 1024 * 1024;  // 5 MB
 
 /* ---------- DOM ---------- */
 const $ = id => document.getElementById(id);
@@ -502,7 +1871,7 @@ const ui = {
   verdict: $("verdict"), vDir: $("vDir"), vPrice: $("vPrice"), vPriceVal: $("vPriceVal"),
   vPriceSub: $("vPriceSub"), vConf: $("vConf"), vConfChip: $("vConfChip"),
   vSrcChip: $("vSrcChip"), vRaison: $("vRaison"), vTs: $("vTs"),
-  flags: $("flags"), aiBox: $("aiBox"), aiBadge: $("aiBadge"),
+  flags: $("flags"), synthBox: $("synthBox"), synthBadge: $("synthBadge"),
   scoreFill: $("scoreFill"), scoreLabel: $("scoreLabel"), scoreComp: $("scoreComp"),
   tfTrend: $("tfTrend"), tfDesc: $("tfDesc"), tfAlign: $("tfAlign"),
   dxyVal: $("dxyVal"), dxyChg: $("dxyChg"), dxyBias: $("dxyBias"),
@@ -513,11 +1882,25 @@ const ui = {
   sessionBadge: $("sessionBadge"), sessionText: $("sessionText"),
   cycle: $("cycle"), cycleTimer: $("cycleTimer"),
   modal: $("modal"),
-  apiAnthropic: $("apiAnthropic"), apiTwelve: $("apiTwelve"),
+  apiTwelve: $("apiTwelve"),
   notifLevel: $("notifLevel"),
   autoRefresh: $("autoRefresh"), autoMorning: $("autoMorning"),
-  btnSave: $("btnSave"), btnClose: $("btnClose"), btnTestKey: $("btnTestKey"),
+  btnSave: $("btnSave"), btnClose: $("btnClose"),
+  btnExport: $("btnExport"), btnImport: $("btnImport"), importInput: $("importInput"),
+  btnHelp: $("btnHelp"), helpModal: $("helpModal"), btnCloseHelp: $("btnCloseHelp"),
+  btnRunDiagnostic: $("btnRunDiagnostic"), diagnosticResults: $("diagnosticResults"),
+  btnReset: $("btnReset"),
   btnSettings: $("btnSettings"), btnClearHist: $("btnClearHist"),
+  btnCapture: $("btnCapture"),
+  captureCard: $("captureCard"), captureStatus: $("captureStatus"),
+  captureZone: $("captureZone"), captureInput: $("captureInput"),
+  capturePrompt: $("capturePrompt"),
+  capturePreview: $("capturePreview"), captureImg: $("captureImg"),
+  captureDel: $("captureDel"),
+  captureActions: $("captureActions"), btnCopyCapture: $("btnCopyCapture"),
+  btnReplaceCapture: $("btnReplaceCapture"),
+  metaName: $("metaName"), metaSize: $("metaSize"), metaTime: $("metaTime"),
+  captureStatusText: document.querySelector("#captureStatus .status-text"),
   toast: $("toast")
 };
 
@@ -528,12 +1911,10 @@ const LS = {
   del(k) { try { localStorage.removeItem(k); } catch {} }
 };
 function loadSettings() {
-  state.anthropicKey = LS.get("xa_ak", "");
   state.twelveKey = LS.get("xa_tk", "");
   state.notifLevel = LS.get("xa_nl", "fort");
   state.autoRefresh = LS.get("xa_ar", false);
   state.autoMorning = LS.get("xa_am", true);
-  ui.apiAnthropic.value = state.anthropicKey;
   ui.apiTwelve.value = state.twelveKey;
   ui.notifLevel.value = state.notifLevel;
   ui.autoRefresh.checked = !!state.autoRefresh;
@@ -542,12 +1923,10 @@ function loadSettings() {
   state.cooldownUntil = LS.get("xa_cd", 0);
 }
 function saveSettings() {
-  state.anthropicKey = ui.apiAnthropic.value.trim();
   state.twelveKey = ui.apiTwelve.value.trim();
   state.notifLevel = ui.notifLevel.value;
   state.autoRefresh = ui.autoRefresh.checked;
   state.autoMorning = ui.autoMorning.checked;
-  LS.set("xa_ak", state.anthropicKey);
   LS.set("xa_tk", state.twelveKey);
   LS.set("xa_nl", state.notifLevel);
   LS.set("xa_ar", state.autoRefresh);
@@ -584,6 +1963,95 @@ function renderHistory() {
       <span class="score">${e.score > 0 ? "+" : ""}${e.score ?? "—"}</span>
     </div>`;
   }).join("");
+}
+
+/* ---------- CAPTURE HYDRATRADE (simple) ---------- */
+function loadCapture() {
+  return LS.get("xa_cap", null);
+}
+function saveCapture() {
+  if (state.capture) LS.set("xa_cap", state.capture);
+  else LS.del("xa_cap");
+}
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error || new Error("lecture impossible"));
+    r.readAsDataURL(file);
+  });
+}
+async function setCaptureFile(file) {
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    toast("Format non supporté — images uniquement", "err");
+    return;
+  }
+  if (file.size > MAX_CAPTURE_BYTES) {
+    toast("Image trop volumineuse (max 5 Mo)", "err");
+    return;
+  }
+  try {
+    const dataUrl = await fileToDataUrl(file);
+    state.capture = { dataUrl, name: file.name || "capture.png", ts: Date.now(), size: file.size };
+    saveCapture();
+    renderCapture();
+    toast("Capture chargée ✓ Clique sur « Copier pour Mavis » puis colle dans le chat", "ok", 5000);
+  } catch (e) {
+    toast("Erreur lecture fichier", "err");
+    console.error(e);
+  }
+}
+function clearCapture() {
+  state.capture = null;
+  saveCapture();
+  renderCapture();
+  toast("Capture effacée", "info");
+}
+function fmtCaptureTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleString("fr-FR", {
+    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
+  });
+}
+function renderCapture() {
+  if (!state.capture) {
+    ui.capturePrompt.classList.remove("hide");
+    ui.capturePreview.classList.add("hide");
+    ui.captureImg.src = "";
+    ui.captureActions.classList.add("hide");
+    ui.captureCard.classList.remove("active");
+    ui.captureStatus.dataset.state = "empty";
+    if (ui.captureStatusText) ui.captureStatusText.textContent = "En attente";
+    return;
+  }
+  ui.capturePrompt.classList.add("hide");
+  ui.capturePreview.classList.remove("hide");
+  ui.captureImg.src = state.capture.dataUrl;
+  ui.captureActions.classList.remove("hide");
+  ui.captureCard.classList.add("active");
+  ui.captureStatus.dataset.state = "loaded";
+  if (ui.captureStatusText) ui.captureStatusText.textContent = "Chargée";
+  if (ui.metaName) ui.metaName.textContent = state.capture.name;
+  if (ui.metaSize) ui.metaSize.textContent = fmtBytes(state.capture.size || 0);
+  if (ui.metaTime) ui.metaTime.textContent = fmtCaptureTime(state.capture.ts);
+  // Mettre à jour le hint de la synthèse (capture chargée ou pas)
+  if (ui.synthBox && !state.lastResult) renderSynthesis(null);
+}
+async function copyCapture() {
+  if (!state.capture) return;
+  if (!navigator.clipboard || !window.ClipboardItem) {
+    toast("Copie d'image non supportée par ce navigateur", "err");
+    return;
+  }
+  try {
+    const blob = await (await fetch(state.capture.dataUrl)).blob();
+    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+    toast("Copié ! Collez (Ctrl/⌘+V) dans le chat avec Mavis", "ok", 4000);
+  } catch (e) {
+    console.warn(e);
+    toast("Copie impossible — faites un clic droit sur l'image", "err");
+  }
 }
 
 /* ---------- TIMEZONE / SESSION ---------- */
@@ -1316,104 +2784,69 @@ function analyze(candles15, candles1h, dxy) {
 }
 
 /* ====================================================================
-   AI — Anthropic
+   SYNTHÈSE TECHNIQUE — génération locale
    ==================================================================== */
-function buildAIPrompt(analysis, dxy) {
+function generateSynthesis(analysis, dxy) {
   const c = analysis.current;
+  const dir = analysis.globalScore > 0 ? "ACHAT" : "VENTE";
+  const align = analysis.trend1h.aligned === true ? "alignée"
+              : analysis.trend1h.aligned === false ? "opposée à la tendance 1h"
+              : "tendance 1h neutre";
+
+  // Top contributeurs (positifs et négatifs)
+  const sorted = [...analysis.components].sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
+  const topPos = sorted.filter(x => x.val > 0).slice(0, 3);
+  const topNeg = sorted.filter(x => x.val < 0).slice(0, 3);
+
   const fmt = (v, n = 2) => v == null ? "n/d" : v.toFixed(n);
-  const fmt0 = v => v == null ? "n/d" : v.toFixed(0);
-  const compLines = analysis.components.map(x => `- ${x.name}: ${x.val > 0 ? "+" : ""}${x.val}`).join("\n");
-  const dxyLine = dxy.value == null ? "indisponible" : `${dxy.value.toFixed(2)} (${dxy.change >= 0 ? "+" : ""}${dxy.change.toFixed(2)}%)`;
 
-  return `Données techniques 15 min pour XAUUSD :
+  let txt = `Tendance dominante <strong>${dir}</strong> — score technique ${analysis.globalScore > 0 ? "+" : ""}${analysis.globalScore}/100, ${align}.`;
 
-Prix actuel : ${fmt(c.price)}
-Composition du score (sur ~-100 à +100) :
-${compLines}
-Score technique global : ${analysis.globalScore > 0 ? "+" : ""}${analysis.globalScore} (indicatif)
-
-Indicateurs détaillés :
-- RSI(14) : ${fmt0(c.rsi)}
-- MACD hist. : ${fmt(c.macdHist, 3)}
-- EMA 9 / 21 / 50 : ${fmt(c.ema9)} / ${fmt(c.ema21)} / ${fmt(c.ema50)}
-- Bollinger : ${fmt(c.bbLo)} / ${fmt(c.bbMid)} / ${fmt(c.bbUp)} (position ${c.bbUp ? (((c.price - c.bbLo) / (c.bbUp - c.bbLo)) * 100).toFixed(0) : "n/d"}%)
-- ADX : ${fmt0(c.adx)} | +DI ${fmt0(c.plusDI)} | -DI ${fmt0(c.minusDI)}
-- ATR(14) : ${fmt(c.atr)} USD
-- StochRSI K/D : ${fmt0(c.stochK)} / ${fmt0(c.stochD)}
-- MFI : ${fmt0(c.mfi)}
-- Williams %R : ${fmt0(c.wr)}
-- CCI(20) : ${fmt0(c.cci)}
-- Ichimoku Tenkan/Kijun/SpanA/SpanB : ${fmt(c.ichTenkan)} / ${fmt(c.ichKijun)} / ${fmt(c.ichSpanA)} / ${fmt(c.ichSpanB)}
-- VWAP : ${fmt(c.vwap)}
-
-Tendance 1 h : ${analysis.trend1h.label} — ${analysis.alignment}
-DXY : ${dxyLine} (or inversement corrélé)
-Supports : ${c.sr.supports.map(s => s.toFixed(2)).join(", ") || "n/d"}
-Résistances : ${c.sr.resists.map(r => r.toFixed(2)).join(", ") || "n/d"}
-Pivots daily : P=${fmt(c.piv?.P)} R1=${fmt(c.piv?.R1)} S1=${fmt(c.piv?.S1)} R2=${fmt(c.piv?.R2)} S2=${fmt(c.piv?.S2)}
-
-Calibration Helder (20 trades) :
-- ACHAT historique : 14% WR (1/7) — exige confluence forte (score >= 55) et alignement 1h
-- VENTE historique : 46% WR
-- Sessions 05-09 h : zone rouge · 09-10 h : danger · 10-14 h : optimale · 12-13 h : premium
-- Lundi : 0% WR · Mercredi : 100% WR
-- Gros lots (0.25-0.44) = pertes — rester prudent sur signaux très volatils
-- Prop firm : 1 trade/cycle (3h), TP ≈ 150$, SL ≈ 118$, 4 steps max, pas de position après 18h, fermeture avant 22h (21h ven)
-
-RÈGLES ABSOLUES :
-1. Réponds UNIQUEMENT en JSON : {"signal":"BUY|SELL","confidence":"FAIBLE|MOYEN|FORT","raison":"phrase courte (max 80 caractères)","analyse":"2-3 phrases","risque":"une phrase"}
-2. INTERDIT : "WAIT", "NEUTRAL", "HOLD" — tranche TOUJOURS vers ACHAT ou VENTE
-3. Si le score technique et la tendance 1h s'opposent, signale-le dans "risque" et choisis la direction dominante avec confiance FAIBLE
-4. Pour un ACHAT, exige score >= 55 ET alignement 1h haussier (sinon confiance FAIBLE)
-5. Pas de caractères < > & dans la sortie
-6. Raison ≤ 80 caractères, claire, sans jargon inutile
-`;
-}
-async function callAnthropic(analysis, dxy) {
-  if (!state.anthropicKey) throw new Error("Clé API Anthropic manquante — ouvrez les Réglages.");
-  const userPrompt = buildAIPrompt(analysis, dxy);
-  const systemPrompt = `Tu es un analyste technique senior spécialisé XAUUSD (or) sur timeframe 15 minutes. Tu t'adresses à un trader sur prop firm (Hydratrade / A Caccia di Trader) qui doit trancher en UN CLIC entre ACHAT et VENTE sur un compte 25K. Tu interdis absolument le WAIT/NEUTRAL. Tu appliques strictement la calibration de l'historique du trader (20 trades) : méfiance sur les ACHATS (14% WR), alignement avec la tendance 1h obligatoire, vigilance sur les sessions 05-10 h et le lundi. Tu réponds uniquement en JSON valide sans aucun caractère < > &.`;
-
-  const body = {
-    model: ANTHROPIC_MODEL,
-    max_tokens: 700,
-    system: systemPrompt,
-    messages: [{ role: "user", content: userPrompt }]
-  };
-  const r = await fetchWithTimeout(ANTHROPIC_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": state.anthropicKey,
-      "anthropic-version": ANTHROPIC_VERSION,
-      "anthropic-dangerous-direct-browser-access": "true"
-    },
-    body: JSON.stringify(body)
-  }, 30000);
-  if (!r.ok) {
-    const t = await r.text();
-    let msg = "HTTP " + r.status;
-    try { const j = JSON.parse(t); if (j.error?.message) msg = j.error.message; } catch {}
-    throw new Error("Anthropic: " + msg);
+  // RSI
+  if (c.rsi != null) {
+    if (c.rsi < 30) txt += ` RSI à ${c.rsi.toFixed(0)} (survendu).`;
+    else if (c.rsi > 70) txt += ` RSI à ${c.rsi.toFixed(0)} (suracheté).`;
+    else if (c.rsi > 50) txt += ` RSI à ${c.rsi.toFixed(0)} (tendance haussière).`;
+    else txt += ` RSI à ${c.rsi.toFixed(0)} (tendance baissière).`;
   }
-  const j = await r.json();
-  const text = (j.content || []).map(b => b.text || "").join("\n").trim();
-  // Extraire le JSON (éventuellement entouré de ```json ... ```)
-  let clean = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
-  // Trouver le premier {...}
-  const start = clean.indexOf("{");
-  const end = clean.lastIndexOf("}");
-  if (start >= 0 && end > start) clean = clean.slice(start, end + 1);
-  // Nettoyer caractères interdits (spec : < > &)
-  clean = clean.replace(/[<>&]/g, "");
-  let parsed;
-  try { parsed = JSON.parse(clean); }
-  catch (e) { throw new Error("Réponse IA non parseable: " + text.slice(0, 200)); }
-  return parsed;
+
+  // ADX
+  if (c.adx != null) {
+    if (c.adx > 25) txt += ` Tendance marquée (ADX ${c.adx.toFixed(0)}).`;
+    else txt += ` Marché sans tendance forte (ADX ${c.adx.toFixed(0)}).`;
+  }
+
+  // DXY
+  if (dxy.value != null) {
+    if (dxy.change <= -0.3) txt += ` DXY en repli (${dxy.change.toFixed(2)}%) — soutien à l'or.`;
+    else if (dxy.change >= 0.3) txt += ` DXY en hausse (${dxy.change.toFixed(2)}%) — pression sur l'or.`;
+  }
+
+  // Top contributeurs
+  if (topPos.length) {
+    txt += ` <br><br><strong>Facteurs haussiers :</strong> ${topPos.map(x => x.name).join(", ")}.`;
+  }
+  if (topNeg.length) {
+    txt += ` <br><strong>Facteurs baissiers :</strong> ${topNeg.map(x => x.name).join(", ")}.`;
+  }
+
+  // Supports / Résistances proches
+  if (c.sr && c.sr.resists && c.sr.resists.length) {
+    const nearest = c.sr.resists[0];
+    const dist = ((nearest - c.price) / c.price) * 100;
+    if (dist < 0.5) txt += ` <br>⚠️ Résistance proche à ${nearest.toFixed(2)} (+${dist.toFixed(2)}%).`;
+  }
+  if (c.sr && c.sr.supports && c.sr.supports.length) {
+    const nearest = c.sr.supports[0];
+    const dist = ((c.price - nearest) / c.price) * 100;
+    if (dist < 0.5) txt += ` Support proche à ${nearest.toFixed(2)} (-${dist.toFixed(2)}%).`;
+  }
+
+  return txt;
 }
 
 /* ====================================================================
-   POST-TRAITEMENT IA — application des garde-fous
+   POST-TRAITEMENT — application des garde-fous
    ==================================================================== */
 function applySafetyNets(aiResult, analysis) {
   let signal = (aiResult.signal || "").toUpperCase();
@@ -1423,7 +2856,7 @@ function applySafetyNets(aiResult, analysis) {
   // Garde 1: jamais WAIT/NEUTRAL
   if (signal !== "BUY" && signal !== "SELL") {
     signal = analysis.provisionalDir > 0 ? "BUY" : "SELL";
-    flags.push({ tone: "y", text: "L'IA n'a pas tranché — direction dominante forcée" });
+    flags.push({ tone: "y", text: "Direction dominante forcée (signal indéterminé)" });
     confidence = "FAIBLE";
   }
 
@@ -1480,11 +2913,7 @@ function applySafetyNets(aiResult, analysis) {
     flags.push({ tone: "r", text: "Session fermée — pas de nouvelle position" });
   }
 
-  // Garde 8: cooldown
-  if (Date.now() < state.cooldownUntil) {
-    const remMin = Math.ceil((state.cooldownUntil - Date.now()) / 60000);
-    flags.push({ tone: "y", text: `Cooldown prop firm : attendre ${remMin} min avant le prochain trade` });
-  }
+  // (Garde 8 cooldown supprimée — pas de blocage)
 
   return { signal, confidence, flags, raison: aiResult.raison || "", analyse: aiResult.analyse || "", risque: aiResult.risque || "" };
 }
@@ -1525,25 +2954,25 @@ function renderFlags(flags) {
   }
   ui.flags.innerHTML = flags.map(f => `<span class="flag ${f.tone}"><span class="dot"></span>${f.text}</span>`).join("");
 }
-function renderAI(result) {
+function renderSynthesis(result) {
   if (!result) {
-    ui.aiBox.className = "aibox empty";
-    ui.aiBox.innerHTML = "L'analyse détaillée de Claude apparaîtra ici après chaque « Analyser ».";
-    ui.aiBadge.textContent = "en attente";
+    ui.synthBox.className = "aibox empty";
+    // Si une capture est chargée, proposer d'analyser ; sinon, hint générique
+    if (state.capture) {
+      ui.synthBox.innerHTML = `📊 <strong>Capture Hydratrade prête.</strong> Clique sur <strong>« Analyser maintenant »</strong> (en haut de page) pour générer le verdict technique.<br><br><span class="dim">L'analyse visuelle détaillée (chandeliers, supports, structure) se fait dans le chat Mavis — utilise <kbd>Copier pour Mavis</kbd> puis colle dans le chat.</span>`;
+      ui.synthBadge.textContent = "prête";
+    } else {
+      ui.synthBox.innerHTML = "Charge une capture Hydratrade <em>ou</em> clique sur <strong>« Analyser maintenant »</strong> pour générer une synthèse technique basée sur les indicateurs du moment.";
+      ui.synthBadge.textContent = "en attente";
+    }
     return;
   }
-  if (result.aiError) {
-    ui.aiBox.className = "aibox empty";
-    ui.aiBox.innerHTML = `<p style="color:#ff8aa0">⚠️ ${result.aiError}</p><p>Le score technique indicatif reste affiché. Utilisez-le avec prudence.</p>`;
-    ui.aiBadge.textContent = "indisponible";
-    return;
-  }
-  ui.aiBox.className = "aibox";
-  ui.aiBox.innerHTML = `
-    <p class="analyse">${escapeHtml(result.analyse || "—")}</p>
+  ui.synthBox.className = "aibox";
+  ui.synthBox.innerHTML = `
+    <p class="analyse">${result.analyse || "—"}</p>
     ${result.risque ? `<div class="risque">⚠️ ${escapeHtml(result.risque)}</div>` : ""}
   `;
-  ui.aiBadge.textContent = result.source || "Claude";
+  ui.synthBadge.textContent = "locale";
 }
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, m => ({
@@ -1754,6 +3183,196 @@ function renderChart(candles) {
 }
 
 /* ====================================================================
+   EXPORT / IMPORT — sync entre appareils
+   ==================================================================== */
+function exportData() {
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    settings: {
+      twelveKey: state.twelveKey,
+      notifLevel: state.notifLevel,
+      autoRefresh: state.autoRefresh,
+      autoMorning: state.autoMorning,
+    },
+    capture: state.capture,
+    history: loadHistory(),
+  };
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `xauusd-signal-sync-${ts}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast("Données exportées — transfère le fichier sur ton autre ordi", "ok", 5000);
+}
+async function importData(file) {
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data || data.version !== 1) {
+      toast("Fichier incompatible (mauvaise version)", "err");
+      return;
+    }
+    // Settings
+    if (data.settings) {
+      state.twelveKey    = data.settings.twelveKey    || "";
+      state.notifLevel   = data.settings.notifLevel   || "fort";
+      state.autoRefresh  = !!data.settings.autoRefresh;
+      state.autoMorning  = data.settings.autoMorning !== false;
+      saveSettings();
+    }
+    // Capture
+    if (data.capture) {
+      state.capture = data.capture;
+      saveCapture();
+    } else {
+      state.capture = null;
+      saveCapture();
+    }
+    // History
+    if (Array.isArray(data.history)) {
+      LS.set("xa_hist", data.history);
+    }
+    // Refresh UI
+    renderCapture();
+    renderHistory();
+    setupAutoTimers();
+    toast("Import réussi ✓ Tes données sont synchronisées", "ok", 4000);
+  } catch (e) {
+    toast("Fichier invalide ou corrompu", "err");
+    console.error(e);
+  }
+}
+
+
+/* ====================================================================
+   DIAGNOSTIC & HELP
+   ==================================================================== */
+async function runDiagnostic() {
+  if (!ui.diagnosticResults) return;
+  ui.diagnosticResults.innerHTML = '<div class="diag-item"><span class="label">Analyse en cours…</span><span class="status">…</span></div>';
+
+  const tests = [];
+
+  // Test 1 : localStorage dispo
+  let storageOk = false;
+  try {
+    const k = "__diag_test__";
+    LS.set(k, "1");
+    storageOk = LS.get(k) === "1";
+    LS.del(k);
+  } catch (e) { storageOk = false; }
+  tests.push({ label: "localStorage", status: storageOk ? "ok" : "err", detail: storageOk ? "OK" : "Indisponible" });
+
+  // Test 2 : capture présente
+  tests.push({
+    label: "Capture Hydratrade",
+    status: state.capture ? "ok" : "warn",
+    detail: state.capture ? `${state.capture.name || "image"} (${fmtBytes(state.capture.size || 0)})` : "Aucune"
+  });
+
+  // Test 3 : connexion API (test rapide Yahoo)
+  let yahooOk = false;
+  try {
+    const url = "https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1m&range=1d";
+    const data = await fetchViaProxies(url, true);
+    yahooOk = !!(data && data.chart && data.chart.result);
+  } catch (e) { yahooOk = false; }
+  tests.push({ label: "Yahoo Finance (via proxy)", status: yahooOk ? "ok" : "err", detail: yahooOk ? "OK" : "Injoignable" });
+
+  // Test 4 : clé TwelveData
+  tests.push({
+    label: "Clé Twelve Data",
+    status: state.twelveKey ? "ok" : "warn",
+    detail: state.twelveKey ? `Configurée (${state.twelveKey.slice(0, 6)}…)` : "Non configurée (fallback Yahoo)"
+  });
+
+  // Test 5 : historique
+  const histCount = loadHistory().length;
+  tests.push({
+    label: "Historique",
+    status: histCount > 0 ? "ok" : "warn",
+    detail: `${histCount} signal${histCount > 1 ? "ux" : ""} enregistré${histCount > 1 ? "s" : ""}`
+  });
+
+  // Test 6 : dernières données
+  const candleCount = state.candles15.length;
+  tests.push({
+    label: "Bougies en cache",
+    status: candleCount > 0 ? "ok" : "warn",
+    detail: candleCount > 0 ? `${candleCount} bougies 15m` : "Aucune (clique Analyser)"
+  });
+
+  // Test 7 : clipboard API
+  const clipboardOk = !!(navigator.clipboard && window.ClipboardItem);
+  tests.push({
+    label: "Clipboard API",
+    status: clipboardOk ? "ok" : "warn",
+    detail: clipboardOk ? "Disponible" : "Non (copie d'image impossible)"
+  });
+
+  // Test 8 : synchronisation (date courante)
+  const tzOk = !!(Intl && Intl.DateTimeFormat);
+  tests.push({
+    label: "Fuseau Berlin",
+    status: tzOk ? "ok" : "err",
+    detail: new Date().toLocaleString("fr-FR", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" })
+  });
+
+  // Affichage
+  ui.diagnosticResults.innerHTML = tests.map(t => `
+    <div class="diag-item ${t.status}">
+      <span class="label">${t.label}</span>
+      <span class="status">${t.status === "ok" ? "✓ " : t.status === "warn" ? "⚠ " : "✗ "}${t.detail}</span>
+    </div>
+  `).join("");
+
+  // Toast récap
+  const errs = tests.filter(t => t.status === "err").length;
+  const warns = tests.filter(t => t.status === "warn").length;
+  if (errs > 0) toast(`Diagnostic : ${errs} erreur(s), ${warns} avertissement(s)`, "err");
+  else if (warns > 0) toast(`Diagnostic OK — ${warns} avertissement(s)`, "info");
+  else toast("Diagnostic : tout est OK ✓", "ok");
+}
+function resetAllData() {
+  if (!confirm("⚠️ Tout effacer :\n\n• Réglages (clé API, notifs, auto-modes)\n• Capture Hydratrade\n• Historique des signaux\n• Préférences UI\n\nCette action est IRRÉVERSIBLE. Continuer ?")) return;
+  // Liste des clés à nettoyer
+  ["xa_tk", "xa_nl", "xa_ar", "xa_am", "xa_cap", "xa_hist", "xa_cd"].forEach(k => LS.del(k));
+  state.twelveKey = "";
+  state.notifLevel = "fort";
+  state.autoRefresh = false;
+  state.autoMorning = true;
+  state.capture = null;
+  state.lastResult = null;
+  state.candles15 = [];
+  state.candles1h = [];
+  state.dxy = { value: null, prev: null, change: 0, history: [] };
+  state.cooldownUntil = 0;
+  renderCapture();
+  renderHistory();
+  renderVerdict(null);
+  renderSynthesis(null);
+  renderScore(null);
+  renderTF(null);
+  renderDXY(state.dxy);
+  renderIndicators(null);
+  setupAutoTimers();
+  // Reset form values
+  if (ui.apiTwelve) ui.apiTwelve.value = "";
+  if (ui.notifLevel) ui.notifLevel.value = "fort";
+  if (ui.autoRefresh) ui.autoRefresh.checked = false;
+  if (ui.autoMorning) ui.autoMorning.checked = true;
+  toast("Tout a été effacé", "info");
+}
+
+/* ====================================================================
    ORCHESTRATION
    ==================================================================== */
 async function analyzeNow(opts = {}) {
@@ -1763,19 +3382,15 @@ async function analyzeNow(opts = {}) {
     toast("Marché fermé le week-end", "err");
     return;
   }
-  if (Date.now() < state.cooldownUntil && !opts.force) {
-    const remMin = Math.ceil((state.cooldownUntil - Date.now()) / 60000);
-    toast(`Cooldown prop firm : encore ${remMin} min`, "err");
-    return;
-  }
+  // (cooldown désactivé — Analyser est toujours cliquable)
   state.analyzing = true;
   ui.btnAnalyze.disabled = true;
   ui.verdict.classList.add("loading");
   ui.vDir.textContent = "…";
   ui.vRaison.textContent = "Récupération des données de marché…";
-  ui.aiBox.className = "aibox empty";
-  ui.aiBox.textContent = "Analyse Claude en cours…";
-  ui.aiBadge.textContent = "en cours";
+  ui.synthBox.className = "aibox empty";
+  ui.synthBox.textContent = "Synthèse technique en cours…";
+  ui.synthBadge.textContent = "en cours";
 
   try {
     // 1) Données
@@ -1797,51 +3412,31 @@ async function analyzeNow(opts = {}) {
     renderIndicators(analysis);
     renderChart(c15.candles);
 
-    // 3) Appel IA
-    let aiResult = null, aiError = null;
-    if (!state.anthropicKey) {
-      aiError = "Clé API Anthropic non configurée — ouvrez les Réglages.";
-    } else {
-      try {
-        ui.vRaison.textContent = "Interrogation de Claude…";
-        aiResult = await callAnthropic(analysis, dxy);
-      } catch (e) {
-        console.warn("AI error:", e);
-        aiError = e.message || "Erreur IA";
-      }
-    }
-
-    // 4) Garde-fous + verdict final
-    let final;
-    if (aiResult) {
-      final = applySafetyNets(aiResult, analysis);
-      final.source = "Claude · " + ANTHROPIC_MODEL;
-    } else {
-      // Fallback : on tranche nous-mêmes à partir du score
-      const dir = analysis.globalScore > 0 ? "BUY" : "SELL";
-      let conf = "FAIBLE";
-      if (Math.abs(analysis.globalScore) >= 60) conf = "FORT";
-      else if (Math.abs(analysis.globalScore) >= 30) conf = "MOYEN";
-      final = {
-        signal: dir,
-        confidence: conf,
-        flags: [{ tone: "y", text: "IA indisponible — décision issue du score technique" }],
-        raison: "Score technique " + (analysis.globalScore > 0 ? "+" : "") + analysis.globalScore + " (sans IA)",
-        analyse: "L'IA n'a pas pu répondre. Le verdict est dérivé du seul score technique indicatif.",
-        risque: "À utiliser avec une extrême prudence — pas d'analyse contextuelle."
-      };
-      final = applySafetyNets(final, analysis);  // appliquer quand même les garde-fous
-      final.source = "fallback local";
-    }
+    // 3) Décision locale (issue du score technique + garde-fous)
+    const dir = analysis.globalScore > 0 ? "BUY" : "SELL";
+    let conf = "FAIBLE";
+    if (Math.abs(analysis.globalScore) >= 60) conf = "FORT";
+    else if (Math.abs(analysis.globalScore) >= 30) conf = "MOYEN";
+    const syntheseHtml = generateSynthesis(analysis, dxy);
+    let final = {
+      signal: dir,
+      confidence: conf,
+      flags: [],
+      raison: "Score technique " + (analysis.globalScore > 0 ? "+" : "") + analysis.globalScore,
+      analyse: syntheseHtml,
+      risque: ""
+    };
+    final = applySafetyNets(final, analysis);
+    final.source = "technique local";
     final.score = analysis.globalScore;
     final.price = analysis.current.price;
     final.ts = Date.now();
 
-    // 5) Rendu
+    // 4) Rendu
     state.lastResult = final;
     renderVerdict(final);
     renderFlags(final.flags);
-    renderAI(aiResult ? { ...aiResult, source: "Claude " + ANTHROPIC_MODEL } : { aiError });
+    renderSynthesis(final);
 
     // 6) Historique
     pushHistory({
@@ -1854,12 +3449,10 @@ async function analyzeNow(opts = {}) {
     });
     renderHistory();
 
-    // 7) Cooldown
-    if (final.signal) {
-      state.cooldownUntil = Date.now() + COOLDOWN_MS;
-      LS.set("xa_cd", state.cooldownUntil);
-      updateCycleUI();
-    }
+    // 7) Cooldown — désactivé : pas de blocage, Analyser toujours dispo
+    state.cooldownUntil = 0;
+    LS.set("xa_cd", 0);
+    updateCycleUI();
 
     // 8) Notifications navigateur
     tryNotify(final);
@@ -1869,6 +3462,10 @@ async function analyzeNow(opts = {}) {
     console.error(e);
     toast(e.message || "Erreur d'analyse", "err");
     ui.vRaison.textContent = e.message || "Erreur — réessayez dans 30 s.";
+    // Reset la synthèse (sans ça elle reste bloquée sur "en cours")
+    ui.synthBox.className = "aibox empty";
+    ui.synthBox.innerHTML = `⚠️ <strong>Échec de l'analyse.</strong> ${e.message || "Réessaie dans quelques secondes."} <br><br>Si le problème persiste, vérifie ta connexion ou ta clé Twelve Data dans les Réglages.`;
+    ui.synthBadge.textContent = "échec";
   } finally {
     state.analyzing = false;
     ui.btnAnalyze.disabled = false;
@@ -1889,18 +3486,9 @@ function tryNotify(final) {
   }
 }
 function updateCycleUI() {
-  const rem = state.cooldownUntil - Date.now();
-  if (rem > 0) {
-    ui.cycle.classList.remove("hide");
-    ui.cycle.classList.add("cool");
-    const h = Math.floor(rem / 3600000);
-    const m = Math.floor((rem % 3600000) / 60000);
-    const s = Math.floor((rem % 60000) / 1000);
-    ui.cycleTimer.textContent = `${h}h${pad2(m)}:${pad2(s)}`;
-  } else {
-    ui.cycle.classList.add("hide");
-    ui.cycle.classList.remove("cool");
-  }
+  // Cooldown désactivé : on cache la barre, on indique juste "ready" si visible
+  ui.cycle.classList.add("hide");
+  ui.cycle.classList.remove("cool");
 }
 
 /* ====================================================================
@@ -1946,11 +3534,11 @@ async function refreshDataOnly() {
    TOAST
    ==================================================================== */
 let toastT = null;
-function toast(msg, tone = "info") {
+function toast(msg, tone = "info", duration = 3500) {
   ui.toast.textContent = msg;
   ui.toast.className = "toast show " + tone;
   if (toastT) clearTimeout(toastT);
-  toastT = setTimeout(() => { ui.toast.classList.remove("show"); }, 3500);
+  toastT = setTimeout(() => { ui.toast.classList.remove("show"); }, duration);
 }
 
 /* ====================================================================
@@ -1967,37 +3555,19 @@ ui.btnAuto.addEventListener("click", () => {
 });
 ui.btnSettings.addEventListener("click", () => ui.modal.classList.remove("hidden"));
 ui.btnClose.addEventListener("click", () => ui.modal.classList.add("hidden"));
+ui.btnHelp.addEventListener("click", () => ui.helpModal.classList.remove("hidden"));
+if (ui.btnCloseHelp) ui.btnCloseHelp.addEventListener("click", () => ui.helpModal.classList.add("hidden"));
+if (ui.helpModal) ui.helpModal.addEventListener("click", e => { if (e.target === ui.helpModal) ui.helpModal.classList.add("hidden"); });
+if (ui.btnRunDiagnostic) ui.btnRunDiagnostic.addEventListener("click", runDiagnostic);
+if (ui.btnReset) ui.btnReset.addEventListener("click", resetAllData);
 ui.modal.addEventListener("click", e => { if (e.target === ui.modal) ui.modal.classList.add("hidden"); });
 ui.btnSave.addEventListener("click", () => { saveSettings(); ui.modal.classList.add("hidden"); });
-ui.btnTestKey.addEventListener("click", async () => {
-  const k = ui.apiAnthropic.value.trim();
-  if (!k) { toast("Saisissez votre clé d'abord", "err"); return; }
-  toast("Test en cours…", "info");
-  try {
-    const r = await fetchWithTimeout(ANTHROPIC_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": k,
-        "anthropic-version": ANTHROPIC_VERSION,
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
-      body: JSON.stringify({
-        model: ANTHROPIC_MODEL,
-        max_tokens: 30,
-        messages: [{ role: "user", content: "Réponds juste par OK" }]
-      })
-    }, 20000);
-    if (!r.ok) {
-      const t = await r.text();
-      let m = "HTTP " + r.status;
-      try { m = JSON.parse(t).error?.message || m; } catch {}
-      throw new Error(m);
-    }
-    toast("Clé valide ✓", "ok");
-  } catch (e) {
-    toast("Échec : " + e.message, "err");
-  }
+ui.btnExport.addEventListener("click", exportData);
+ui.btnImport.addEventListener("click", () => ui.importInput.click());
+ui.importInput.addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (f) importData(f);
+  e.target.value = "";
 });
 ui.btnClearHist.addEventListener("click", () => {
   if (confirm("Effacer tout l'historique des signaux ?")) {
@@ -2006,6 +3576,64 @@ ui.btnClearHist.addEventListener("click", () => {
     toast("Historique effacé", "ok");
   }
 });
+
+/* ====================================================================
+   EVENT HANDLERS — CAPTURE HYDRATRADE
+   ==================================================================== */
+// Bouton caméra header -> file picker
+ui.btnCapture.addEventListener("click", () => ui.captureInput.click());
+
+// Click sur la zone -> file picker (sauf si on clique le bouton supprimer)
+ui.captureZone.addEventListener("click", e => {
+  if (e.target.closest("#captureDel")) return;
+  ui.captureInput.click();
+});
+ui.captureZone.addEventListener("keydown", e => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    ui.captureInput.click();
+  }
+});
+
+// Drag & drop
+["dragenter", "dragover"].forEach(evt => {
+  ui.captureZone.addEventListener(evt, e => {
+    e.preventDefault();
+    e.stopPropagation();
+    ui.captureZone.classList.add("dragover");
+  });
+});
+["dragleave", "drop"].forEach(evt => {
+  ui.captureZone.addEventListener(evt, e => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (evt === "dragleave" && ui.captureZone.contains(e.relatedTarget)) return;
+    ui.captureZone.classList.remove("dragover");
+  });
+});
+ui.captureZone.addEventListener("drop", e => {
+  const files = e.dataTransfer && e.dataTransfer.files;
+  if (files && files.length) setCaptureFile(files[0]);
+});
+
+// File picker
+ui.captureInput.addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (f) setCaptureFile(f);
+  e.target.value = "";  // reset pour pouvoir re-uploader le même fichier
+});
+
+// Supprimer la capture
+ui.captureDel.addEventListener("click", e => {
+  e.stopPropagation();
+  clearCapture();
+});
+
+// Copier pour Mavis
+ui.btnCopyCapture.addEventListener("click", copyCapture);
+
+// Remplacer la capture (réouvre le file picker)
+ui.btnReplaceCapture.addEventListener("click", () => ui.captureInput.click());
 
 /* Cooldown tick */
 setInterval(updateCycleUI, 1000);
@@ -2016,6 +3644,8 @@ setInterval(updateSessionBadge, 30000);
    ==================================================================== */
 function init() {
   loadSettings();
+  state.capture = loadCapture();
+  renderCapture();
   renderHistory();
   updateSessionBadge();
   updateCycleUI();
