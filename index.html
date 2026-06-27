@@ -1359,61 +1359,49 @@
     gap:10px;
     margin-top:18px;
   }
+  /* Bouton gold premium (utilisé par Lancer un diagnostic dans le help modal) */
   .capture-btn-primary{
-    flex:1.4;
     display:inline-flex;
     align-items:center;
     justify-content:center;
     gap:10px;
-    padding:14px 20px;
+    padding:14px 22px;
     border-radius:12px;
     background:linear-gradient(180deg, var(--gold-soft) 0%, var(--gold) 100%);
     color:#0a0b10;
     font-weight:500;
-    font-size:13.5px;
+    font-size:14px;
     letter-spacing:0.02em;
     border:1px solid var(--gold);
     cursor:pointer;
     transition:all .2s var(--ease);
-    box-shadow:0 1px 0 rgba(255,255,255,0.15) inset, 0 4px 16px rgba(201,169,97,0.18);
+    box-shadow:0 1px 0 rgba(255,255,255,0.15) inset, 0 4px 16px rgba(201,169,97,0.15);
     font-family:'Inter',sans-serif;
   }
-  .capture-btn-primary svg{width:16px;height:16px;stroke-width:1.7}
   .capture-btn-primary:hover{
     background:linear-gradient(180deg, #e3c988 0%, var(--gold-soft) 100%);
     transform:translateY(-1px);
-    box-shadow:0 1px 0 rgba(255,255,255,0.2) inset, 0 6px 20px rgba(201,169,97,0.28);
+    box-shadow:0 1px 0 rgba(255,255,255,0.2) inset, 0 6px 20px rgba(201,169,97,0.25);
   }
   .capture-btn-primary:active{transform:translateY(0)}
-  .capture-btn-primary kbd{
-    display:inline-flex;
-    align-items:center;
-    padding:2px 6px;
-    background:rgba(10,11,16,0.25);
-    border:1px solid rgba(10,11,16,0.4);
-    border-radius:4px;
-    font-family:'JetBrains Mono',monospace;
-    font-size:10px;
-    font-weight:600;
-    color:rgba(10,11,16,0.7);
-    margin-left:4px;
-  }
-  .capture-btn-secondary{
-    width:48px;
-    flex-shrink:0;
+  .capture-btn-replace{
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    padding:14px;
-    border-radius:12px;
+    gap:8px;
+    padding:12px 18px;
+    border-radius:10px;
     background:rgba(255,255,255,0.02);
     border:1px solid var(--border);
     color:var(--text-2);
+    font-size:12.5px;
+    font-weight:500;
+    letter-spacing:0.02em;
     cursor:pointer;
     transition:all .2s var(--ease);
   }
-  .capture-btn-secondary svg{width:18px;height:18px;stroke-width:1.6}
-  .capture-btn-secondary:hover{
+  .capture-btn-replace svg{width:15px;height:15px;stroke-width:1.7}
+  .capture-btn-replace:hover{
     background:rgba(255,255,255,0.05);
     color:var(--text);
     border-color:var(--border-strong);
@@ -1571,18 +1559,15 @@
     </div>
 
     <div id="captureActions" class="capture-actions hide">
-      <button id="btnAnalyzeFromCapture" class="capture-btn-primary">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        <span>Analyser maintenant</span>
-      </button>
-      <button id="btnReplaceCapture" class="capture-btn-secondary" title="Charger une autre image">
+      <button id="btnReplaceCapture" class="capture-btn-replace" title="Charger une autre image">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <span>Remplacer la capture</span>
       </button>
     </div>
 
     <div class="capture-tip">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-      <span><strong>L'analyse technique se lance automatiquement</strong> au chargement de la capture. Tu peux aussi cliquer sur <strong>Analyser maintenant</strong> pour relancer manuellement, ou sur l'icône <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> pour changer la capture.</span>
+      <span><strong>L'analyse technique se lance automatiquement</strong> au chargement de la capture. Utilise le bouton <strong>Remplacer la capture</strong> pour en charger une autre.</span>
     </div>
   </section>
 
@@ -1769,16 +1754,16 @@
     <div class="help-section">
       <div class="help-num">2</div>
       <div class="help-body">
-        <div class="help-title">Analyser maintenant</div>
-        <div class="help-text">Clique sur <strong>Analyser maintenant</strong>. Le site récupère les bougies 15m/1h + DXY, calcule un score technique, applique les garde-fous (session, jour, volatilité) et affiche un verdict <strong>BUY</strong> ou <strong>SELL</strong>. <em>Pas de cooldown — tu peux relancer quand tu veux.</em></div>
+        <div class="help-title">Analyse 100% automatique</div>
+        <div class="help-text">Le site récupère les bougies 15m/1h + DXY, calcule un score technique, applique les garde-fous (session, jour, volatilité) et affiche un verdict <strong>BUY</strong> ou <strong>SELL</strong>. Tu peux aussi cliquer sur le bouton <strong>Analyser maintenant</strong> en haut de page pour relancer manuellement. <em>Pas de cooldown — tu peux relancer quand tu veux.</em></div>
       </div>
     </div>
 
     <div class="help-section">
       <div class="help-num">3</div>
       <div class="help-body">
-        <div class="help-title">Analyse auto + manuelle</div>
-        <div class="help-text"><strong>L'analyse technique se lance automatiquement</strong> au chargement de ta capture. Tu peux aussi cliquer sur <strong>Analyser maintenant</strong> pour relancer manuellement, ou sur l'icône ↻ pour remplacer la capture. Si les proxies CORS sont down, configure une clé <strong>Twelve Data</strong> dans les Réglages pour un flux fiable.</div>
+        <div class="help-title">Analyse 100% automatique</div>
+        <div class="help-text"><strong>L'analyse technique se lance automatiquement</strong> au chargement de ta capture (environ 400 ms après l'upload). Tu n'as rien à cliquer. Pour relancer avec une nouvelle capture, utilise le bouton <strong>Remplacer la capture</strong>. Si les proxies CORS sont down, configure une clé <strong>Twelve Data</strong> dans les Réglages pour un flux fiable.</div>
       </div>
     </div>
 
@@ -1829,7 +1814,9 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "6.0.0";
+const APP_VERSION = "7.0.0";
+// v7.0.0 — Smart Money Suite : Market Structure (BOS/CHoCH) + Order Blocks + Fair Value Gaps + US 10Y Treasury Yield + Events macro (NFP/FOMC/CPI)
+// v6.1.0 — retrait du bouton "Analyser maintenant" (100% auto après upload)
 // v6.0.0 — auto-analyse capture + retrait "Copier pour Mavis"
 // v5.0.0 — sync multi-device + suppression cooldown + aide + diagnostic
 // v4.0.0 — premium UI redesign + capture section redesignée
@@ -1915,7 +1902,7 @@ const ui = {
   apiTwelve: $("apiTwelve"),
   notifLevel: $("notifLevel"),
   autoRefresh: $("autoRefresh"), autoMorning: $("autoMorning"),
-  autoAnalyze: $("autoAnalyze"), btnAnalyzeFromCapture: $("btnAnalyzeFromCapture"),
+  autoAnalyze: $("autoAnalyze"),
   appVersion: $("appVersion"),
   btnSave: $("btnSave"), btnClose: $("btnClose"),
   btnExport: $("btnExport"), btnImport: $("btnImport"), importInput: $("importInput"),
@@ -2536,6 +2523,165 @@ function fibo(candles, lookback = 60) {
     : { "0%": lo, "23.6%": lo + 0.236 * range, "38.2%": lo + 0.382 * range, "50%": lo + 0.5 * range, "61.8%": lo + 0.618 * range, "78.6%": lo + 0.786 * range, "100%": hi };
   return { levels, direction: uptrend ? "up" : "down" };
 }
+
+/* ====================================================================
+   SMART MONEY CONCEPTS (SMC) — v7.0.0
+   - Market Structure : swing highs/lows + BOS/CHoCH
+   - Order Blocks : zones d'entrée institutionnelles
+   - Fair Value Gaps : imbalances
+   ==================================================================== */
+
+// Swing points : un swing high est un high local (plus haut que ses N voisins avant/après)
+function findSwingPoints(candles, lookback = 5) {
+  if (candles.length < lookback * 2 + 1) return { highs: [], lows: [] };
+  const highs = [];
+  const lows = [];
+  for (let i = lookback; i < candles.length - lookback; i++) {
+    const c = candles[i];
+    let isHigh = true, isLow = true;
+    for (let j = 1; j <= lookback; j++) {
+      if (candles[i - j].h >= c.h) isHigh = false;
+      if (candles[i + j].h >= c.h) isHigh = false;
+      if (candles[i - j].l <= c.l) isLow = false;
+      if (candles[i + j].l <= c.l) isLow = false;
+    }
+    if (isHigh) highs.push({ i, price: c.h, t: c.t });
+    if (isLow) lows.push({ i, price: c.l, t: c.t });
+  }
+  return { highs, lows };
+}
+
+// Market Structure : BOS (continuation) + CHoCH (reversal) basés sur les swing points
+function detectMarketStructure(candles, lookback = 5) {
+  const { highs, lows } = findSwingPoints(candles, lookback);
+  if (highs.length < 2 || lows.length < 2) {
+    return { trend: "indéfini", swings: { highs, lows }, events: [] };
+  }
+  // Récupère les 2 derniers swing highs et 2 derniers swing lows
+  const lastHigh1 = highs[highs.length - 1];
+  const lastHigh2 = highs[highs.length - 2];
+  const lastLow1 = lows[lows.length - 1];
+  const lastLow2 = lows[lows.length - 2];
+  // Tendance : HH+HL = bullish ; LH+LL = bearish
+  let trend = "ranging";
+  const higherHigh = lastHigh1.price > lastHigh2.price;
+  const higherLow = lastLow1.price > lastLow2.price;
+  const lowerHigh = lastHigh1.price < lastHigh2.price;
+  const lowerLow = lastLow1.price < lastLow2.price;
+  if (higherHigh && higherLow) trend = "haussière";
+  else if (lowerHigh && lowerLow) trend = "baissière";
+  // Events : BOS = cassure du swing précédent dans le sens de la tendance
+  //         CHoCH = cassure dans le sens inverse (signal de retournement)
+  const events = [];
+  if (lastHigh1.price > lastHigh2.price) {
+    events.push({ type: lowerHigh ? "BOS" : "CHoCH", dir: "up", price: lastHigh1.price, t: lastHigh1.t });
+  } else if (lastHigh1.price < lastHigh2.price) {
+    events.push({ type: higherHigh ? "BOS" : "CHoCH", dir: "down", price: lastHigh1.price, t: lastHigh1.t });
+  }
+  return { trend, swings: { highs, lows }, events, lastHigh: lastHigh1, lastLow: lastLow1 };
+}
+
+// Order Blocks : dernier chandelier opposé avant un move significatif
+function findOrderBlocks(candles, lookback = 50, minMoveATR = 1.5) {
+  if (candles.length < 20) return { bullish: [], bearish: [] };
+  const slice = candles.slice(-lookback);
+  // ATR approximé
+  let trSum = 0;
+  for (let i = 1; i < slice.length; i++) {
+    trSum += Math.max(
+      slice[i].h - slice[i].l,
+      Math.abs(slice[i].h - slice[i - 1].c),
+      Math.abs(slice[i].l - slice[i - 1].c)
+    );
+  }
+  const atr = trSum / (slice.length - 1);
+  const minMove = atr * minMoveATR;
+  const bullish = []; // OB haussier : bougie rouge avant un fort move up
+  const bearish = []; // OB baissier : bougie verte avant un fort move down
+  for (let i = 1; i < slice.length - 1; i++) {
+    const prev = slice[i - 1];
+    const curr = slice[i];
+    const next = slice[i + 1];
+    // Bougie rouge puis forte hausse = OB bullish
+    if (prev.c < prev.o && next.c - next.o > minMove) {
+      bullish.push({ high: prev.o, low: prev.l, t: prev.t, mitigated: next.h > prev.h });
+    }
+    // Bougie verte puis forte baisse = OB bearish
+    if (prev.c > prev.o && next.o - next.c > minMove) {
+      bearish.push({ high: prev.h, low: prev.l, t: prev.t, mitigated: next.l < prev.l });
+    }
+  }
+  // On garde les 3 derniers non-mitigated
+  return {
+    bullish: bullish.filter(o => !o.mitigated).slice(-3),
+    bearish: bearish.filter(o => !o.mitigated).slice(-3)
+  };
+}
+
+// Fair Value Gaps : gap entre 3 chandeliers
+function findFairValueGaps(candles, lookback = 50) {
+  if (candles.length < 3) return { bullish: [], bearish: [] };
+  const slice = candles.slice(-lookback);
+  const bullish = []; // FVG bullish : low[i] > high[i-2] (gap haussier)
+  const bearish = []; // FVG bearish : high[i] < low[i-2]
+  for (let i = 2; i < slice.length; i++) {
+    const c = slice[i];
+    const c2 = slice[i - 2];
+    if (c.l > c2.h) {
+      bullish.push({ top: c.l, bottom: c2.h, t: c.t });
+    }
+    if (c.h < c2.l) {
+      bearish.push({ top: c2.l, bottom: c.h, t: c.t });
+    }
+  }
+  // On garde les 3 derniers
+  return {
+    bullish: bullish.slice(-3),
+    bearish: bearish.slice(-3)
+  };
+}
+
+// US 10Y Treasury Yield (Yahoo ^TNX) — corrélation inverse avec gold
+async function fetchUS10Y() {
+  try {
+    const url = "https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d&range=5d";
+    const data = await fetchViaProxies(url, true);
+    if (!data || !data.chart || !data.chart.result || !data.chart.result[0]) {
+      return { value: null, prev: null, change: 0 };
+    }
+    const closes = data.chart.result[0].indicators.quote[0].close;
+    const last = closes[closes.length - 1];
+    const prev = closes[closes.length - 2];
+    if (last == null || prev == null) return { value: null, prev: null, change: 0 };
+    return { value: last, prev, change: ((last - prev) / prev) * 100 };
+  } catch (e) {
+    console.warn("US10Y:", e);
+    return { value: null, prev: null, change: 0 };
+  }
+}
+
+// Economic events awareness (NFP, FOMC, CPI)
+// Retourne un flag si on est proche d'un événement majeur (24h avant / 2h après)
+function getUpcomingEvents(d = nowBerlin()) {
+  const day = d.getDay();        // 0=Dim, 6=Sam
+  const date = d.getDate();
+  const month = d.getMonth() + 1;
+  const hour = d.getHours();
+  const events = [];
+  // NFP : premier vendredi du mois, à 14:30 UTC = 16:30 Berlin
+  if (day === 5 && date <= 7 && hour >= 14 && hour < 18) {
+    events.push({ name: "NFP (Non-Farm Payrolls)", impact: "high", time: "16:30" });
+  }
+  // FOMC : 8 fois par an, dates variables — heuristique sur les 3èmes mercredis
+  if (day === 3 && date >= 14 && date <= 21 && hour >= 18 && hour < 22) {
+    events.push({ name: "FOMC (Fed Rate Decision)", impact: "high", time: "20:00" });
+  }
+  // CPI : vers le 13 du mois, 14:30 UTC
+  if (date >= 12 && date <= 14 && hour >= 14 && hour < 18) {
+    events.push({ name: "CPI (Inflation)", impact: "high", time: "14:30" });
+  }
+  return events;
+}
 function supportsResistances(candles, lookback = 80) {
   // Trouve niveaux de swing (clusters) sur les N dernières bougies
   if (candles.length < lookback) lookback = candles.length;
@@ -2559,7 +2705,7 @@ function supportsResistances(candles, lookback = 80) {
 }
 
 /* ---------- ANALYSE GLOBALE ---------- */
-function analyze(candles15, candles1h, dxy) {
+async function analyze(candles15, candles1h, dxy) {
   const closes = candles15.map(c => c.c);
   const last = closes[closes.length - 1];
   const prev = closes[closes.length - 2] ?? last;
@@ -2806,11 +2952,24 @@ function analyze(candles15, candles1h, dxy) {
   // Clamp final
   globalScore = Math.max(-100, Math.min(100, globalScore));
 
+  // === SMC : Market Structure + Order Blocks + FVG ===
+  const smc15 = detectMarketStructure(candles15, 5);
+  const smc1h = detectMarketStructure(candles1h, 5);
+  const orderBlocks = findOrderBlocks(candles15, 50, 1.5);
+  const fvgs = findFairValueGaps(candles15, 50);
+
+  // === Macro : US 10Y Treasury Yield + events ===
+  let us10y = { value: null, prev: null, change: 0 };
+  try { us10y = await fetchUS10Y(); } catch (e) { /* tolerere */ }
+  const upcomingEvents = getUpcomingEvents();
+
   return {
     current: cur,
     components,
     techScore, trend1h, trendScore, dxyScore, sessDayScore, volScore,
-    globalScore, alignment, provisionalDir
+    globalScore, alignment, provisionalDir,
+    smc: { h15: smc15, h1: smc1h, orderBlocks, fvgs },
+    macro: { us10y, events: upcomingEvents }
   };
 }
 
@@ -2871,6 +3030,51 @@ function generateSynthesis(analysis, dxy) {
     const nearest = c.sr.supports[0];
     const dist = ((c.price - nearest) / c.price) * 100;
     if (dist < 0.5) txt += ` Support proche à ${nearest.toFixed(2)} (-${dist.toFixed(2)}%).`;
+  }
+
+  // === SMC : Market Structure ===
+  if (analysis.smc && analysis.smc.h15) {
+    const smc15 = analysis.smc.h15;
+    if (smc15.trend && smc15.trend !== "indéfini" && smc15.trend !== "ranging") {
+      txt += ` <br><br><strong>Market Structure :</strong> ${smc15.trend}${smc15.events && smc15.events.length ? ` (${smc15.events[0].type} ${smc15.events[0].dir === "up" ? "↑" : "down"})` : ""}.`;
+    }
+    if (smc15.lastHigh) txt += ` Swing high : <strong>${fmt(smc15.lastHigh.price)}</strong>.`;
+    if (smc15.lastLow) txt += ` Swing low : <strong>${fmt(smc15.lastLow.price)}</strong>.`;
+  }
+
+  // === SMC : Order Blocks + FVG ===
+  if (analysis.smc) {
+    const ob = analysis.smc.orderBlocks;
+    const fv = analysis.smc.fvgs;
+    if ((ob.bullish && ob.bullish.length) || (ob.bearish && ob.bearish.length)) {
+      const lastBull = ob.bullish[ob.bullish.length - 1];
+      const lastBear = ob.bearish[ob.bearish.length - 1];
+      txt += ` <br><strong>Order Blocks :</strong> `;
+      if (lastBull) txt += `bullish ${fmt(lastBull.low)}-${fmt(lastBull.high)}`;
+      if (lastBull && lastBear) txt += ` · `;
+      if (lastBear) txt += `bearish ${fmt(lastBear.low)}-${fmt(lastBear.high)}`;
+      txt += `.`;
+    }
+    if ((fv.bullish && fv.bullish.length) || (fv.bearish && fv.bearish.length)) {
+      const lastBullFVG = fv.bullish[fv.bullish.length - 1];
+      const lastBearFVG = fv.bearish[fv.bearish.length - 1];
+      txt += ` <br><strong>FVG :</strong> `;
+      if (lastBullFVG) txt += `bullish ${fmt(lastBullFVG.bottom)}-${fmt(lastBullFVG.top)}`;
+      if (lastBullFVG && lastBearFVG) txt += ` · `;
+      if (lastBearFVG) txt += `bearish ${fmt(lastBearFVG.bottom)}-${fmt(lastBearFVG.top)}`;
+      txt += `.`;
+    }
+  }
+
+  // === Macro : US 10Y Treasury Yield ===
+  if (analysis.macro && analysis.macro.us10y && analysis.macro.us10y.value != null) {
+    const y10 = analysis.macro.us10y;
+    txt += ` <br><strong>US 10Y Yield :</strong> ${fmt(y10.value, 3)}% (${y10.change > 0 ? "+" : ""}${fmt(y10.change)}%) — corrélation inverse avec l'or.`;
+  }
+
+  // === Macro : Events imminents ===
+  if (analysis.macro && analysis.macro.events && analysis.macro.events.length > 0) {
+    txt += ` <br><strong>⚠️ Événements macro :</strong> ${analysis.macro.events.map(e => e.name).join(", ")}.`;
   }
 
   return txt;
@@ -2946,6 +3150,36 @@ function applySafetyNets(aiResult, analysis) {
 
   // (Garde 8 cooldown supprimée — pas de blocage)
 
+  // Garde 9: événements macro majeurs (NFP/FOMC/CPI)
+  if (analysis.macro && analysis.macro.events && analysis.macro.events.length > 0) {
+    for (const ev of analysis.macro.events) {
+      flags.push({ tone: "r", text: `⚠️ ${ev.name} imminent (${ev.time} Berlin) — éviter d'ouvrir une position` });
+    }
+  }
+
+  // Garde 10: US 10Y Yield — corrélation inverse avec gold
+  if (analysis.macro && analysis.macro.us10y && analysis.macro.us10y.value != null) {
+    const y10 = analysis.macro.us10y;
+    const yDir = y10.change > 0 ? "hausse" : "baisse";
+    if (y10.change >= 0.5) {
+      flags.push({ tone: "r", text: `US 10Y en forte ${yDir} (+${y10.change.toFixed(2)}%) — pression baissière sur l'or` });
+    } else if (y10.change <= -0.5) {
+      flags.push({ tone: "g", text: `US 10Y en baisse (${y10.change.toFixed(2)}%) — soutien haussier pour l'or` });
+    }
+  }
+
+  // Garde 11: Market Structure conflict (signal 15m vs structure 1h)
+  if (analysis.smc && analysis.smc.h1 && analysis.smc.h1.trend) {
+    const h1Trend = analysis.smc.h1.trend;
+    if (signal === "BUY" && h1Trend === "baissière") {
+      flags.push({ tone: "r", text: "Structure 1h baissière (SMC) — ACHAT risqué" });
+    } else if (signal === "SELL" && h1Trend === "haussière") {
+      flags.push({ tone: "r", text: "Structure 1h haussière (SMC) — VENTE risquée" });
+    } else if ((signal === "BUY" && h1Trend === "haussière") || (signal === "SELL" && h1Trend === "baissière")) {
+      flags.push({ tone: "g", text: `Structure 1h ${h1Trend} (SMC) — confluence avec le signal` });
+    }
+  }
+
   return { signal, confidence, flags, raison: aiResult.raison || "", analyse: aiResult.analyse || "", risque: aiResult.risque || "" };
 }
 
@@ -2990,10 +3224,10 @@ function renderSynthesis(result) {
     ui.synthBox.className = "aibox empty";
     // Si une capture est chargée, proposer d'analyser ; sinon, hint générique
     if (state.capture) {
-      ui.synthBox.innerHTML = `📊 <strong>Capture Hydratrade prête.</strong> L'analyse technique se lance automatiquement (400 ms).<br><br><span class="dim">Si l'analyse ne démarre pas, clique sur <strong>Analyser maintenant</strong> ci-dessous, ou vérifie ta connexion dans <strong>Diagnostic</strong>.</span>`;
+      ui.synthBox.innerHTML = `📊 <strong>Capture Hydratrade prête.</strong> L'analyse technique se lance automatiquement (400 ms).<br><br><span class="dim">Si l'analyse ne démarre pas, clique sur le bouton <strong>Analyser maintenant</strong> en haut de page, ou vérifie ta connexion dans <strong>Diagnostic</strong>.</span>`;
       ui.synthBadge.textContent = "prête";
     } else {
-      ui.synthBox.innerHTML = "Charge une capture Hydratrade <em>ou</em> clique sur <strong>« Analyser maintenant »</strong> pour générer une synthèse technique basée sur les indicateurs du moment.";
+      ui.synthBox.innerHTML = "Charge une capture Hydratrade — l'analyse technique se lance automatiquement. <em>Ou</em> clique sur le bouton <strong>Analyser maintenant</strong> en haut de page pour générer une synthèse basée sur les indicateurs du moment.";
       ui.synthBadge.textContent = "en attente";
     }
     return;
@@ -3436,7 +3670,7 @@ async function analyzeNow(opts = {}) {
     ui.chartSrc.textContent = c15.source;
 
     // 2) Analyse technique
-    const analysis = analyze(c15.candles, c1h.candles, dxy);
+    const analysis = await analyze(c15.candles, c1h.candles, dxy);
     renderScore(analysis);
     renderTF(analysis);
     renderDXY(dxy);
@@ -3659,12 +3893,6 @@ ui.captureInput.addEventListener("change", e => {
 ui.captureDel.addEventListener("click", e => {
   e.stopPropagation();
   clearCapture();
-});
-
-// Analyser maintenant (depuis la card capture)
-if (ui.btnAnalyzeFromCapture) ui.btnAnalyzeFromCapture.addEventListener("click", () => {
-  if (state.analyzing) { toast("Analyse déjà en cours…", "info"); return; }
-  analyzeNow({ fromManualButton: true });
 });
 
 // Remplacer la capture (réouvre le file picker)
