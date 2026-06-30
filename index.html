@@ -327,6 +327,46 @@
     animation:scan 1.6s linear infinite;
   }
   @keyframes scan{to{left:100%}}
+  /* Scintillement du verdict 10 min après signal BUY/SELL */
+  @keyframes signalPulse{
+    0%, 100%{
+      box-shadow:var(--shadow-lg), 0 0 0 1px rgba(201,169,97,0) inset, 0 0 0 rgba(201,169,97,0);
+    }
+    50%{
+      box-shadow:var(--shadow-lg), 0 0 0 1px rgba(201,169,97,0.6) inset, 0 0 60px rgba(201,169,97,0.28);
+    }
+  }
+  .verdict.buy.pulse-active{
+    animation:signalPulse 2.4s ease-in-out infinite;
+  }
+  .verdict.sell.pulse-active{
+    animation:signalPulse 2.4s ease-in-out infinite;
+  }
+  .verdict.buy.pulse-active{animation-name:signalPulseBuy}
+  .verdict.sell.pulse-active{animation-name:signalPulseSell}
+  @keyframes signalPulseBuy{
+    0%, 100%{
+      box-shadow:var(--shadow-lg), 0 0 0 1px rgba(95,164,126,0) inset, 0 0 0 rgba(95,164,126,0);
+    }
+    50%{
+      box-shadow:var(--shadow-lg), 0 0 0 1px rgba(95,164,126,0.6) inset, 0 0 60px rgba(95,164,126,0.28);
+    }
+  }
+  @keyframes signalPulseSell{
+    0%, 100%{
+      box-shadow:var(--shadow-lg), 0 0 0 1px rgba(196,107,92,0) inset, 0 0 0 rgba(196,107,92,0);
+    }
+    50%{
+      box-shadow:var(--shadow-lg), 0 0 0 1px rgba(196,107,92,0.6) inset, 0 0 60px rgba(196,107,92,0.28);
+    }
+  }
+  .verdict .vlabel.pulse-active{
+    animation:vlabelPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes vlabelPulse{
+    0%, 100%{opacity:0.55;letter-spacing:0.22em}
+    50%{opacity:1;letter-spacing:0.28em}
+  }
   .verdict .vlabel{
     font-size:10.5px;
     text-transform:uppercase;
@@ -1471,7 +1511,7 @@
 
   <!-- ============== VERDICT ============== -->
   <section id="verdict" class="verdict idle mb-12" aria-live="polite">
-    <div class="vlabel">Signal en cours</div>
+    <div class="vlabel">Signal in progress</div>
     <div id="vDir" class="vdir">—</div>
     <div id="vPrice" class="vprice hide"><span id="vPriceVal" class="num">—</span><span class="sub" id="vPriceSub">—</span></div>
     <div id="vConf" class="vconfidence hide">
@@ -1814,7 +1854,9 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.0.0";
+const APP_VERSION = "7.1.0";
+// v7.1.0 — terme BUY/SELL en anglais + label "Signal in progress" + scintillement 10 min après signal
+// v7.0.1 — fix timeouts : proxies CORS en parallèle + timeout global 20s + compteur de progression
 // v7.0.0 — Smart Money Suite : Market Structure (BOS/CHoCH) + Order Blocks + Fair Value Gaps + US 10Y Treasury Yield + Events macro (NFP/FOMC/CPI)
 // v6.1.0 — retrait du bouton "Analyser maintenant" (100% auto après upload)
 // v6.0.0 — auto-analyse capture + retrait "Copier pour Mavis"
@@ -1981,7 +2023,7 @@ function renderHistory() {
     const confClass = (e.confidence || "faible").toLowerCase();
     return `<div class="histi">
       <span class="ts">${ts}</span>
-      <span class="dir ${dirClass}">${e.signal === "BUY" ? "▲ ACHAT" : "▼ VENTE"}</span>
+      <span class="dir ${dirClass}">${e.signal === "BUY" ? "▲ BUY" : "▼ SELL"}</span>
       <span class="conf ${confClass}">${(e.confidence || "—").toUpperCase()}</span>
       <span class="price">${e.price ? e.price.toFixed(2) : "—"}</span>
       <span class="score">${e.score > 0 ? "+" : ""}${e.score ?? "—"}</span>
@@ -2143,27 +2185,26 @@ function fetchWithTimeout(url, opts = {}, timeout = REQ_TIMEOUT_MS) {
   });
 }
 async function fetchViaProxies(targetUrl, asJson = true) {
-  let lastErr = null;
-  for (const wrap of PROXIES) {
-    try {
-      const url = wrap(targetUrl);
-      const r = await fetchWithTimeout(url, { headers: { "Accept": asJson ? "application/json,*/*" : "*/*" } });
-      if (!r.ok) { lastErr = new Error("HTTP " + r.status); continue; }
-      if (asJson) {
-        const j = await r.json();
-        // allorigins /get wraps: { contents: "..." } ou { status: { ... }, contents: "..." }
-        if (j && typeof j.contents === "string") {
-          try { return JSON.parse(j.contents); } catch { return j.contents; }
-        }
-        return j;
-      } else {
-        return await r.text();
+  // Lance TOUS les proxies en parallèle — premier qui répond OK gagne
+  // (avant : séquentiel 8s × 4 = 32s max ; maintenant : 8s max)
+  const tasks = PROXIES.map((wrap) => (async () => {
+    const url = wrap(targetUrl);
+    const r = await fetchWithTimeout(url, { headers: { "Accept": asJson ? "application/json,*/*" : "*/*" } });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    if (asJson) {
+      const j = await r.json();
+      if (j && typeof j.contents === "string") {
+        try { return JSON.parse(j.contents); } catch { return j.contents; }
       }
-    } catch (e) {
-      lastErr = e;
+      return j;
+    } else {
+      return await r.text();
     }
-  }
-  throw lastErr || new Error("Tous les proxies ont échoué");
+  })());
+  // Promise.any : la première promesse résolue gagne ; les échecs sont ignorés
+  return await Promise.any(tasks).catch(() => {
+    throw new Error("Tous les proxies ont échoué (timeout ou bloqués)");
+  });
 }
 
 /* ---------- DATA SOURCES ---------- */
@@ -2978,7 +3019,7 @@ async function analyze(candles15, candles1h, dxy) {
    ==================================================================== */
 function generateSynthesis(analysis, dxy) {
   const c = analysis.current;
-  const dir = analysis.globalScore > 0 ? "ACHAT" : "VENTE";
+  const dir = analysis.globalScore > 0 ? "BUY" : "SELL";
   const align = analysis.trend1h.aligned === true ? "alignée"
               : analysis.trend1h.aligned === false ? "opposée à la tendance 1h"
               : "tendance 1h neutre";
@@ -3102,11 +3143,11 @@ function applySafetyNets(aiResult, analysis) {
     if (!aligns || !strong) {
       if (confidence === "FORT") confidence = "MOYEN";
       if (!strong) {
-        flags.push({ tone: "r", text: "ACHAT : score < 55 — vos ACHATS ont 14% de réussite historique" });
+        flags.push({ tone: "r", text: "BUY : score < 55 — vos BUY ont 14% de réussite historique" });
         confidence = "FAIBLE";
       }
       if (!aligns) {
-        flags.push({ tone: "r", text: "ACHAT contre tendance 1h (" + analysis.trend1h.label.toLowerCase() + ") — dangereux" });
+        flags.push({ tone: "r", text: "BUY contre tendance 1h (" + analysis.trend1h.label.toLowerCase() + ") — dangereux" });
         confidence = "FAIBLE";
       }
     }
@@ -3172,9 +3213,9 @@ function applySafetyNets(aiResult, analysis) {
   if (analysis.smc && analysis.smc.h1 && analysis.smc.h1.trend) {
     const h1Trend = analysis.smc.h1.trend;
     if (signal === "BUY" && h1Trend === "baissière") {
-      flags.push({ tone: "r", text: "Structure 1h baissière (SMC) — ACHAT risqué" });
+      flags.push({ tone: "r", text: "Structure 1h baissière (SMC) — BUY risqué" });
     } else if (signal === "SELL" && h1Trend === "haussière") {
-      flags.push({ tone: "r", text: "Structure 1h haussière (SMC) — VENTE risquée" });
+      flags.push({ tone: "r", text: "Structure 1h haussière (SMC) — SELL risquée" });
     } else if ((signal === "BUY" && h1Trend === "haussière") || (signal === "SELL" && h1Trend === "baissière")) {
       flags.push({ tone: "g", text: `Structure 1h ${h1Trend} (SMC) — confluence avec le signal` });
     }
@@ -3194,11 +3235,18 @@ function renderVerdict(result) {
     ui.vConf.classList.add("hide");
     ui.vRaison.textContent = "Cliquez sur « Analyser » pour générer un signal.";
     ui.vTs.textContent = "—";
+    // Arrêter le scintillement si reset
+    if (window._signalPulseTimer) {
+      clearTimeout(window._signalPulseTimer);
+      window._signalPulseTimer = null;
+    }
+    ui.verdict.classList.remove("pulse-active");
+    ui.vlabel.classList.remove("pulse-active");
     return;
   }
   const { signal, confidence, price, ts, score, source } = result;
   ui.verdict.className = "verdict " + (signal === "BUY" ? "buy" : "sell");
-  ui.vDir.textContent = signal === "BUY" ? "ACHAT" : "VENTE";
+  ui.vDir.textContent = signal === "BUY" ? "BUY" : "SELL";
   if (price) {
     ui.vPrice.classList.remove("hide");
     ui.vPriceVal.textContent = price.toFixed(2);
@@ -3211,6 +3259,17 @@ function renderVerdict(result) {
   ui.vSrcChip.textContent = "source: " + (source || "—");
   ui.vRaison.textContent = result.raison || "—";
   ui.vTs.textContent = "Signal émis " + formatTimeBerlin(new Date(ts)) + " (Berlin)";
+  // Scintillement 10 min : démarre l'animation, l'arrête après 10 min
+  if (window._signalPulseTimer) clearTimeout(window._signalPulseTimer);
+  // petit délai pour laisser le DOM se mettre à jour avec la classe buy/sell
+  setTimeout(() => {
+    ui.verdict.classList.add("pulse-active");
+    ui.vlabel.classList.add("pulse-active");
+  }, 50);
+  window._signalPulseTimer = setTimeout(() => {
+    ui.verdict.classList.remove("pulse-active");
+    ui.vlabel.classList.remove("pulse-active");
+  }, 10 * 60 * 1000);  // 10 minutes
 }
 function renderFlags(flags) {
   if (!flags || !flags.length) {
@@ -3657,13 +3716,25 @@ async function analyzeNow(opts = {}) {
   ui.synthBox.textContent = "Synthèse technique en cours…";
   ui.synthBadge.textContent = "en cours";
 
+  // Compteur de progression (donne du feedback à l'utilisateur)
+  const _t0 = Date.now();
+  const _progressTimer = setInterval(() => {
+    const elapsed = ((Date.now() - _t0) / 1000).toFixed(0);
+    ui.vRaison.textContent = `Récupération des données de marché… ${elapsed}s`;
+  }, 250);
+
+  // Timeout global : 20s max pour tout le fetch + analyse
+  const GLOBAL_TIMEOUT_MS = 20000;
+  const _globalTimeout = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(`Délai dépassé (${GLOBAL_TIMEOUT_MS/1000}s). Les proxies CORS sont peut-être down — configure ta clé TwelveData dans les Réglages pour un flux fiable.`)), GLOBAL_TIMEOUT_MS);
+  });
+
   try {
     // 1) Données
-    const [c15, c1h, dxy] = await Promise.all([
-      fetchCandles15(),
-      fetchCandles1h(),
-      fetchDXY()
-    ]);
+    const [c15, c1h, dxy] = await Promise.race([
+      Promise.all([fetchCandles15(), fetchCandles1h(), fetchDXY()]),
+      _globalTimeout
+    ]).catch(e => { throw e; });
     state.candles15 = c15.candles;
     state.candles1h = c1h.candles;
     state.dxy = dxy;
@@ -3733,6 +3804,7 @@ async function analyzeNow(opts = {}) {
     ui.synthBox.innerHTML = `⚠️ <strong>Échec de l'analyse.</strong> ${e.message || "Réessaie dans quelques secondes."} <br><br>Si le problème persiste, vérifie ta connexion ou ta clé Twelve Data dans les Réglages.`;
     ui.synthBadge.textContent = "échec";
   } finally {
+    clearInterval(_progressTimer);
     state.analyzing = false;
     ui.btnAnalyze.disabled = false;
     ui.verdict.classList.remove("loading");
@@ -3743,7 +3815,7 @@ function tryNotify(final) {
   if (state.notifLevel === "fort" && final.confidence !== "FORT") return;
   if (!("Notification" in window)) return;
   if (Notification.permission === "granted") {
-    new Notification(`XAUUSD · ${final.signal === "BUY" ? "ACHAT" : "VENTE"} (${final.confidence})`, {
+    new Notification(`XAUUSD · ${final.signal === "BUY" ? "BUY" : "SELL"} (${final.confidence})`, {
       body: `${final.price.toFixed(2)} · ${final.raison}`,
       tag: "xau-signal"
     });
