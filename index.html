@@ -682,6 +682,61 @@
   .aibox p{margin-bottom:10px}
   .aibox p:last-child{margin-bottom:0}
   .aibox .analyse{color:var(--text)}
+  /* Bloc "POURQUOI" : raison de la décision, en tête de synthèse */
+  .aibox .why-block{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:14px 16px;
+    margin-bottom:16px;
+    background:linear-gradient(180deg, rgba(201,169,97,0.08) 0%, rgba(201,169,97,0.03) 100%);
+    border:1px solid rgba(201,169,97,0.3);
+    border-left:3px solid var(--gold);
+    border-radius:6px;
+  }
+  .aibox.buy .why-block{
+    background:linear-gradient(180deg, rgba(95,164,126,0.1) 0%, rgba(95,164,126,0.03) 100%);
+    border-color:rgba(95,164,126,0.3);
+    border-left-color:var(--bull-soft);
+  }
+  .aibox.sell .why-block{
+    background:linear-gradient(180deg, rgba(196,107,92,0.1) 0%, rgba(196,107,92,0.03) 100%);
+    border-color:rgba(196,107,92,0.3);
+    border-left-color:var(--bear-soft);
+  }
+  .aibox .why-label{
+    flex-shrink:0;
+    font-family:'Inter',sans-serif;
+    font-size:9.5px;
+    font-weight:600;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--text-3);
+    padding:4px 8px;
+    background:rgba(0,0,0,0.2);
+    border-radius:4px;
+  }
+  .aibox .why-text{
+    color:var(--text);
+    font-weight:400;
+    line-height:1.55;
+  }
+  .aibox .why-text strong{color:var(--text);font-weight:500}
+  .aibox .why-text em{color:var(--text-2);font-style:italic}
+  /* Sous-titre timestamp dans le card header */
+  .synth-meta-line{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .synth-meta{
+    font-size:10.5px;
+    color:var(--text-3);
+    letter-spacing:0.04em;
+    font-weight:400;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .synth-meta:empty{display:none}
   .aibox .risque{
     padding:10px 14px;
     background:rgba(201,169,97,0.06);
@@ -1613,7 +1668,13 @@
 
   <!-- ============== SYNTHÈSE TECHNIQUE ============== -->
   <section class="card mb-12">
-    <h2>Synthèse technique <span class="badge" id="synthBadge">en attente</span></h2>
+    <h2>
+      <span>Synthèse technique</span>
+      <span class="synth-meta-line">
+        <span class="badge" id="synthBadge">en attente</span>
+        <span class="synth-meta" id="synthMeta"></span>
+      </span>
+    </h2>
     <div id="synthBox" class="aibox empty">La synthèse issue des indicateurs techniques apparaîtra ici après chaque « Analyser ».</div>
   </section>
 
@@ -1854,7 +1915,8 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.1.0";
+const APP_VERSION = "7.1.1";
+// v7.1.1 — synthèse : timestamp de génération + bloc "POURQUOI" (raison de la décision)
 // v7.1.0 — terme BUY/SELL en anglais + label "Signal in progress" + scintillement 10 min après signal
 // v7.0.1 — fix timeouts : proxies CORS en parallèle + timeout global 20s + compteur de progression
 // v7.0.0 — Smart Money Suite : Market Structure (BOS/CHoCH) + Order Blocks + Fair Value Gaps + US 10Y Treasury Yield + Events macro (NFP/FOMC/CPI)
@@ -1930,7 +1992,7 @@ const ui = {
   verdict: $("verdict"), vDir: $("vDir"), vPrice: $("vPrice"), vPriceVal: $("vPriceVal"),
   vPriceSub: $("vPriceSub"), vConf: $("vConf"), vConfChip: $("vConfChip"),
   vSrcChip: $("vSrcChip"), vRaison: $("vRaison"), vTs: $("vTs"),
-  flags: $("flags"), synthBox: $("synthBox"), synthBadge: $("synthBadge"),
+  flags: $("flags"), synthBox: $("synthBox"), synthBadge: $("synthBadge"), synthMeta: $("synthMeta"),
   scoreFill: $("scoreFill"), scoreLabel: $("scoreLabel"), scoreComp: $("scoreComp"),
   tfTrend: $("tfTrend"), tfDesc: $("tfDesc"), tfAlign: $("tfAlign"),
   dxyVal: $("dxyVal"), dxyChg: $("dxyChg"), dxyBias: $("dxyBias"),
@@ -3017,6 +3079,70 @@ async function analyze(candles15, candles1h, dxy) {
 /* ====================================================================
    SYNTHÈSE TECHNIQUE — génération locale
    ==================================================================== */
+function generateReasoning(analysis, signal) {
+  // Génère une explication en langage clair de la décision BUY/SELL
+  const reasons = [];
+  const c = analysis.current;
+  const score = analysis.globalScore;
+
+  // 1. Score technique
+  if (Math.abs(score) >= 25) {
+    reasons.push(`score technique ${score > 0 ? "+" : ""}${score}/100`);
+  }
+
+  // 2. Tendance 1h alignée ou opposée
+  if (analysis.trend1h.aligned === true) {
+    const t1h = analysis.trend1h.label ? analysis.trend1h.label.toLowerCase() : "alignée";
+    reasons.push(`tendance 1h ${t1h} (alignée)`);
+  } else if (analysis.trend1h.aligned === false) {
+    reasons.push(`tendance 1h opposée au signal`);
+  }
+
+  // 3. RSI extrême
+  if (c.rsi != null) {
+    if (c.rsi < 30) reasons.push(`RSI survendu (${c.rsi.toFixed(0)})`);
+    if (c.rsi > 70) reasons.push(`RSI suracheté (${c.rsi.toFixed(0)})`);
+  }
+
+  // 4. ADX (force de la tendance)
+  if (c.adx != null && c.adx >= 25) {
+    reasons.push(`ADX ${c.adx.toFixed(0)} (tendance forte)`);
+  }
+
+  // 5. MACD
+  if (c.macdHist != null && Math.abs(c.macdHist) >= 0.3) {
+    reasons.push(`MACD ${c.macdHist > 0 ? "positif" : "négatif"} (${c.macdHist.toFixed(2)})`);
+  }
+
+  // 6. EMA 9/21/50
+  if (c.ema9 != null && c.ema21 != null && c.ema50 != null) {
+    if (c.ema9 < c.ema21 && c.ema21 < c.ema50) reasons.push(`EMA 9/21/50 baissier`);
+    if (c.ema9 > c.ema21 && c.ema21 > c.ema50) reasons.push(`EMA 9/21/50 haussier`);
+  }
+
+  // 7. Market Structure (SMC)
+  if (analysis.smc && analysis.smc.h1) {
+    const t = analysis.smc.h1.trend;
+    const ev = analysis.smc.h1.events && analysis.smc.h1.events[0];
+    if (t && t !== "indéfini" && t !== "ranging") {
+      if (ev && ev.type) {
+        reasons.push(`structure 1h ${t} (${ev.type} ${ev.dir === "up" ? "↑" : "↓"})`);
+      } else {
+        reasons.push(`structure 1h ${t}`);
+      }
+    }
+  }
+
+  // 8. Day score
+  if (analysis.day && Math.abs(analysis.day.score || 0) >= 5) {
+    const d = analysis.day.label ? analysis.day.label.split("—")[0].trim().toLowerCase() : "";
+    if (d) reasons.push(`${d} (${analysis.day.score > 0 ? "+" : ""}${analysis.day.score})`);
+  }
+
+  // Limite à 4 raisons max pour la lisibilité
+  return reasons.slice(0, 4);
+}
+
 function generateSynthesis(analysis, dxy) {
   const c = analysis.current;
   const dir = analysis.globalScore > 0 ? "BUY" : "SELL";
@@ -3281,7 +3407,7 @@ function renderFlags(flags) {
 function renderSynthesis(result) {
   if (!result) {
     ui.synthBox.className = "aibox empty";
-    // Si une capture est chargée, proposer d'analyser ; sinon, hint générique
+    if (ui.synthMeta) ui.synthMeta.textContent = "";
     if (state.capture) {
       ui.synthBox.innerHTML = `📊 <strong>Capture Hydratrade prête.</strong> L'analyse technique se lance automatiquement (400 ms).<br><br><span class="dim">Si l'analyse ne démarre pas, clique sur le bouton <strong>Analyser maintenant</strong> en haut de page, ou vérifie ta connexion dans <strong>Diagnostic</strong>.</span>`;
       ui.synthBadge.textContent = "prête";
@@ -3291,8 +3417,26 @@ function renderSynthesis(result) {
     }
     return;
   }
-  ui.synthBox.className = "aibox";
+  // === Timestamp de génération ===
+  const tsDate = new Date(result.ts || Date.now());
+  const tsStr = tsDate.toLocaleString("fr-FR", {
+    timeZone: "Europe/Berlin",
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", second: "2-digit"
+  });
+  if (ui.synthMeta) ui.synthMeta.textContent = `Générée le ${tsStr} (Berlin)`;
+
+  // === Bloc "POURQUOI" : raison de la décision ===
+  const whyHtml = result.why && result.why.length
+    ? `<div class="why-block">
+         <span class="why-label">Pourquoi ${result.signal === "BUY" ? "BUY" : "SELL"}</span>
+         <span class="why-text">${result.why.map(r => `<strong>${escapeHtml(r)}</strong>`).join(" · ")}</span>
+       </div>`
+    : "";
+
+  ui.synthBox.className = "aibox " + (result.signal === "BUY" ? "buy" : "sell");
   ui.synthBox.innerHTML = `
+    ${whyHtml}
     <p class="analyse">${result.analyse || "—"}</p>
     ${result.risque ? `<div class="risque">⚠️ ${escapeHtml(result.risque)}</div>` : ""}
   `;
@@ -3767,6 +3911,8 @@ async function analyzeNow(opts = {}) {
     final.score = analysis.globalScore;
     final.price = analysis.current.price;
     final.ts = Date.now();
+    // Bloc "POURQUOI" : raisons en langage clair
+    final.why = generateReasoning(analysis, dir);
 
     // 4) Rendu
     state.lastResult = final;
