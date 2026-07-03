@@ -390,6 +390,112 @@
   .verdict.sell .vdir{color:var(--bear-soft);text-shadow:0 0 40px rgba(196,107,92,0.3)}
   .verdict.idle .vdir{color:var(--text-4);font-size:64px}
   @media (min-width:760px){.verdict.idle .vdir{font-size:96px}}
+  /* ---------- Verdict hero : SELL/BUY + candle column ---------- */
+  .verdict .vdirmain{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    width:100%;
+    min-height:128px;
+  }
+  .verdict.idle .vdirmain{min-height:96px}
+  /* ---------- Candlestick column (v7.2.0) ---------- */
+  .verdict .signal-chart{
+    /* hide on idle / loading so it doesn't distract */
+    display:none;
+    width:64px;
+    flex-shrink:0;
+    margin:0 4px;
+    --c-fill:var(--bear-soft);
+    --c-stroke:var(--bear);
+    --c-glow:rgba(196,107,92,0.85);
+  }
+  .verdict.buy .signal-chart{
+    --c-fill:var(--bull-soft);
+    --c-stroke:var(--bull);
+    --c-glow:rgba(95,164,126,0.85);
+  }
+  .verdict.buy .signal-chart,
+  .verdict.sell .signal-chart{display:block}
+  .verdict .signal-chart svg{
+    width:100%;
+    height:auto;
+    display:block;
+    overflow:visible;
+    filter:drop-shadow(0 6px 14px rgba(0,0,0,0.35));
+  }
+  .verdict .signal-chart .candle-wick{
+    stroke:var(--c-stroke);
+    stroke-width:1.4;
+    stroke-linecap:round;
+  }
+  .verdict .signal-chart .candle-body{
+    fill:var(--c-fill);
+    stroke:var(--c-stroke);
+    stroke-width:0.8;
+  }
+  .verdict .signal-chart .signal-arrow{
+    fill:var(--c-fill);
+    stroke:var(--c-stroke);
+    stroke-width:0.8;
+    stroke-linejoin:round;
+    filter:drop-shadow(0 0 6px var(--c-glow));
+  }
+  /* hide the arrow direction that doesn't apply */
+  .verdict .signal-chart .arrow-up{display:none}
+  .verdict .signal-chart .arrow-down{display:none}
+  .verdict.buy .signal-chart .arrow-up{display:block}
+  .verdict.sell .signal-chart .arrow-down{display:block}
+
+  /* Sequential blinker — SELL: top→bottom light wave, then arrow glow */
+  @keyframes candleGlow{
+    0%, 70%, 100%{ opacity:0.32; filter:drop-shadow(0 0 0 transparent); }
+    15%, 30%    { opacity:1;    filter:drop-shadow(0 0 9px var(--c-glow)); }
+  }
+  /* Arrow keeps a strong baseline glow + amplifies on its turn in the wave */
+  @keyframes arrowGlow{
+    0%, 15%, 100%{
+      opacity:0.85;
+      filter:drop-shadow(0 0 8px var(--c-glow));
+    }
+    40%, 55%{
+      opacity:1;
+      filter:drop-shadow(0 0 18px var(--c-glow)) drop-shadow(0 0 4px var(--c-glow));
+    }
+  }
+  .verdict .signal-chart .candle{
+    animation:candleGlow 2.4s ease-in-out infinite;
+    transform-origin:center;
+  }
+  /* SELL — top → middle → bottom → arrow ↓ */
+  .verdict.sell .signal-chart .candle[data-i="0"]{ animation-delay:0s }
+  .verdict.sell .signal-chart .candle[data-i="1"]{ animation-delay:0.3s }
+  .verdict.sell .signal-chart .candle[data-i="2"]{ animation-delay:0.6s }
+  .verdict.sell .signal-chart .signal-arrow{ animation-delay:0.9s }
+  /* BUY — bottom → middle → top → arrow ↑ */
+  .verdict.buy .signal-chart .candle[data-i="2"]{ animation-delay:0s }
+  .verdict.buy .signal-chart .candle[data-i="1"]{ animation-delay:0.3s }
+  .verdict.buy .signal-chart .candle[data-i="0"]{ animation-delay:0.6s }
+  .verdict.buy .signal-chart .signal-arrow{ animation-delay:0.9s }
+
+  /* pulse on arrow: subtle bounce in direction of trend */
+  @keyframes arrowBounceDown{
+    0%, 100%{ transform:translateY(-2px) }
+    30%, 60%{ transform:translateY(3px) }
+  }
+  @keyframes arrowBounceUp{
+    0%, 100%{ transform:translateY(2px) }
+    30%, 60%{ transform:translateY(-3px) }
+  }
+  .verdict.sell .signal-chart .signal-arrow{ animation: arrowGlow 2.4s ease-in-out infinite, arrowBounceDown 2.4s ease-in-out infinite; animation-delay: 0.9s, 0.9s; }
+  .verdict.buy  .signal-chart .signal-arrow{ animation: arrowGlow 2.4s ease-in-out infinite, arrowBounceUp 2.4s ease-in-out infinite;   animation-delay: 0.9s, 0.9s; }
+
+  @media (max-width:540px){
+    .verdict .vdirmain{gap:8px;min-height:96px}
+    .verdict .signal-chart{width:54px}
+  }
+
   .verdict .vprice{
     text-align:center;
     font-size:16px;
@@ -1567,7 +1673,10 @@
   <!-- ============== VERDICT ============== -->
   <section id="verdict" class="verdict idle mb-12" aria-live="polite">
     <div class="vlabel">Signal in progress</div>
-    <div id="vDir" class="vdir">—</div>
+    <div class="vdirmain">
+      <div id="vDir" class="vdir">—</div>
+      <div class="signal-chart" id="vSignalChart" aria-hidden="true"></div>
+    </div>
     <div id="vPrice" class="vprice hide"><span id="vPriceVal" class="num">—</span><span class="sub" id="vPriceSub">—</span></div>
     <div id="vConf" class="vconfidence hide">
       <span id="vConfChip" class="vchip zero">EN ATTENTE</span>
@@ -1915,7 +2024,12 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.1.1";
+const APP_VERSION = "7.2.0";
+// v7.2.0 — verdict : colonne candlestick animée + flèche directionnelle à droite du texte SELL/BUY
+//                  • 3 chandeliers avec mèches, illumination séquentielle (top→bottom pour SELL, bottom→top pour BUY)
+//                  • Flèche glowing finale (↓ rouge pour SELL, ↑ verte pour BUY) culminant la vague de lumière
+//                  • Préserve tous les autres éléments du verdict : prix, chips confiance/source, score, timestamp
+//                  • Chart masqué en état idle, affiché sur signal BUY/SELL
 // v7.1.1 — synthèse : timestamp de génération + bloc "POURQUOI" (raison de la décision)
 // v7.1.0 — terme BUY/SELL en anglais + label "Signal in progress" + scintillement 10 min après signal
 // v7.0.1 — fix timeouts : proxies CORS en parallèle + timeout global 20s + compteur de progression
@@ -1989,9 +2103,10 @@ const MAX_CAPTURE_BYTES = 5 * 1024 * 1024;  // 5 MB
 /* ---------- DOM ---------- */
 const $ = id => document.getElementById(id);
 const ui = {
-  verdict: $("verdict"), vDir: $("vDir"), vPrice: $("vPrice"), vPriceVal: $("vPriceVal"),
+  verdict: $("verdict"), vDir: $("vDir"), vSignalChart: $("vSignalChart"), vPrice: $("vPrice"), vPriceVal: $("vPriceVal"),
   vPriceSub: $("vPriceSub"), vConf: $("vConf"), vConfChip: $("vConfChip"),
   vSrcChip: $("vSrcChip"), vRaison: $("vRaison"), vTs: $("vTs"),
+  vlabel: document.querySelector("#verdict .vlabel"),
   flags: $("flags"), synthBox: $("synthBox"), synthBadge: $("synthBadge"), synthMeta: $("synthMeta"),
   scoreFill: $("scoreFill"), scoreLabel: $("scoreLabel"), scoreComp: $("scoreComp"),
   tfTrend: $("tfTrend"), tfDesc: $("tfDesc"), tfAlign: $("tfAlign"),
@@ -3353,6 +3468,40 @@ function applySafetyNets(aiResult, analysis) {
 /* ====================================================================
    UI RENDERING
    ==================================================================== */
+/* ====================================================================
+   Signal candlestick chart (v7.2.0)
+   - 3 candles empiliés + flèche directionnelle (en haut pour BUY, en bas pour SELL)
+   - Animation séquentielle : SELL illumine de haut en bas, BUY de bas en haut
+   - La flèche est le dernier élément à s'illuminer (glowing drop-shadow)
+   ==================================================================== */
+function setupSignalChart() {
+  const host = ui.vSignalChart;
+  if (!host) return;
+  if (host.dataset.ready === "1") return;
+  // ViewBox : 80 large × 240 haut
+  // 3 chandeliers : top (i=0) à y=30-78, mid (i=1) à y=88-136, bot (i=2) à y=146-194
+  // Flèche haute (BUY) : y=0-22
+  // Flèche basse (SELL) : y=210-232
+  const svg = `
+<svg viewBox="0 0 80 240" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  <!-- Arrow UP (visible only for BUY) -->
+  <path class="signal-arrow arrow-up" data-i="3" d="M28 22 L52 22 L40 0 Z"/>
+  <!-- Top candle (data-i=0) -->
+  <line class="candle-wick" data-i="0" x1="40" y1="28" x2="40" y2="86"/>
+  <rect class="candle-body" data-i="0" x="32" y="38" width="16" height="40" rx="1"/>
+  <!-- Mid candle (data-i=1) -->
+  <line class="candle-wick" data-i="1" x1="40" y1="92" x2="40" y2="150"/>
+  <rect class="candle-body" data-i="1" x="32" y="102" width="16" height="40" rx="1"/>
+  <!-- Bottom candle (data-i=2) -->
+  <line class="candle-wick" data-i="2" x1="40" y1="156" x2="40" y2="214"/>
+  <rect class="candle-body" data-i="2" x="32" y="166" width="16" height="40" rx="1"/>
+  <!-- Arrow DOWN (visible only for SELL) -->
+  <path class="signal-arrow arrow-down" data-i="3" d="M28 218 L52 218 L40 240 Z"/>
+</svg>`;
+  host.innerHTML = svg.trim();
+  host.dataset.ready = "1";
+}
+
 function renderVerdict(result) {
   if (!result) {
     ui.verdict.className = "verdict idle";
@@ -3367,12 +3516,13 @@ function renderVerdict(result) {
       window._signalPulseTimer = null;
     }
     ui.verdict.classList.remove("pulse-active");
-    ui.vlabel.classList.remove("pulse-active");
+    if (ui.vlabel) ui.vlabel.classList.remove("pulse-active");
     return;
   }
   const { signal, confidence, price, ts, score, source } = result;
   ui.verdict.className = "verdict " + (signal === "BUY" ? "buy" : "sell");
   ui.vDir.textContent = signal === "BUY" ? "BUY" : "SELL";
+  // Le SVG chandeliers est pré-injecté à init ; ici on s'assure qu'il est prêt
   if (price) {
     ui.vPrice.classList.remove("hide");
     ui.vPriceVal.textContent = price.toFixed(2);
@@ -3390,11 +3540,11 @@ function renderVerdict(result) {
   // petit délai pour laisser le DOM se mettre à jour avec la classe buy/sell
   setTimeout(() => {
     ui.verdict.classList.add("pulse-active");
-    ui.vlabel.classList.add("pulse-active");
+    if (ui.vlabel) ui.vlabel.classList.add("pulse-active");
   }, 50);
   window._signalPulseTimer = setTimeout(() => {
     ui.verdict.classList.remove("pulse-active");
-    ui.vlabel.classList.remove("pulse-active");
+    if (ui.vlabel) ui.vlabel.classList.remove("pulse-active");
   }, 10 * 60 * 1000);  // 10 minutes
 }
 function renderFlags(flags) {
@@ -4135,6 +4285,8 @@ function init() {
   renderHistory();
   updateSessionBadge();
   updateCycleUI();
+  // Pré-injecter le SVG chandeliers pour qu'il soit prêt à s'afficher dès le 1er signal
+  setupSignalChart();
   setupAutoTimers();
   // Précharge les données pour avoir un verdict instantané au premier clic
   refreshDataOnly();
