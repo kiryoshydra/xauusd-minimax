@@ -2292,7 +2292,11 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.5.0";
+const APP_VERSION = "7.5.1";
+// v7.5.1 — FIX clic zones d'upload (CSV + capture) : l'input file imbriqué faisait buller le
+//           click() programmatique vers la zone (double invocation imbriquée, sélecteur avorté
+//           sur macOS). Correction : openFilePicker() via showPicker() natif (aucun événement
+//           dispatché) + garde anti-bulle + verrou de réentrance ; binds d'init isolés (bindSafe)
 // v7.5.0 — analyse Fable 5 des captures Hydratrade : bouton « Analyser avec Fable 5 » (API
 //           Anthropic vision directe navigateur, modèle claude-fable-5, repli automatique
 //           Opus 4.8 -> Sonnet 4.6 sur refus classifieur, prompt contextualisé avec calibration
@@ -4326,6 +4330,30 @@ function applySafetyNets(aiResult, analysis) {
    - Toute l'animation est pilotée en CSS (var --blink-cycle = 1.6s).
    ==================================================================== */
 /* ====================================================================
+   OUVERTURE FIABLE DU SÉLECTEUR DE FICHIERS (v7.5.1)
+   Bug corrigé : input file imbriqué dans sa zone cliquable -> le click()
+   programmatique dispatche un événement qui BULLE vers la zone, dont le
+   handler rappelle click() (double invocation imbriquée ; sur macOS le
+   sélecteur avorte). showPicker() ne dispatche AUCUN événement : la classe
+   de bug disparaît par construction. Repli click() pour les navigateurs
+   plus anciens, protégé par un verrou de réentrance.
+   ==================================================================== */
+function openFilePicker(input) {
+  if (!input || input.dataset.pickerBusy === "1") return;
+  input.dataset.pickerBusy = "1";
+  setTimeout(() => { delete input.dataset.pickerBusy; }, 400);
+  try {
+    if (typeof input.showPicker === "function") { input.showPicker(); return; }
+  } catch (e) { /* showPicker exige un geste utilisateur ; on retombe sur click() */ }
+  input.click();
+}
+/* Isole chaque bloc de bind d'init : si l'un casse, les suivants s'attachent
+   quand même et l'erreur est visible en console au lieu d'être silencieuse. */
+function bindSafe(name, fn) {
+  try { fn(); } catch (e) { console.error("init bind [" + name + "]:", e); }
+}
+
+/* ====================================================================
    ANALYSE FABLE 5 (v7.5.0)
    Envoie la capture Hydratrade à Claude Fable 5 (API Anthropic, appel
    direct navigateur) avec tout le contexte : règles prop firm, calibration
@@ -5506,17 +5534,18 @@ ui.btnClearHist.addEventListener("click", () => {
    EVENT HANDLERS — CAPTURE HYDRATRADE
    ==================================================================== */
 // Bouton caméra header -> file picker
-ui.btnCapture.addEventListener("click", () => ui.captureInput.click());
+ui.btnCapture.addEventListener("click", () => openFilePicker(ui.captureInput));
 
 // Click sur la zone -> file picker (sauf si on clique le bouton supprimer)
 ui.captureZone.addEventListener("click", e => {
   if (e.target.closest("#captureDel")) return;
-  ui.captureInput.click();
+  if (e.target === ui.captureInput) return; // bulle du click programmatique
+  openFilePicker(ui.captureInput);
 });
 ui.captureZone.addEventListener("keydown", e => {
   if (e.key === "Enter" || e.key === " ") {
     e.preventDefault();
-    ui.captureInput.click();
+    openFilePicker(ui.captureInput);
   }
 });
 
@@ -5555,7 +5584,7 @@ ui.captureDel.addEventListener("click", e => {
 });
 
 // Remplacer la capture (réouvre le file picker)
-ui.btnReplaceCapture.addEventListener("click", () => ui.captureInput.click());
+ui.btnReplaceCapture.addEventListener("click", () => openFilePicker(ui.captureInput));
 
 /* Cooldown tick */
 setInterval(updateCycleUI, 1000);
@@ -5616,16 +5645,21 @@ function init() {
   // Pré-injecter le SVG chandeliers pour qu'il soit prêt à s'afficher dès le 1er signal
   setupSignalChart();
   // Commutateur de timeframe : bind + labels selon le TF persistant
-  if (ui.tfSwitch) {
+  bindSafe("tf-switch", () => {
+    if (!ui.tfSwitch) return;
     ui.tfSwitch.querySelectorAll(".tf-opt").forEach(b =>
       b.addEventListener("click", () => setTimeframe(b.dataset.tf)));
-  }
-  updateTfUI();
+  });
+  bindSafe("tf-ui", () => updateTfUI());
   // Import CSV : clic, drag & drop, actions
-  if (ui.tradeImportZone) {
-    ui.tradeImportZone.addEventListener("click", () => ui.tradeImportInput.click());
+  bindSafe("csv-import", () => {
+    if (!ui.tradeImportZone) return;
+    ui.tradeImportZone.addEventListener("click", e => {
+      if (e.target === ui.tradeImportInput) return; // bulle du click programmatique
+      openFilePicker(ui.tradeImportInput);
+    });
     ui.tradeImportZone.addEventListener("keydown", e => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ui.tradeImportInput.click(); }
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFilePicker(ui.tradeImportInput); }
     });
     ui.tradeImportZone.addEventListener("dragover", e => { e.preventDefault(); ui.tradeImportZone.classList.add("dragover"); });
     ui.tradeImportZone.addEventListener("dragleave", () => ui.tradeImportZone.classList.remove("dragover"));
@@ -5634,13 +5668,11 @@ function init() {
       ui.tradeImportZone.classList.remove("dragover");
       if (e.dataTransfer && e.dataTransfer.files) handleTradeFiles(e.dataTransfer.files);
     });
-  }
-  if (ui.tradeImportInput) {
     ui.tradeImportInput.addEventListener("change", e => {
       if (e.target.files && e.target.files.length) handleTradeFiles(e.target.files);
       e.target.value = "";
     });
-  }
+  });
   if (ui.btnRecalibrate) {
     ui.btnRecalibrate.addEventListener("click", () => { recalibrate(); toast("Calibration recalculée ✓", "ok"); });
   }
@@ -5654,8 +5686,10 @@ function init() {
     });
   }
   // Boutons Fable 5 sur la capture
-  if (ui.btnFable) ui.btnFable.addEventListener("click", () => analyzeWithFable());
-  if (ui.btnOpenClaude) ui.btnOpenClaude.addEventListener("click", () => openInClaudeApp());
+  bindSafe("fable", () => {
+    if (ui.btnFable) ui.btnFable.addEventListener("click", () => analyzeWithFable());
+    if (ui.btnOpenClaude) ui.btnOpenClaude.addEventListener("click", () => openInClaudeApp());
+  });
   setupAutoTimers();
   // Précharge les données pour avoir un verdict instantané au premier clic
   refreshDataOnly();
