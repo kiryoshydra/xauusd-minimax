@@ -400,6 +400,65 @@
     min-height:128px;
   }
   .verdict.idle .vdirmain{min-height:96px}
+  /* ---------- Bouton Fable 5 ---------- */
+  .btn-fable{
+    border-color:rgba(157,107,255,0.45) !important;
+    color:#c9b2ff !important;
+    background:linear-gradient(180deg, rgba(157,107,255,0.10), rgba(157,107,255,0.04)) !important;
+  }
+  .btn-fable:hover{
+    border-color:#9d6bff !important;
+    color:#e2d5ff !important;
+    box-shadow:0 0 18px rgba(157,107,255,0.25);
+  }
+  .btn-fable:disabled{opacity:.55;cursor:wait}
+
+  /* ---------- Calibration réelle (import CSV) ---------- */
+  .calib-summary{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
+    gap:10px;
+    margin:14px 0;
+  }
+  .calib-stat{
+    background:rgba(255,255,255,0.02);
+    border:1px solid #232b38;
+    border-radius:10px;
+    padding:10px 12px;
+  }
+  .calib-stat .lbl{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--text-3);
+    margin-bottom:4px;
+  }
+  .calib-stat .val{
+    font-family:'JetBrains Mono',monospace;
+    font-size:15px;
+    color:var(--text);
+  }
+  .calib-stat .val.up{color:var(--bull-soft)}
+  .calib-stat .val.dn{color:var(--bear-soft)}
+  .calib-stat .val.ne{color:var(--text-2)}
+  .calib-section-title{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--text-3);
+    margin:14px 0 6px;
+  }
+  .calib-skipped{
+    margin-top:10px;
+    padding:10px 12px;
+    border-radius:10px;
+    background:rgba(216,140,126,0.08);
+    border:1px solid rgba(216,140,126,0.25);
+    font-size:12px;
+    color:var(--text-2);
+    line-height:1.5;
+  }
+
   /* ---------- Commutateur de timeframe (header) ---------- */
   .tf-switch{
     display:inline-flex;
@@ -1910,6 +1969,14 @@
     </div>
 
     <div id="captureActions" class="capture-actions hide">
+      <button id="btnFable" class="capture-btn-replace btn-fable" title="Analyse visuelle du graphique par Claude Fable 5 (clé API requise, Réglages)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.4L19 10l-5.1 1.6L12 17l-1.9-5.4L5 10l5.1-1.6z"/><path d="M19 15l.9 2.6L22.5 18l-2.6.9L19 21.5l-.9-2.6L15.5 18l2.6-.9z"/></svg>
+        <span>Analyser avec Fable 5</span>
+      </button>
+      <button id="btnOpenClaude" class="capture-btn-replace" title="Copie la capture et ouvre l'app Claude avec le prompt pré-rempli (sans clé API)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <span>Ouvrir dans Claude</span>
+      </button>
       <button id="btnReplaceCapture" class="capture-btn-replace" title="Charger une autre image">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         <span>Remplacer la capture</span>
@@ -1919,6 +1986,54 @@
     <div class="capture-tip">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
       <span><strong>L'analyse technique se lance automatiquement</strong> au chargement de la capture. Utilise le bouton <strong>Remplacer la capture</strong> pour en charger une autre.</span>
+    </div>
+  </section>
+
+  <!-- ============== CALIBRATION RÉELLE (IMPORT CSV HYDRATRADE) ============== -->
+  <section class="card mb-12 capture-card" id="tradeImportCard">
+    <h2>
+      <span class="capture-title">
+        <svg class="capture-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-3-3L7 14"/></svg>
+        <span>Calibration réelle · Historique Hydratrade</span>
+      </span>
+      <span class="capture-status" id="tradeImportStatus" data-state="empty">
+        <span class="status-dot"></span>
+        <span class="status-text">Calibration par défaut</span>
+      </span>
+    </h2>
+
+    <div id="tradeImportZone" class="capture-zone" role="button" tabindex="0" aria-label="Importer un export CSV Hydratrade">
+      <input type="file" id="tradeImportInput" accept=".csv,text/csv" hidden multiple />
+      <div class="capture-empty" id="tradeImportPrompt">
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div class="upload-title">Déposez votre export CSV Hydratrade</div>
+        <div class="upload-subtitle">ou cliquez pour parcourir — plusieurs fichiers acceptés, fusionnés automatiquement</div>
+        <div class="upload-formats">
+          <span class="fmt-pill">CSV</span>
+          <span class="fmt-pill-sep">·</span>
+          <span class="fmt-max">order · symbol · openTime · closeTime · type · volume · open_price · close_price · tp · sl · commission · profit</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="tradeImportStats" class="hide"></div>
+
+    <div id="tradeImportActions" class="capture-actions hide">
+      <button id="btnRecalibrate" class="capture-btn-replace" title="Forcer un recalcul de la calibration">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <span>Recalculer la calibration</span>
+      </button>
+      <button id="btnClearTrades" class="capture-btn-replace" title="Effacer l'historique de trades importé" style="color:var(--bear-soft)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        <span>Effacer l'historique importé</span>
+      </button>
+    </div>
+
+    <div class="capture-tip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span><strong>Recalibre automatiquement</strong> les fenêtres horaires, les jours et le biais BUY/SELL du score technique dès que 10 trades XAUUSD sont importés. En dessous, la calibration par défaut (vos 20 premiers trades) reste active. Import cumulatif : les doublons (même n° d'ordre) sont fusionnés sans jamais dupliquer.</span>
     </div>
   </section>
 
@@ -2040,6 +2155,12 @@
       <label for="apiTwelve">Clé API Twelve Data <span class="muted">(recommandé)</span></label>
       <input type="password" id="apiTwelve" placeholder="Optionnel — fallback Yahoo" autocomplete="off" />
       <div class="hint">Gratuit sur <a href="https://twelvedata.com/" target="_blank" rel="noopener">twelvedata.com</a>. Si vide, l'app utilise Yahoo Finance via proxies CORS.</div>
+    </div>
+
+    <div class="field">
+      <label for="apiAnthropic">Clé API Anthropic <span class="muted">(analyse Fable 5 des captures)</span></label>
+      <input type="password" id="apiAnthropic" placeholder="sk-ant-… — optionnel" autocomplete="off" />
+      <div class="hint">À créer sur <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>. Stockée uniquement dans ce navigateur (localStorage). Permet le bouton « Analyser avec Fable 5 » sur la capture.</div>
     </div>
 
     <div class="field">
@@ -2171,7 +2292,17 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.3.0";
+const APP_VERSION = "7.5.0";
+// v7.5.0 — analyse Fable 5 des captures Hydratrade : bouton « Analyser avec Fable 5 » (API
+//           Anthropic vision directe navigateur, modèle claude-fable-5, repli automatique
+//           Opus 4.8 -> Sonnet 4.6 sur refus classifieur, prompt contextualisé avec calibration
+//           réelle + verdict local, garde-fous unifiés) + « Ouvrir dans Claude » (capture copiée
+//           dans le presse-papiers + deep link claude://new?q= avec prompt pré-rempli, repli web),
+//           clé Anthropic dans les Réglages (localStorage xa_ak, export/import, reset)
+// v7.4.0 — import CSV Hydratrade (glisser-déposer, multi-fichiers cumulatifs, dédoublonnage par
+//           n° d'ordre) avec calibration dynamique : sessions horaires, jours de la semaine et
+//           biais BUY/SELL recalculés depuis les vrais trades (seuil de confiance 10 trades XAUUSD,
+//           repli automatique sur la calibration par défaut sous ce seuil), export/import JSON étendu
 // v7.3.0 — timeframe commutable 5 min / 15 min (tendance adaptative 30m/1h), version complète
 //           affichée dans le header, +5 indicateurs directionnels (SuperTrend, Parabolic SAR,
 //           Heikin-Ashi, OBV, Choppiness Index), consensus directionnel 🐂/🐻, garde-fous
@@ -2246,7 +2377,7 @@ const TIMEFRAMES = {
 function TF() { return TIMEFRAMES[state.tf] || TIMEFRAMES["15m"]; }
 
 // Session & jour — calibration 20 trades Helder (heure Berlin)
-const SESSION_SCORES = [
+const DEFAULT_SESSION_SCORES = [
   { from: 5,  to: 9,  score: -20, label: "ZONE ROUGE 05-09 h", tone: "r" },
   { from: 9,  to: 10, score: -18, label: "DANGER 09-10 h (London open)", tone: "r" },
   { from: 10, to: 12, score: +15, label: "Optimale 10-12 h", tone: "g" },
@@ -2254,7 +2385,7 @@ const SESSION_SCORES = [
   { from: 13, to: 14, score: +15, label: "Optimale 13-14 h", tone: "g" },
   { from: 14, to: 16, score: +6,  label: "Correcte 14-16 h", tone: "b" }
 ];
-const DAY_SCORES = {
+const DEFAULT_DAY_SCORES = {
   0: { score: 0,  label: "Dimanche — marché fermé", closed: true },
   1: { score: -12, label: "Lundi — 0% WR historique" },
   3: { score: +5,  label: "Mercredi — 100% WR" },
@@ -2268,7 +2399,13 @@ const PROP_FIRM = {
 /* ---------- STATE ---------- */
 const state = {
   tf: "15m",                   // timeframe de trading actif ("5m" | "15m")
+  tradeHistory: [],             // trades importés depuis les CSV Hydratrade
+  tradeMeta: { importedAt: null, files: [] },
+  calibration: null,            // { session, day, directional, totalAll, totalXau, isDefault, importedAt }
   twelveKey: "",
+  anthropicKey: "",             // clé API Anthropic (analyse Fable 5 des captures)
+  fableAnalyzing: false,
+  lastAnalysis: null,           // snapshot du dernier objet analyze() (pour les garde-fous Fable)
   notifLevel: "fort",
   autoRefresh: false,
   autoMorning: true,
@@ -2307,12 +2444,18 @@ const ui = {
   cycle: $("cycle"), cycleTimer: $("cycleTimer"),
   modal: $("modal"),
   apiTwelve: $("apiTwelve"),
+  apiAnthropic: $("apiAnthropic"),
+  btnFable: $("btnFable"), btnOpenClaude: $("btnOpenClaude"),
   notifLevel: $("notifLevel"),
   autoRefresh: $("autoRefresh"), autoMorning: $("autoMorning"),
   autoAnalyze: $("autoAnalyze"),
   appVersion: $("appVersion"),
   tfSwitch: $("tfSwitch"), indTitle: $("indTitle"), chartTitle: $("chartTitle"),
   trendTitle: $("trendTitle"), trendDirLbl: $("trendDirLbl"),
+  tradeImportCard: $("tradeImportCard"), tradeImportStatus: $("tradeImportStatus"),
+  tradeImportZone: $("tradeImportZone"), tradeImportInput: $("tradeImportInput"),
+  tradeImportStats: $("tradeImportStats"), tradeImportActions: $("tradeImportActions"),
+  btnRecalibrate: $("btnRecalibrate"), btnClearTrades: $("btnClearTrades"),
   btnSave: $("btnSave"), btnClose: $("btnClose"),
   btnExport: $("btnExport"), btnImport: $("btnImport"), importInput: $("importInput"),
   btnHelp: $("btnHelp"), helpModal: $("helpModal"), btnCloseHelp: $("btnCloseHelp"),
@@ -2342,11 +2485,13 @@ function loadSettings() {
   state.tf = LS.get("xa_tf", "15m");
   if (!TIMEFRAMES[state.tf]) state.tf = "15m";
   state.twelveKey = LS.get("xa_tk", "");
+  state.anthropicKey = LS.get("xa_ak", "");
   state.notifLevel = LS.get("xa_nl", "fort");
   state.autoRefresh = LS.get("xa_ar", false);
   state.autoMorning = LS.get("xa_am", true);
   state.autoAnalyzeOnCapture = LS.get("xa_aac", true);
   ui.apiTwelve.value = state.twelveKey;
+  if (ui.apiAnthropic) ui.apiAnthropic.value = state.anthropicKey;
   ui.notifLevel.value = state.notifLevel;
   ui.autoRefresh.checked = !!state.autoRefresh;
   ui.autoMorning.checked = !!state.autoMorning;
@@ -2356,11 +2501,13 @@ function loadSettings() {
 }
 function saveSettings() {
   state.twelveKey = ui.apiTwelve.value.trim();
+  state.anthropicKey = ui.apiAnthropic ? ui.apiAnthropic.value.trim() : state.anthropicKey;
   state.notifLevel = ui.notifLevel.value;
   state.autoRefresh = ui.autoRefresh.checked;
   state.autoMorning = ui.autoMorning.checked;
   state.autoAnalyzeOnCapture = ui.autoAnalyze ? ui.autoAnalyze.checked : true;
   LS.set("xa_tk", state.twelveKey);
+  LS.set("xa_ak", state.anthropicKey);
   LS.set("xa_nl", state.notifLevel);
   LS.set("xa_ar", state.autoRefresh);
   LS.set("xa_am", state.autoMorning);
@@ -2529,14 +2676,14 @@ function formatTimeBerlin(d) {
 }
 function getSessionScore(d = nowBerlin()) {
   const h = d.getHours();
-  for (const r of SESSION_SCORES) {
+  for (const r of ((state.calibration && state.calibration.session) || DEFAULT_SESSION_SCORES)) {
     if (h >= r.from && h < r.to) return r;
   }
   return { from: 0, to: 24, score: 0, label: "Hors session", tone: "b" };
 }
 function getDayInfo(d = nowBerlin()) {
   const day = d.getDay();
-  return DAY_SCORES[day] || { score: 0, label: "Jour standard" };
+  return ((state.calibration && state.calibration.day) || DEFAULT_DAY_SCORES)[day] || { score: 0, label: "Jour standard" };
 }
 function isWeekend(d = nowBerlin()) {
   const day = d.getDay();
@@ -3283,6 +3430,258 @@ function choppiness(candles, period = 14) {
   return 100 * Math.log10(sumTR / range) / Math.log10(period);
 }
 
+/* ====================================================================
+   IMPORT CSV HYDRATRADE & CALIBRATION DYNAMIQUE (v7.4.0)
+   Remplace la calibration figée (20 trades analysés manuellement en juin
+   2026) par une calibration VIVANTE recalculée depuis les exports CSV
+   réels d'Hydratrade, importables à tout moment et cumulables. En
+   dessous du seuil de confiance (10 trades XAUUSD), on retombe sur la
+   calibration par défaut — jamais de régression silencieuse.
+   ==================================================================== */
+const MONTH_MAP = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
+const CSV_HEADER_ALIASES = {
+  order:      ["order","orderid","orderid#","ticket","ticketid","id","#"],
+  symbol:     ["symbol","instrument","pair","asset"],
+  openTime:   ["opentime","opendate","open_time","open_date","time","date"],
+  closeTime:  ["closetime","closedate","close_time","close_date"],
+  type:       ["type","side","direction","action"],
+  volume:     ["volume","lots","lot","size","qty","quantity"],
+  open:       ["openprice","open_price","open","entryprice","entry"],
+  close:      ["closeprice","close_price","close","exitprice","exit"],
+  tp:         ["tp","takeprofit","take_profit"],
+  sl:         ["sl","stoploss","stop_loss"],
+  commission: ["commission","comm","fees","fee","swap"],
+  profit:     ["profit","pnl","p/l","pl","netprofit","net_profit","result"]
+};
+const MIN_SAMPLE_BUCKET = 3;   // trades min par tranche horaire/jour pour ne pas retomber sur le défaut
+const MIN_SAMPLE_TOTAL  = 10;  // trades XAUUSD min pour activer la recalibration globale
+const MAX_TRADES_STORED = 2000;
+
+/* ---------- Parsing CSV bas niveau (RFC4180 + tolérances réelles) ---------- */
+function normalizeHeaderCell(h) {
+  return String(h || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+function detectCsvDelimiter(headerLine) {
+  const commas = (headerLine.match(/,/g) || []).length;
+  const semis  = (headerLine.match(/;/g) || []).length;
+  return semis > commas ? ";" : ",";
+}
+function parseCsvLine(line, delim) {
+  const out = [];
+  let cur = "", inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQ) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; }
+        else inQ = false;
+      } else cur += ch;
+    } else {
+      if (ch === '"') inQ = true;
+      else if (ch === delim) { out.push(cur); cur = ""; }
+      else cur += ch;
+    }
+  }
+  out.push(cur);
+  return out.map(s => s.trim());
+}
+function parseFlexibleNumber(str) {
+  if (str == null) return null;
+  let s = String(str).trim();
+  if (!s) return null;
+  s = s.replace(/[€$£\s]/g, "");
+  if (s.includes(",") && s.includes(".")) s = s.replace(/,/g, "");       // 1,234.56 -> 1234.56
+  else if (s.includes(",") && !s.includes(".")) s = s.replace(",", "."); // 1234,56  -> 1234.56
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+function parseFlexibleDate(str) {
+  if (str == null) return null;
+  const s = String(str).trim();
+  if (!s) return null;
+  // Excel serial date (ex. 46123.708333)
+  if (/^\d+(\.\d+)?$/.test(s) && Number(s) > 20000 && Number(s) < 80000) {
+    return Date.UTC(1899, 11, 30) + Number(s) * 86400000;
+  }
+  // Format JS Date.toString() typique des exports Hydratrade :
+  // "Tue Jun 23 2026 17:04:41 GMT+0000 (Coordinated Universal Time)"
+  let m = s.match(/^\w{3}\s+(\w{3})\s+(\d{1,2})\s+(\d{4})\s+(\d{2}):(\d{2}):(\d{2})\s+GMT([+-])(\d{2})(\d{2})/);
+  if (m && MONTH_MAP[m[1]] !== undefined) {
+    const sign = m[7] === "-" ? -1 : 1;
+    const offsetMs = sign * (parseInt(m[8], 10) * 60 + parseInt(m[9], 10)) * 60000;
+    const localMs = Date.UTC(+m[3], MONTH_MAP[m[1]], +m[2], +m[4], +m[5], +m[6]);
+    return localMs - offsetMs;
+  }
+  // ISO 8601 : "YYYY-MM-DD HH:mm:ss" ou "YYYY-MM-DDTHH:mm:ss"
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(:(\d{2}))?/);
+  if (m) return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[7] || 0));
+  // DD.MM.YYYY HH:mm(:ss)
+  m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})[ T](\d{2}):(\d{2})(:(\d{2}))?/);
+  if (m) return Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4], +m[5], +(m[7] || 0));
+  // DD/MM/YYYY HH:mm(:ss)
+  m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})[ T](\d{2}):(\d{2})(:(\d{2}))?/);
+  if (m) return Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4], +m[5], +(m[7] || 0));
+  // Dernier recours : parsing natif (force UTC si aucune zone n'est précisée)
+  const hasTz = /[zZ]$|[+-]\d{2}:?\d{2}$/.test(s);
+  const t = Date.parse(hasTz ? s : s.replace(" ", "T") + "Z");
+  return isNaN(t) ? null : t;
+}
+function berlinHourDay(ms) {
+  // Conversion timezone-aware (gère le passage heure d'été/hiver automatiquement,
+  // contrairement à un décalage fixe +1/+2 codé en dur).
+  const d = new Date(ms);
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Europe/Berlin", hour: "numeric", hour12: false, weekday: "short"
+    }).formatToParts(d);
+    const hourPart = parts.find(p => p.type === "hour");
+    const wdPart = parts.find(p => p.type === "weekday");
+    const wdMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+    const hour = hourPart ? (parseInt(hourPart.value, 10) % 24) : d.getUTCHours();
+    const day = wdPart && wdMap[wdPart.value] !== undefined ? wdMap[wdPart.value] : d.getUTCDay();
+    return { hour, day };
+  } catch (e) {
+    // Environnement sans ICU complet : repli sur UTC (dégradé mais fonctionnel)
+    return { hour: d.getUTCHours(), day: d.getUTCDay() };
+  }
+}
+function parseHydratradeCSV(text) {
+  if (!text || !text.trim()) throw new Error("Fichier CSV vide.");
+  const clean = text.replace(/^\uFEFF/, "");
+  const rawLines = clean.split(/\r\n|\r|\n/).filter(l => l.trim().length > 0);
+  if (rawLines.length < 2) throw new Error("Le CSV ne contient que l'en-tête, aucune ligne de trade.");
+  const delim = detectCsvDelimiter(rawLines[0]);
+  const headerCells = parseCsvLine(rawLines[0], delim).map(normalizeHeaderCell);
+  const colIndex = {};
+  for (const [field, aliases] of Object.entries(CSV_HEADER_ALIASES)) {
+    const idx = headerCells.findIndex(h => aliases.includes(h));
+    if (idx >= 0) colIndex[field] = idx;
+  }
+  const required = ["openTime", "type", "profit"];
+  const missing = required.filter(f => colIndex[f] === undefined);
+  if (missing.length) {
+    throw new Error("Colonnes obligatoires manquantes (" + missing.join(", ") + "). Colonnes détectées : " + headerCells.join(", "));
+  }
+  const trades = [];
+  const skipped = [];
+  for (let i = 1; i < rawLines.length; i++) {
+    const cells = parseCsvLine(rawLines[i], delim);
+    if (!cells.length || cells.every(c => !c)) continue;
+    const get = f => (colIndex[f] !== undefined ? cells[colIndex[f]] : undefined);
+    try {
+      const openMs = parseFlexibleDate(get("openTime"));
+      if (openMs == null) throw new Error("openTime illisible (" + get("openTime") + ")");
+      const closeMs = parseFlexibleDate(get("closeTime"));
+      const rawType = (get("type") || "").toString().trim().toUpperCase();
+      const type = /BUY|LONG/.test(rawType) ? "BUY" : /SELL|SHORT/.test(rawType) ? "SELL" : null;
+      if (!type) throw new Error("type ni BUY ni SELL (" + rawType + ")");
+      const profit = parseFlexibleNumber(get("profit"));
+      if (profit == null) throw new Error("profit illisible (" + get("profit") + ")");
+      const { hour, day } = berlinHourDay(openMs);
+      const orderRaw = (get("order") || "").toString().trim();
+      trades.push({
+        order: orderRaw || (openMs + "-" + type + "-" + i),
+        symbol: (get("symbol") || "XAUUSD").toString().trim().toUpperCase(),
+        openTime: openMs, closeTime: closeMs,
+        type,
+        volume: parseFlexibleNumber(get("volume")),
+        open: parseFlexibleNumber(get("open")),
+        close: parseFlexibleNumber(get("close")),
+        tp: parseFlexibleNumber(get("tp")),
+        sl: parseFlexibleNumber(get("sl")),
+        commission: parseFlexibleNumber(get("commission")) || 0,
+        profit, win: profit > 0,
+        hour, day
+      });
+    } catch (e) {
+      skipped.push({ line: i + 1, reason: e.message, raw: rawLines[i].slice(0, 120) });
+    }
+  }
+  if (!trades.length) {
+    throw new Error("Aucun trade exploitable (" + skipped.length + " ligne(s) ignorée(s) — vérifie le format des colonnes).");
+  }
+  return { trades, skipped, columnsFound: headerCells };
+}
+
+/* ---------- Persistance & fusion ---------- */
+function loadTradeHistory() {
+  const trades = LS.get("xa_trades", []);
+  const meta = LS.get("xa_trades_meta", { importedAt: null, files: [] });
+  return { trades: Array.isArray(trades) ? trades : [], meta };
+}
+function saveTradeHistory(trades, meta) {
+  const capped = trades.slice(-MAX_TRADES_STORED);
+  LS.set("xa_trades", capped);
+  LS.set("xa_trades_meta", meta);
+  return capped;
+}
+function mergeTradeHistory(existing, incoming) {
+  // Fusion par n° d'ordre (upsert) — un ré-import du même export est un no-op,
+  // un import partiellement recouvrant complète l'historique sans doublon.
+  const map = new Map(existing.map(t => [t.order, t]));
+  for (const t of incoming) map.set(t.order, t);
+  return Array.from(map.values()).sort((a, b) => a.openTime - b.openTime);
+}
+
+/* ---------- Moteur de calibration dynamique ---------- */
+function bucketLabelBase(from, to) { return pad2(from) + "-" + pad2(to) + " h"; }
+function dayNameFr(d) {
+  return ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"][d] || "Jour";
+}
+function computeSessionCalibration(trades) {
+  return DEFAULT_SESSION_SCORES.map(bucket => {
+    const inBucket = trades.filter(t => t.hour >= bucket.from && t.hour < bucket.to);
+    if (inBucket.length < MIN_SAMPLE_BUCKET) return { ...bucket };
+    const wins = inBucket.filter(t => t.win).length;
+    const wr = wins / inBucket.length;
+    const dampen = Math.min(1, inBucket.length / 8); // confiance croissante avec l'échantillon
+    const score = Math.max(-20, Math.min(20, Math.round((wr - 0.5) * 40 * dampen)));
+    const tone = score >= 8 ? "g" : score <= -8 ? "r" : "b";
+    const label = bucketLabelBase(bucket.from, bucket.to) + " · " + Math.round(wr * 100) + "% WR (" + inBucket.length + " trades)";
+    return { from: bucket.from, to: bucket.to, score, label, tone };
+  });
+}
+function computeDayCalibration(trades) {
+  const out = {};
+  for (let d = 0; d <= 6; d++) {
+    const def = DEFAULT_DAY_SCORES[d] || { score: 0, label: dayNameFr(d) };
+    if (def.closed) { out[d] = { ...def }; continue; }
+    const inDay = trades.filter(t => t.day === d);
+    if (inDay.length < MIN_SAMPLE_BUCKET) { out[d] = { ...def }; continue; }
+    const wins = inDay.filter(t => t.win).length;
+    const wr = wins / inDay.length;
+    const dampen = Math.min(1, inDay.length / 8);
+    const score = Math.max(-15, Math.min(15, Math.round((wr - 0.5) * 30 * dampen)));
+    out[d] = { score, label: dayNameFr(d) + " · " + Math.round(wr * 100) + "% WR (" + inDay.length + " trades)" };
+  }
+  return out;
+}
+function computeDirectionalStats(trades) {
+  const wrOf = arr => (arr.length ? Math.round(100 * arr.filter(t => t.win).length / arr.length) : null);
+  const buy = trades.filter(t => t.type === "BUY");
+  const sell = trades.filter(t => t.type === "SELL");
+  return {
+    buy:  { count: buy.length,  wr: wrOf(buy) },
+    sell: { count: sell.length, wr: wrOf(sell) },
+    overall: { count: trades.length, wr: wrOf(trades) }
+  };
+}
+function recalibrate() {
+  const all = state.tradeHistory || [];
+  const xau = all.filter(t => (t.symbol || "").includes("XAU"));
+  const useDynamic = xau.length >= MIN_SAMPLE_TOTAL;
+  state.calibration = {
+    session: useDynamic ? computeSessionCalibration(xau) : DEFAULT_SESSION_SCORES,
+    day: useDynamic ? computeDayCalibration(xau) : DEFAULT_DAY_SCORES,
+    directional: computeDirectionalStats(xau.length ? xau : all),
+    totalAll: all.length,
+    totalXau: xau.length,
+    isDefault: !useDynamic,
+    importedAt: state.tradeMeta ? state.tradeMeta.importedAt : null
+  };
+  if (typeof renderTradeImportPanel === "function") renderTradeImportPanel();
+}
+
 async function analyze(candles15, candles1h, dxy) {
   const closes = candles15.map(c => c.c);
   const last = closes[closes.length - 1];
@@ -3815,7 +4214,10 @@ function applySafetyNets(aiResult, analysis) {
     if (!aligns || !strong) {
       if (confidence === "FORT") confidence = "MOYEN";
       if (!strong) {
-        flags.push({ tone: "r", text: "BUY : score < 55 — vos BUY ont 14% de réussite historique" });
+        const bwr = state.calibration && state.calibration.directional.buy.wr;
+        const bn  = state.calibration && state.calibration.directional.buy.count;
+        const buyTxt = bwr != null ? `${bwr}% de réussite historique (${bn} trades)` : "historique BUY insuffisant — prudence";
+        flags.push({ tone: "r", text: "BUY : score < 55 — vos BUY ont " + buyTxt });
         confidence = "FAIBLE";
       }
       if (!aligns) {
@@ -3833,13 +4235,13 @@ function applySafetyNets(aiResult, analysis) {
     // neutre
   }
 
-  // Garde 4: lundi
+  // Garde 4: jour de la semaine — généralisé à la calibration active
+  // (par défaut : lundi pénalisé, mercredi bonifié ; recalculé si CSV importé)
   const dNow = nowBerlin();
-  if (dNow.getDay() === 1) {
-    flags.push({ tone: "r", text: "Lundi — 0% de réussite historique" });
-  }
-  if (dNow.getDay() === 3 && confidence === "FAIBLE") {
-    flags.push({ tone: "g", text: "Mercredi — 100% WR historique" });
+  const dInfo = ((state.calibration && state.calibration.day) || DEFAULT_DAY_SCORES)[dNow.getDay()];
+  if (dInfo && !dInfo.closed) {
+    if (dInfo.score <= -8) flags.push({ tone: "r", text: dInfo.label + " — prudence renforcée" });
+    else if (dInfo.score >= 8 && confidence === "FAIBLE") flags.push({ tone: "g", text: dInfo.label });
   }
 
   // Garde 5: opposé au TF de tendance
@@ -3923,6 +4325,265 @@ function applySafetyNets(aiResult, analysis) {
      La classe .buy/.sell du verdict sélectionne l'escalier affiché.
    - Toute l'animation est pilotée en CSS (var --blink-cycle = 1.6s).
    ==================================================================== */
+/* ====================================================================
+   ANALYSE FABLE 5 (v7.5.0)
+   Envoie la capture Hydratrade à Claude Fable 5 (API Anthropic, appel
+   direct navigateur) avec tout le contexte : règles prop firm, calibration
+   réelle recalculée depuis les CSV, timeframe actif, dernière analyse
+   technique locale. Verdict unique rendu dans la bannière officielle.
+
+   Spécificités Fable 5 (docs Anthropic, vérifiées 04/07/2026) :
+   - model: "claude-fable-5" ; temperature NON définie (doit être 1.0 ou absente)
+   - thinking adaptatif toujours actif -> les blocs de réponse sont extraits
+     PAR TYPE ("text"), jamais par index
+   - refus possibles via stop_reason "refusal" (HTTP 200) -> repli
+     automatique sur claude-opus-4-8 puis claude-sonnet-4-6
+   ==================================================================== */
+const FABLE_MODELS = ["claude-fable-5", "claude-opus-4-8", "claude-sonnet-4-6"];
+const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
+
+function splitDataUrl(dataUrl) {
+  // "data:image/png;base64,AAAA..." -> { mediaType, base64 }
+  const m = /^data:([a-z0-9.+/-]+);base64,(.+)$/i.exec(dataUrl || "");
+  if (!m) throw new Error("Capture illisible (dataURL invalide)");
+  return { mediaType: m[1].toLowerCase(), base64: m[2] };
+}
+
+function buildFablePrompt() {
+  const t = TF();
+  const cal = state.calibration;
+  const dNow = nowBerlin();
+  const sess = getSessionScore(dNow);
+  const day = getDayInfo(dNow);
+  const lines = [];
+  lines.push("Tu analyses une capture d'écran d'un graphique XAUUSD (or spot) de la plateforme Hydratrade.");
+  lines.push("");
+  lines.push("CONTEXTE TRADER (système « A Caccia di Trader » / prop firm Hydratrade) :");
+  lines.push("- Seule décision possible : BUY ou SELL (jamais WAIT). TP ~" + PROP_FIRM.tp + "$ / SL ~" + PROP_FIRM.sl + "$ automatiques.");
+  lines.push("- Timeframe de trading actif : " + t.label + " (filtre de tendance " + t.trendLabel + ").");
+  lines.push("- Heure actuelle : " + pad2(dNow.getHours()) + ":" + pad2(dNow.getMinutes()) + " Berlin, " + dayNameFr(dNow.getDay()) + ".");
+  lines.push("- Qualité de la fenêtre actuelle : session « " + sess.label + " » (score " + (sess.score > 0 ? "+" : "") + sess.score + "), jour « " + day.label + " » (score " + (day.score > 0 ? "+" : "") + day.score + ").");
+  if (cal && !cal.isDefault) {
+    const d = cal.directional;
+    lines.push("");
+    lines.push("STATISTIQUES RÉELLES DU TRADER (recalculées depuis " + cal.totalXau + " trades XAUUSD importés) :");
+    lines.push("- Win rate global " + d.overall.wr + "% · BUY " + d.buy.wr + "% (" + d.buy.count + " trades) · SELL " + d.sell.wr + "% (" + d.sell.count + " trades).");
+    lines.push("- Le trader perd historiquement sur les BUY et avant 10h Berlin : exige une confluence exceptionnelle pour recommander BUY.");
+  } else {
+    lines.push("- Calibration par défaut : BUY historiquement faible (~14% WR), SELL correct (~46%) ; pertes avant 10h Berlin et gains 10h-14h.");
+  }
+  if (state.lastResult && state.lastResult.score != null) {
+    lines.push("");
+    lines.push("ANALYSE TECHNIQUE LOCALE LA PLUS RÉCENTE (indicateurs calculés par l'app) :");
+    lines.push("- Verdict local : " + state.lastResult.signal + " (confiance " + state.lastResult.confidence + "), score technique " + (state.lastResult.score > 0 ? "+" : "") + state.lastResult.score + "/100.");
+    if (state.lastResult.why && state.lastResult.why.length) {
+      lines.push("- Raisons : " + state.lastResult.why.join(" ; ") + ".");
+    }
+    lines.push("- Confronte ta lecture visuelle du graphique à ce verdict : confirme-le ou contredis-le en argumentant.");
+  }
+  lines.push("");
+  lines.push("TÂCHE : analyse visuellement le graphique (structure, chandeliers, momentum, supports/résistances visibles, contexte des indicateurs affichés) et donne UNE direction.");
+  lines.push("Réponds UNIQUEMENT avec un objet JSON strict, sans texte autour, sans backticks :");
+  lines.push('{"signal":"BUY|SELL","confidence":"FAIBLE|MOYEN|FORT","raison":"phrase courte max 80 caractères","analyse":"2-3 phrases sur ce que tu vois dans le graphique","risque":"une phrase sur le risque principal"}');
+  lines.push("Interdits : WAIT/NEUTRAL, caractères < > &, texte hors du JSON.");
+  return lines.join("\n");
+}
+
+function extractFableJSON(apiResponse) {
+  // Blocs extraits PAR TYPE (le thinking adaptatif de Fable 5 peut précéder le texte)
+  const textBlocks = (apiResponse.content || []).filter(b => b.type === "text").map(b => b.text);
+  const raw = textBlocks.join("\n").trim();
+  if (!raw) throw new Error("Réponse vide du modèle");
+  // Tolérance : retire d'éventuelles fences ```json ... ``` et isole le premier objet {...}
+  const cleaned = raw.replace(/```json|```/g, "").trim();
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  if (start < 0 || end <= start) throw new Error("Aucun JSON dans la réponse du modèle");
+  const parsed = JSON.parse(cleaned.slice(start, end + 1));
+  const signal = String(parsed.signal || "").toUpperCase();
+  if (signal !== "BUY" && signal !== "SELL") throw new Error("Signal invalide dans la réponse (" + parsed.signal + ")");
+  const conf = String(parsed.confidence || "FAIBLE").toUpperCase();
+  return {
+    signal,
+    confidence: ["FAIBLE","MOYEN","FORT"].includes(conf) ? conf : "FAIBLE",
+    raison: String(parsed.raison || "").slice(0, 120),
+    analyse: String(parsed.analyse || ""),
+    risque: String(parsed.risque || "")
+  };
+}
+
+async function callFable5(imageDataUrl, promptText) {
+  if (!state.anthropicKey) throw new Error("NO_KEY");
+  const { mediaType, base64 } = splitDataUrl(imageDataUrl);
+  const errors = [];
+  for (const model of FABLE_MODELS) {
+    try {
+      const r = await fetchWithTimeout(ANTHROPIC_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": state.anthropicKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: 1024,
+          // temperature volontairement absente : Fable 5 exige 1.0 ou non défini
+          system: "Tu es un analyste technique XAUUSD senior pour un trader prop firm. Tu réponds exclusivement en JSON strict.",
+          messages: [{
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
+              { type: "text", text: promptText }
+            ]
+          }]
+        })
+      }, 60000);
+      const data = await r.json();
+      if (!r.ok) {
+        const msg = (data && data.error && data.error.message) || ("HTTP " + r.status);
+        // Clé invalide : inutile de tenter les autres modèles
+        if (r.status === 401 || r.status === 403) throw new Error("AUTH: " + msg);
+        errors.push(model + ": " + msg);
+        continue;
+      }
+      // Refus Fable 5 (HTTP 200 + stop_reason "refusal") -> repli modèle suivant
+      if (data.stop_reason === "refusal") {
+        errors.push(model + ": refus classifieur (stop_reason refusal)");
+        continue;
+      }
+      const verdict = extractFableJSON(data);
+      verdict.model = model;
+      verdict.usage = data.usage || null;
+      return verdict;
+    } catch (e) {
+      if (String(e.message).startsWith("AUTH:")) throw new Error("Clé API Anthropic refusée — vérifie-la dans les Réglages (" + e.message.slice(6) + ")");
+      errors.push(model + ": " + e.message);
+    }
+  }
+  throw new Error("Tous les modèles ont échoué — " + errors.join(" · "));
+}
+
+async function analyzeWithFable() {
+  if (!state.capture) { toast("Charge d'abord une capture Hydratrade", "err"); return; }
+  if (!state.anthropicKey) {
+    toast("Ajoute ta clé API Anthropic dans les Réglages pour l'analyse Fable 5 intégrée", "err", 6000);
+    if (ui.modal) ui.modal.classList.remove("hidden");
+    if (ui.apiAnthropic) ui.apiAnthropic.focus();
+    return;
+  }
+  if (state.fableAnalyzing) { toast("Analyse Fable 5 déjà en cours…", "info"); return; }
+  state.fableAnalyzing = true;
+  const btn = ui.btnFable;
+  const oldLabel = btn ? btn.querySelector("span").textContent : "";
+  if (btn) { btn.disabled = true; btn.querySelector("span").textContent = "Fable 5 analyse…"; }
+  ui.synthBox.className = "aibox";
+  ui.synthBox.innerHTML = "🔮 <strong>Fable 5 examine la capture…</strong> (jusqu'à 60 s — thinking adaptatif actif)";
+  ui.synthBadge.textContent = "Fable 5…";
+  const t0 = Date.now();
+  try {
+    const verdict = await callFable5(state.capture.dataUrl, buildFablePrompt());
+    // Passe par les MÊMES garde-fous que l'analyse locale (principe du verdict unique)
+    const baseAnalysis = state.lastAnalysis || {
+      trend1h: { aligned: null, label: "Indisponible" },
+      globalScore: verdict.signal === "BUY" ? 60 : -60,
+      provisionalDir: verdict.signal === "BUY" ? 1 : -1,
+      current: { atr: null, price: 0, chop: null },
+      macro: { events: [], us10y: { value: null } }
+    };
+    let final = applySafetyNets({ signal: verdict.signal, confidence: verdict.confidence }, baseAnalysis);
+    final.raison = verdict.raison || final.raison || "Analyse visuelle Fable 5";
+    final.analyse = verdict.analyse;
+    final.risque = verdict.risque;
+    final.source = verdict.model === "claude-fable-5" ? "Fable 5" : verdict.model + " (repli)";
+    final.score = state.lastResult ? state.lastResult.score : null;
+    final.price = state.lastResult && state.lastResult.price ? state.lastResult.price : (state.candles15.length ? state.candles15[state.candles15.length - 1].c : 0);
+    final.tf = state.tf;
+    final.ts = Date.now();
+    final.why = [verdict.raison].filter(Boolean);
+    state.lastResult = final;
+    renderVerdict(final);
+    renderFlags(final.flags);
+    const secs = ((Date.now() - t0) / 1000).toFixed(1);
+    ui.synthBox.className = "aibox";
+    ui.synthBox.innerHTML =
+      `<strong>🔮 Verdict ${escapeHtml(final.source)} : ${final.signal} (${final.confidence})</strong><br>` +
+      `${escapeHtml(verdict.analyse)}<br>` +
+      (verdict.risque ? `<em>Risque : ${escapeHtml(verdict.risque)}</em><br>` : "") +
+      `<span class="dim">Modèle ${escapeHtml(verdict.model)} · ${secs}s` +
+      (verdict.usage ? ` · ${verdict.usage.input_tokens} tokens in / ${verdict.usage.output_tokens} out` : "") + `</span>`;
+    ui.synthBadge.textContent = "Fable 5";
+    if (ui.synthMeta) ui.synthMeta.textContent = "Analyse visuelle de la capture · " + new Date().toLocaleTimeString("fr-CH");
+    pushHistory({ ts: final.ts, signal: final.signal, confidence: final.confidence, score: final.score, price: final.price, source: final.source, tf: state.tf });
+    renderHistory();
+    tryNotify(final);
+    toast("Fable 5 : " + final.signal + " (" + final.confidence + ")", final.signal === "BUY" ? "ok" : "info");
+  } catch (e) {
+    console.error(e);
+    ui.synthBox.className = "aibox empty";
+    ui.synthBox.innerHTML = `⚠️ <strong>Échec de l'analyse Fable 5.</strong> ${escapeHtml(e.message)}`;
+    ui.synthBadge.textContent = "échec";
+    toast(e.message, "err", 6000);
+  } finally {
+    state.fableAnalyzing = false;
+    if (btn) { btn.disabled = false; btn.querySelector("span").textContent = oldLabel || "Analyser avec Fable 5"; }
+  }
+}
+
+/* ---------- Lien direct vers l'app Claude (sans clé API) ----------
+   1. Copie la capture dans le presse-papiers (ClipboardItem image)
+   2. Ouvre claude://new?q=<prompt> (deep link officiel Desktop/mobile,
+      champ prompt pré-rempli) ; repli web https://claude.ai/new après 1,4 s
+      si l'app n'intercepte pas le lien, avec le prompt copié en secours. */
+async function openInClaudeApp() {
+  if (!state.capture) { toast("Charge d'abord une capture Hydratrade", "err"); return; }
+  const prompt = buildFablePrompt() + "\n\n(La capture du graphique est dans ton presse-papiers : colle-la ici avec Cmd/Ctrl+V avant d'envoyer.)";
+  let imageCopied = false;
+  try {
+    const { mediaType, base64 } = splitDataUrl(state.capture.dataUrl);
+    const bin = atob(base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    let blob = new Blob([bytes], { type: mediaType });
+    // ClipboardItem n'accepte que image/png de façon fiable -> conversion canvas si besoin
+    if (mediaType !== "image/png") blob = await convertBlobToPng(blob);
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    imageCopied = true;
+  } catch (e) { console.warn("Clipboard image:", e); }
+
+  const deepLink = "claude://new?q=" + encodeURIComponent(prompt);
+  const opened = Date.now();
+  window.location.href = deepLink;
+  setTimeout(async () => {
+    // Si l'app Claude a pris la main, l'onglet est passé en arrière-plan (blur/hidden)
+    if (document.hidden || Date.now() - opened > 2500) return;
+    if (!imageCopied) {
+      try { await navigator.clipboard.writeText(prompt); } catch (e) {}
+      toast("Prompt copié — colle-le dans Claude, puis ajoute la capture manuellement", "info", 7000);
+    } else {
+      toast("Capture copiée ✓ — colle-la (Cmd/Ctrl+V) dans la conversation Claude qui s'ouvre", "info", 7000);
+    }
+    window.open("https://claude.ai/new", "_blank", "noopener");
+  }, 1400);
+  if (imageCopied) toast("Capture copiée dans le presse-papiers ✓ Ouverture de Claude…", "ok", 5000);
+}
+function convertBlobToPng(blob) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext("2d").drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? resolve(b) : reject(new Error("Conversion PNG impossible")), "image/png");
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image illisible")); };
+    img.src = url;
+  });
+}
+
 function setupSignalChart() {
   const host = ui.vSignalChart;
   if (!host) return;
@@ -4103,6 +4764,88 @@ function escapeHtml(s) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[m]);
 }
+/* ====================================================================
+   RENDU DU PANNEAU CALIBRATION / IMPORT CSV (v7.4.0)
+   ==================================================================== */
+function renderTradeImportPanel() {
+  if (!ui.tradeImportStatus) return;
+  const cal = state.calibration;
+  const total = cal ? cal.totalAll : 0;
+  const xau = cal ? cal.totalXau : 0;
+
+  // Badge de statut (header de la carte)
+  if (total > 0) {
+    ui.tradeImportStatus.dataset.state = "loaded";
+    ui.tradeImportStatus.querySelector(".status-text").textContent =
+      cal.isDefault ? xau + " trade(s) importé(s) · sous le seuil" : "Calibration réelle active";
+  } else {
+    ui.tradeImportStatus.dataset.state = "empty";
+    ui.tradeImportStatus.querySelector(".status-text").textContent = "Calibration par défaut";
+  }
+
+  if (!ui.tradeImportStats || !ui.tradeImportActions) return;
+  if (total === 0) {
+    ui.tradeImportStats.classList.add("hide");
+    ui.tradeImportActions.classList.add("hide");
+    return;
+  }
+  ui.tradeImportStats.classList.remove("hide");
+  ui.tradeImportActions.classList.remove("hide");
+
+  const dir = cal.directional;
+  const wrTxt = v => (v == null ? "n/d" : v + "%");
+  const importedTxt = cal.importedAt ? new Date(cal.importedAt).toLocaleString("fr-CH", { dateStyle: "medium", timeStyle: "short" }) : "—";
+
+  let html = `<div class="calib-summary">`;
+  html += `<div class="calib-stat"><div class="lbl">Trades importés</div><div class="val ne">${total}${xau !== total ? " (" + xau + " XAUUSD)" : ""}</div></div>`;
+  html += `<div class="calib-stat"><div class="lbl">Win rate global</div><div class="val ${dir.overall.wr >= 50 ? "up" : "dn"}">${wrTxt(dir.overall.wr)}</div></div>`;
+  html += `<div class="calib-stat"><div class="lbl">BUY</div><div class="val ${dir.buy.wr >= 50 ? "up" : "dn"}">${wrTxt(dir.buy.wr)} (${dir.buy.count})</div></div>`;
+  html += `<div class="calib-stat"><div class="lbl">SELL</div><div class="val ${dir.sell.wr >= 50 ? "up" : "dn"}">${wrTxt(dir.sell.wr)} (${dir.sell.count})</div></div>`;
+  html += `<div class="calib-stat"><div class="lbl">Dernier import</div><div class="val ne" style="font-size:12px">${importedTxt}</div></div>`;
+  html += `</div>`;
+
+  if (cal.isDefault) {
+    html += `<div class="calib-skipped">⚠️ ${xau} trade(s) XAUUSD importé(s) — il en faut ${MIN_SAMPLE_TOTAL} minimum pour activer la recalibration dynamique des sessions/jours. La calibration par défaut (20 trades historiques) reste active en attendant.</div>`;
+  } else {
+    html += `<div class="calib-section-title">Calibration horaire (recalculée)</div>`;
+    html += cal.session.map(s => `<div class="ind"><span class="n">${escapeHtml(s.label)}</span><span class="v ${s.score > 0 ? "up" : s.score < 0 ? "dn" : "ne"}">${s.score > 0 ? "+" : ""}${s.score}</span></div>`).join("");
+    html += `<div class="calib-section-title">Calibration par jour (recalculée)</div>`;
+    html += [1,2,3,4,5].map(d => {
+      const info = cal.day[d];
+      return `<div class="ind"><span class="n">${escapeHtml(info.label)}</span><span class="v ${info.score > 0 ? "up" : info.score < 0 ? "dn" : "ne"}">${info.score > 0 ? "+" : ""}${info.score}</span></div>`;
+    }).join("");
+  }
+
+  ui.tradeImportStats.innerHTML = html;
+}
+
+async function handleTradeFiles(fileList) {
+  const files = Array.from(fileList || []).filter(f => /\.csv$/i.test(f.name) || f.type === "text/csv");
+  if (!files.length) { toast("Sélectionne un fichier .csv", "err"); return; }
+  let allNew = [];
+  let allSkipped = [];
+  let anyOk = false;
+  for (const f of files) {
+    try {
+      const text = await f.text();
+      const { trades, skipped } = parseHydratradeCSV(text);
+      allNew = allNew.concat(trades);
+      allSkipped = allSkipped.concat(skipped);
+      anyOk = true;
+    } catch (e) {
+      toast(`${f.name} : ${e.message}`, "err", 6000);
+    }
+  }
+  if (!anyOk) return;
+  const merged = mergeTradeHistory(state.tradeHistory, allNew);
+  const added = merged.length - state.tradeHistory.length;
+  state.tradeHistory = saveTradeHistory(merged, { importedAt: Date.now(), files: files.map(f => f.name) });
+  state.tradeMeta = LS.get("xa_trades_meta", { importedAt: Date.now(), files: [] });
+  recalibrate();
+  const skipTxt = allSkipped.length ? ` (${allSkipped.length} ligne(s) ignorée(s))` : "";
+  toast(`Import réussi ✓ ${added} nouveau(x) trade(s), ${merged.length} au total${skipTxt}`, "ok", 5000);
+}
+
 function renderScore(analysis) {
   if (!analysis) {
     ui.scoreFill.style.width = "0%";
@@ -4339,12 +5082,15 @@ function exportData() {
     settings: {
       tf: state.tf,
       twelveKey: state.twelveKey,
+      anthropicKey: state.anthropicKey,
       notifLevel: state.notifLevel,
       autoRefresh: state.autoRefresh,
       autoMorning: state.autoMorning,
     },
     capture: state.capture,
     history: loadHistory(),
+    trades: state.tradeHistory,
+    tradeMeta: state.tradeMeta,
   };
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: "application/json" });
@@ -4373,6 +5119,7 @@ async function importData(file) {
       state.tf           = TIMEFRAMES[data.settings.tf] ? data.settings.tf : "15m";
       LS.set("xa_tf", state.tf);
       state.twelveKey    = data.settings.twelveKey    || "";
+      state.anthropicKey = data.settings.anthropicKey || "";
       state.notifLevel   = data.settings.notifLevel   || "fort";
       state.autoRefresh  = !!data.settings.autoRefresh;
       state.autoMorning  = data.settings.autoMorning !== false;
@@ -4389,6 +5136,12 @@ async function importData(file) {
     // History
     if (Array.isArray(data.history)) {
       LS.set("xa_hist", data.history);
+    }
+    // Trades importés (calibration réelle)
+    if (Array.isArray(data.trades)) {
+      state.tradeHistory = saveTradeHistory(data.trades, data.tradeMeta || { importedAt: Date.now(), files: [] });
+      state.tradeMeta = LS.get("xa_trades_meta", { importedAt: Date.now(), files: [] });
+      recalibrate();
     }
     // Refresh UI
     renderCapture();
@@ -4494,8 +5247,9 @@ async function runDiagnostic() {
 function resetAllData() {
   if (!confirm("⚠️ Tout effacer :\n\n• Réglages (clé API, notifs, auto-modes)\n• Capture Hydratrade\n• Historique des signaux\n• Préférences UI\n\nCette action est IRRÉVERSIBLE. Continuer ?")) return;
   // Liste des clés à nettoyer
-  ["xa_tk", "xa_nl", "xa_ar", "xa_am", "xa_aac", "xa_cap", "xa_hist", "xa_cd"].forEach(k => LS.del(k));
+  ["xa_tk", "xa_ak", "xa_nl", "xa_ar", "xa_am", "xa_aac", "xa_cap", "xa_hist", "xa_cd", "xa_tf", "xa_trades", "xa_trades_meta"].forEach(k => LS.del(k));
   state.twelveKey = "";
+  state.anthropicKey = "";
   state.notifLevel = "fort";
   state.autoRefresh = false;
   state.autoMorning = true;
@@ -4505,6 +5259,9 @@ function resetAllData() {
   state.candles1h = [];
   state.dxy = { value: null, prev: null, change: 0, history: [] };
   state.cooldownUntil = 0;
+  state.tradeHistory = [];
+  state.tradeMeta = { importedAt: null, files: [] };
+  recalibrate();
   renderCapture();
   renderHistory();
   renderVerdict(null);
@@ -4568,6 +5325,7 @@ async function analyzeNow(opts = {}) {
 
     // 2) Analyse technique
     const analysis = await analyze(c15.candles, c1h.candles, dxy);
+    state.lastAnalysis = analysis;
     renderScore(analysis);
     renderTF(analysis);
     renderDXY(dxy);
@@ -4848,6 +5606,10 @@ function init() {
   }
   state.capture = loadCapture();
   renderCapture();
+  const _th = loadTradeHistory();
+  state.tradeHistory = _th.trades;
+  state.tradeMeta = _th.meta;
+  recalibrate();
   renderHistory();
   updateSessionBadge();
   updateCycleUI();
@@ -4859,6 +5621,41 @@ function init() {
       b.addEventListener("click", () => setTimeframe(b.dataset.tf)));
   }
   updateTfUI();
+  // Import CSV : clic, drag & drop, actions
+  if (ui.tradeImportZone) {
+    ui.tradeImportZone.addEventListener("click", () => ui.tradeImportInput.click());
+    ui.tradeImportZone.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ui.tradeImportInput.click(); }
+    });
+    ui.tradeImportZone.addEventListener("dragover", e => { e.preventDefault(); ui.tradeImportZone.classList.add("dragover"); });
+    ui.tradeImportZone.addEventListener("dragleave", () => ui.tradeImportZone.classList.remove("dragover"));
+    ui.tradeImportZone.addEventListener("drop", e => {
+      e.preventDefault();
+      ui.tradeImportZone.classList.remove("dragover");
+      if (e.dataTransfer && e.dataTransfer.files) handleTradeFiles(e.dataTransfer.files);
+    });
+  }
+  if (ui.tradeImportInput) {
+    ui.tradeImportInput.addEventListener("change", e => {
+      if (e.target.files && e.target.files.length) handleTradeFiles(e.target.files);
+      e.target.value = "";
+    });
+  }
+  if (ui.btnRecalibrate) {
+    ui.btnRecalibrate.addEventListener("click", () => { recalibrate(); toast("Calibration recalculée ✓", "ok"); });
+  }
+  if (ui.btnClearTrades) {
+    ui.btnClearTrades.addEventListener("click", () => {
+      if (!confirm("Effacer tout l'historique de trades importé ? La calibration repassera par défaut.")) return;
+      LS.del("xa_trades"); LS.del("xa_trades_meta");
+      state.tradeHistory = []; state.tradeMeta = { importedAt: null, files: [] };
+      recalibrate();
+      toast("Historique de trades effacé", "ok");
+    });
+  }
+  // Boutons Fable 5 sur la capture
+  if (ui.btnFable) ui.btnFable.addEventListener("click", () => analyzeWithFable());
+  if (ui.btnOpenClaude) ui.btnOpenClaude.addEventListener("click", () => openInClaudeApp());
   setupAutoTimers();
   // Précharge les données pour avoir un verdict instantané au premier clic
   refreshDataOnly();
