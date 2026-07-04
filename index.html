@@ -400,34 +400,50 @@
     min-height:128px;
   }
   .verdict.idle .vdirmain{min-height:96px}
-  /* ---------- Candlestick column (v7.2.0) ---------- */
+  /* ====================================================================
+     Candlestick stairs (v7.2.1) — escalier de 4 bougies + flèche comète
+     Séquence type clignoteur Audi, validée en preview v6 :
+       04% → 31%  bougies 1→4 s'allument en cascade et RESTENT allumées
+       38% → 50%  la flèche est tirée depuis le corps de la dernière bougie
+                  et remonte la mèche (easing projectile) avec un sillage
+       52%        KICK à l'impact : pulsation, onde de choc, flash, étincelles
+       74%        extinction simultanée, la flèche rentre dans le corps
+     Deux SVG (stairs-buy / stairs-sell), la classe du verdict choisit lequel.
+     ==================================================================== */
   .verdict .signal-chart{
     /* hide on idle / loading so it doesn't distract */
     display:none;
-    width:64px;
+    width:122px;
     flex-shrink:0;
     margin:0 4px;
+    --blink-cycle:1.6s;
     --c-fill:var(--bear-soft);
     --c-stroke:var(--bear);
-    --c-glow:rgba(196,107,92,0.85);
+    --c-glow:rgba(216,140,126,0.9);
+    --c-spark:#f6d3c9;
   }
   .verdict.buy .signal-chart{
     --c-fill:var(--bull-soft);
     --c-stroke:var(--bull);
-    --c-glow:rgba(95,164,126,0.85);
+    --c-glow:rgba(130,189,156,0.9);
+    --c-spark:#c9f0da;
   }
   .verdict.buy .signal-chart,
   .verdict.sell .signal-chart{display:block}
+  /* un seul escalier visible selon la direction */
+  .verdict .signal-chart .stairs-buy,
+  .verdict .signal-chart .stairs-sell{display:none}
+  .verdict.buy  .signal-chart .stairs-buy{display:block}
+  .verdict.sell .signal-chart .stairs-sell{display:block}
   .verdict .signal-chart svg{
     width:100%;
     height:auto;
-    display:block;
     overflow:visible;
     filter:drop-shadow(0 6px 14px rgba(0,0,0,0.35));
   }
   .verdict .signal-chart .candle-wick{
     stroke:var(--c-stroke);
-    stroke-width:1.4;
+    stroke-width:2;
     stroke-linecap:round;
   }
   .verdict .signal-chart .candle-body{
@@ -435,65 +451,158 @@
     stroke:var(--c-stroke);
     stroke-width:0.8;
   }
-  .verdict .signal-chart .signal-arrow{
-    fill:var(--c-fill);
+  .verdict .signal-chart .dart-body{
     stroke:var(--c-stroke);
     stroke-width:0.8;
     stroke-linejoin:round;
-    filter:drop-shadow(0 0 6px var(--c-glow));
   }
-  /* hide the arrow direction that doesn't apply */
-  .verdict .signal-chart .arrow-up{display:none}
-  .verdict .signal-chart .arrow-down{display:none}
-  .verdict.buy .signal-chart .arrow-up{display:block}
-  .verdict.sell .signal-chart .arrow-down{display:block}
-
-  /* Sequential blinker — SELL: top→bottom light wave, then arrow glow */
-  @keyframes candleGlow{
-    0%, 70%, 100%{ opacity:0.32; filter:drop-shadow(0 0 0 transparent); }
-    15%, 30%    { opacity:1;    filter:drop-shadow(0 0 9px var(--c-glow)); }
+  .verdict .signal-chart .dart-highlight{
+    fill:none;
+    stroke:rgba(255,255,255,0.55);
+    stroke-width:1.3;
+    stroke-linecap:round;
   }
-  /* Arrow keeps a strong baseline glow + amplifies on its turn in the wave */
-  @keyframes arrowGlow{
-    0%, 15%, 100%{
-      opacity:0.85;
-      filter:drop-shadow(0 0 8px var(--c-glow));
-    }
-    40%, 55%{
-      opacity:1;
-      filter:drop-shadow(0 0 18px var(--c-glow)) drop-shadow(0 0 4px var(--c-glow));
-    }
-  }
-  .verdict .signal-chart .candle{
-    animation:candleGlow 2.4s ease-in-out infinite;
+  .verdict .signal-chart .burst-ring{
+    fill:none;
+    stroke:var(--c-spark);
+    stroke-width:2;
+    transform-box:fill-box;
     transform-origin:center;
   }
-  /* SELL — top → middle → bottom → arrow ↓ */
-  .verdict.sell .signal-chart .candle[data-i="0"]{ animation-delay:0s }
-  .verdict.sell .signal-chart .candle[data-i="1"]{ animation-delay:0.3s }
-  .verdict.sell .signal-chart .candle[data-i="2"]{ animation-delay:0.6s }
-  .verdict.sell .signal-chart .signal-arrow{ animation-delay:0.9s }
-  /* BUY — bottom → middle → top → arrow ↑ */
-  .verdict.buy .signal-chart .candle[data-i="2"]{ animation-delay:0s }
-  .verdict.buy .signal-chart .candle[data-i="1"]{ animation-delay:0.3s }
-  .verdict.buy .signal-chart .candle[data-i="0"]{ animation-delay:0.6s }
-  .verdict.buy .signal-chart .signal-arrow{ animation-delay:0.9s }
+  .verdict .signal-chart .burst-core{
+    fill:#ffffff;
+    transform-box:fill-box;
+    transform-origin:center;
+  }
+  .verdict .signal-chart .spark{
+    fill:var(--c-spark);
+  }
+  .verdict .signal-chart .dart-trail{
+    stroke:var(--c-spark);
+    stroke-width:4;
+    stroke-linecap:round;
+    fill:none;
+    stroke-dasharray:34;
+    stroke-dashoffset:34;
+    opacity:0;
+    filter:drop-shadow(0 0 6px var(--c-glow));
+  }
 
-  /* pulse on arrow: subtle bounce in direction of trend */
-  @keyframes arrowBounceDown{
-    0%, 100%{ transform:translateY(-2px) }
-    30%, 60%{ transform:translateY(3px) }
+  /* ---------- Bougies : allumage LED en cascade, maintien, extinction commune ---------- */
+  @keyframes sigStep0{
+    0%,3.9%{opacity:.22;filter:none}
+    4%,74%{opacity:1;filter:drop-shadow(0 0 7px var(--c-glow))}
+    74.1%,100%{opacity:.22;filter:none}
   }
-  @keyframes arrowBounceUp{
-    0%, 100%{ transform:translateY(2px) }
-    30%, 60%{ transform:translateY(-3px) }
+  @keyframes sigStep1{
+    0%,12.9%{opacity:.22;filter:none}
+    13%,74%{opacity:1;filter:drop-shadow(0 0 7px var(--c-glow))}
+    74.1%,100%{opacity:.22;filter:none}
   }
-  .verdict.sell .signal-chart .signal-arrow{ animation: arrowGlow 2.4s ease-in-out infinite, arrowBounceDown 2.4s ease-in-out infinite; animation-delay: 0.9s, 0.9s; }
-  .verdict.buy  .signal-chart .signal-arrow{ animation: arrowGlow 2.4s ease-in-out infinite, arrowBounceUp 2.4s ease-in-out infinite;   animation-delay: 0.9s, 0.9s; }
+  @keyframes sigStep2{
+    0%,21.9%{opacity:.22;filter:none}
+    22%,74%{opacity:1;filter:drop-shadow(0 0 7px var(--c-glow))}
+    74.1%,100%{opacity:.22;filter:none}
+  }
+  @keyframes sigStep3{
+    0%,30.9%{opacity:.22;filter:none}
+    31%,74%{opacity:1;filter:drop-shadow(0 0 8px var(--c-glow))}
+    74.1%,100%{opacity:.22;filter:none}
+  }
+  /* ---------- Flèche comète : tirée du corps, vol, KICK à l'impact ---------- */
+  @keyframes sigDartFire{
+    0%,37.9%{
+      opacity:0;
+      filter:none;
+      transform:translateY(var(--travel)) scale(0.85);
+    }
+    38%{
+      opacity:1;
+      filter:drop-shadow(0 0 10px var(--c-glow));
+      transform:translateY(var(--travel)) scale(0.9);
+      animation-timing-function:cubic-bezier(0.16,1,0.3,1);
+    }
+    50%{
+      opacity:1;
+      filter:drop-shadow(0 0 12px var(--c-glow));
+      transform:translateY(0) scale(1);
+    }
+    52%,55%{
+      opacity:1;
+      filter:drop-shadow(0 0 22px var(--c-glow)) drop-shadow(0 0 6px var(--c-glow));
+      transform:translateY(calc(var(--arrow-shift)*1.8)) scale(1.14);
+    }
+    60%,74%{
+      opacity:1;
+      filter:drop-shadow(0 0 12px var(--c-glow));
+      transform:translateY(0) scale(1);
+    }
+    74.1%,100%{
+      opacity:0;
+      filter:none;
+      transform:translateY(var(--travel)) scale(0.85);
+    }
+  }
+  /* ---------- Burst d'impact : onde de choc + flash + étincelles ---------- */
+  @keyframes sigShockwave{
+    0%,51.9%{opacity:0;transform:scale(0.25)}
+    52%{opacity:.9;transform:scale(0.35)}
+    68%,100%{opacity:0;transform:scale(1.9)}
+  }
+  @keyframes sigFlashCore{
+    0%,51.9%{opacity:0;transform:scale(0.4)}
+    52%{opacity:.95;transform:scale(0.7)}
+    62%,100%{opacity:0;transform:scale(2)}
+  }
+  @keyframes sigSparkFly{
+    0%,51.9%{opacity:0;transform:translate(0,0)}
+    52%{opacity:1;transform:translate(0,0)}
+    70%,100%{opacity:0;transform:translate(var(--dx),var(--dy))}
+  }
+  /* Sillage : se dessine du corps vers la pointe en même temps que le vol */
+  @keyframes sigTrailDraw{
+    0%,37.9%{opacity:0;stroke-dashoffset:34}
+    38%{opacity:.75;stroke-dashoffset:34;animation-timing-function:cubic-bezier(0.16,1,0.3,1)}
+    50%{opacity:.75;stroke-dashoffset:0}
+    58%,100%{opacity:0;stroke-dashoffset:0}
+  }
+
+  .verdict .signal-chart [data-step="0"]{animation:sigStep0 var(--blink-cycle) linear infinite}
+  .verdict .signal-chart [data-step="1"]{animation:sigStep1 var(--blink-cycle) linear infinite}
+  .verdict .signal-chart [data-step="2"]{animation:sigStep2 var(--blink-cycle) linear infinite}
+  .verdict .signal-chart [data-step="3"]{animation:sigStep3 var(--blink-cycle) linear infinite}
+  .verdict .signal-chart .dart{
+    animation:sigDartFire var(--blink-cycle) linear infinite;
+    transform-box:fill-box;
+    transform-origin:center;
+  }
+  .verdict .signal-chart .burst-ring{animation:sigShockwave var(--blink-cycle) linear infinite}
+  .verdict .signal-chart .burst-core{animation:sigFlashCore var(--blink-cycle) linear infinite}
+  .verdict .signal-chart .spark{animation:sigSparkFly var(--blink-cycle) ease-out infinite}
+  .verdict .signal-chart .dart-trail{animation:sigTrailDraw var(--blink-cycle) linear infinite}
+  .verdict.buy  .signal-chart .dart{--arrow-shift:-2.5px;--travel:36px}
+  .verdict.sell .signal-chart .dart{--arrow-shift:2.5px;--travel:-36px}
+
+  @media (prefers-reduced-motion:reduce){
+    .verdict .signal-chart [data-step],
+    .verdict .signal-chart .dart{
+      animation:none !important;
+      opacity:1;
+      filter:drop-shadow(0 0 6px var(--c-glow));
+      transform:none;
+    }
+    .verdict .signal-chart .burst-ring,
+    .verdict .signal-chart .burst-core,
+    .verdict .signal-chart .spark,
+    .verdict .signal-chart .dart-trail{
+      animation:none !important;
+      opacity:0;
+    }
+  }
 
   @media (max-width:540px){
     .verdict .vdirmain{gap:8px;min-height:96px}
-    .verdict .signal-chart{width:54px}
+    .verdict .signal-chart{width:96px}
   }
 
   .verdict .vprice{
@@ -2010,7 +2119,7 @@
 /* ====================================================================
    XAUUSD SIGNAL — single-file app
    Helder · prop firm XAUUSD 15min
-   - Données: Twelve Data (XAU/USD) + Yahoo (GC=F, DX-Y.NYB) via cascade CORS
+   - Données: Twelve Data (XAU/USD) > Binance PAXG direct > Yahoo (GC=F) via proxies ; DXY: DX=F/DX-Y.NYB
    - Synthèse technique locale (indicateurs + score + garde-fous)
    - Indicateurs: RSI, MACD, BB, ADX, EMA, ATR, S/R, VWAP, Ichimoku,
      StochRSI, MFI, Williams %R, CCI, Pivots journaliers, Fibo
@@ -2024,7 +2133,12 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.2.0";
+const APP_VERSION = "7.2.2";
+// v7.2.2 — data layer durci : Binance PAXG/USDT en source directe sans clé ni proxy (CORS natif),
+//           hiérarchie Twelve Data > Binance > Yahoo/proxies, corsproxy.io réparé (format ?url=),
+//           DXY via DX=F (DX-Y.NYB cassé côté Yahoo depuis 03/2026), erreurs diagnostiques
+// v7.2.1 — verdict : escalier de 4 bougies façon clignoteur Audi, flèche comète tirée depuis le corps
+//           de la dernière bougie (vol + sillage), kick à l'impact (onde de choc, flash, étincelles)
 // v7.2.0 — verdict : colonne candlestick animée + flèche directionnelle à droite du texte SELL/BUY
 //                  • 3 chandeliers avec mèches, illumination séquentielle (top→bottom pour SELL, bottom→top pour BUY)
 //                  • Flèche glowing finale (↓ rouge pour SELL, ↑ verte pour BUY) culminant la vague de lumière
@@ -2044,10 +2158,23 @@ const APP_VERSION = "7.2.0";
 const TD_URL = "https://api.twelvedata.com/time_series";
 const TD_SYMBOL = "XAU/USD";
 const YF_GOLD = "https://query1.finance.yahoo.com/v8/finance/chart/GC=F";
-const YF_DXY  = "https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB";
+// DXY : DX=F (futures ICE) en premier — l'index DX-Y.NYB renvoie HTTP 500
+// côté Yahoo depuis mars 2026 (bug serveur documenté, yfinance issue #2721)
+const YF_DXY_LIST = [
+  "https://query1.finance.yahoo.com/v8/finance/chart/DX=F",
+  "https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB"
+];
+// Binance market-data : endpoints publics officiels, SANS clé et SANS proxy
+// (CORS natif Access-Control-Allow-Origin:*). PAXG = or tokenisé 1:1 once,
+// prix ≈ XAU/USD spot — plus proche du feed Hydratrade que les futures GC=F.
+const BINANCE_HOSTS = [
+  "https://data-api.binance.vision",
+  "https://api.binance.com"
+];
+const BINANCE_GOLD = "PAXGUSDT";
 const PROXIES = [
   u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
-  u => "https://corsproxy.io/?" + encodeURIComponent(u),
+  u => "https://corsproxy.io/?url=" + encodeURIComponent(u),
   u => "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(u),
   u => "https://api.allorigins.win/get?url=" + encodeURIComponent(u)
 ];
@@ -2410,6 +2537,35 @@ async function fetchYahoo(symbol, interval = "15m", range = "5d") {
   const j = await fetchViaProxies(url, true);
   return parseYahooChart(j, symbol);
 }
+function parseBinanceKlines(json) {
+  // Format Binance klines : tableau de tableaux
+  // [ openTime, open, high, low, close, volume, closeTime, ... ]
+  if (!Array.isArray(json)) throw new Error("Format Binance invalide");
+  const candles = [];
+  for (const k of json) {
+    if (!Array.isArray(k) || k.length < 6) continue;
+    const o = parseFloat(k[1]), h = parseFloat(k[2]), l = parseFloat(k[3]), c = parseFloat(k[4]);
+    if (!isFinite(o) || !isFinite(h) || !isFinite(l) || !isFinite(c)) continue;
+    candles.push({ t: k[0], o, h, l, c, v: parseFloat(k[5]) || 0 });
+  }
+  if (!candles.length) throw new Error("Binance: aucune bougie exploitable");
+  return candles;
+}
+async function fetchBinance(interval = "15m", limit = 200) {
+  // Appel DIRECT navigateur -> Binance : CORS natif, aucune clé, aucun proxy.
+  // Deux hôtes essayés dans l'ordre (data-api.binance.vision est l'endpoint
+  // market-data public officiel ; api.binance.com en secours).
+  let lastErr = null;
+  for (const host of BINANCE_HOSTS) {
+    try {
+      const url = `${host}/api/v3/klines?symbol=${BINANCE_GOLD}&interval=${interval}&limit=${limit}`;
+      const r = await fetchWithTimeout(url, { headers: { "Accept": "application/json" } });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return parseBinanceKlines(await r.json());
+    } catch (e) { lastErr = e; }
+  }
+  throw new Error("Binance PAXG: " + (lastErr && lastErr.message || "échec"));
+}
 async function fetchTwelve(symbol, interval = "15min", outputsize = 200) {
   const url = `${TD_URL}?symbol=${encodeURIComponent(symbol || TD_SYMBOL)}&interval=${interval}&outputsize=${outputsize}&apikey=${encodeURIComponent(state.twelveKey)}&format=JSON`;
   const r = await fetchWithTimeout(url);
@@ -2426,15 +2582,26 @@ async function fetchTwelve(symbol, interval = "15min", outputsize = 200) {
   }));
 }
 async function fetchCandles15() {
+  const fails = [];
+  // 1. Twelve Data (XAU/USD réel) si clé configurée — direct, CORS natif
   if (state.twelveKey) {
     try { return { candles: await fetchTwelve(TD_SYMBOL, "15min", 200), source: "Twelve Data" }; }
-    catch (e) { console.warn("Twelve Data 15m:", e); }
+    catch (e) { console.warn("Twelve Data 15m:", e); fails.push("Twelve Data (" + e.message + ")"); }
   }
+  // 2. Binance PAXG/USDT — direct, sans clé, sans proxy (le plus fiable sans clé)
+  try {
+    return { candles: await fetchBinance("15m", 200), source: "Binance PAXG (≈XAU spot)" };
+  } catch (e) { console.warn("Binance 15m:", e); fails.push("Binance (" + e.message + ")"); }
+  // 3. Yahoo GC=F via proxies CORS publics — dernier recours (fragile)
   try {
     return { candles: await fetchYahoo(YF_GOLD, "15m", "5d"), source: "Yahoo (GC=F)" };
   } catch (e) {
-    console.warn("Yahoo 15m:", e);
-    throw new Error("Impossible de récupérer les bougies 15 min. Vérifiez votre connexion ou réessayez dans 30 s.");
+    console.warn("Yahoo 15m:", e); fails.push("Yahoo/proxies (" + e.message + ")");
+    throw new Error(
+      "Impossible de récupérer les bougies 15 min — sources en échec : " + fails.join(" · ") +
+      ". " + (state.twelveKey ? "Réessayez dans 30 s." :
+      "Astuce : ajoutez une clé Twelve Data gratuite (Réglages) pour une source directe et stable.")
+    );
   }
 }
 async function fetchCandles1h() {
@@ -2442,6 +2609,9 @@ async function fetchCandles1h() {
     try { return { candles: await fetchTwelve(TD_SYMBOL, "1h", 100), source: "Twelve Data" }; }
     catch (e) { console.warn("Twelve Data 1h:", e); }
   }
+  try {
+    return { candles: await fetchBinance("1h", 120), source: "Binance PAXG (≈XAU spot)" };
+  } catch (e) { console.warn("Binance 1h:", e); }
   try {
     return { candles: await fetchYahoo(YF_GOLD, "60m", "1mo"), source: "Yahoo (GC=F)" };
   } catch (e) {
@@ -2451,17 +2621,19 @@ async function fetchCandles1h() {
   }
 }
 async function fetchDXY() {
-  try {
-    const candles = await fetchYahoo(YF_DXY, "60m", "5d");
-    if (candles.length < 2) throw new Error("DXY: pas assez de données");
-    const last = candles[candles.length - 1];
-    const prev = candles[candles.length - 2];
-    const change = ((last.c - prev.c) / prev.c) * 100;
-    return { value: last.c, prev: prev.c, change, history: candles.map(c => c.c) };
-  } catch (e) {
-    console.warn("DXY:", e);
-    return { value: null, prev: null, change: 0, history: [] };
+  // DX=F essayé avant DX-Y.NYB : l'index renvoie HTTP 500 côté Yahoo
+  // depuis mars 2026 ; les futures ICE restent servis normalement.
+  for (const url of YF_DXY_LIST) {
+    try {
+      const candles = await fetchYahoo(url, "60m", "5d");
+      if (candles.length < 2) throw new Error("DXY: pas assez de données");
+      const last = candles[candles.length - 1];
+      const prev = candles[candles.length - 2];
+      const change = ((last.c - prev.c) / prev.c) * 100;
+      return { value: last.c, prev: prev.c, change, history: candles.map(c => c.c) };
+    } catch (e) { console.warn("DXY (" + url.split("/").pop() + "):", e); }
   }
+  return { value: null, prev: null, change: 0, history: [] };
 }
 
 /* ====================================================================
@@ -3469,37 +3641,100 @@ function applySafetyNets(aiResult, analysis) {
    UI RENDERING
    ==================================================================== */
 /* ====================================================================
-   Signal candlestick chart (v7.2.0)
-   - 3 candles empiliés + flèche directionnelle (en haut pour BUY, en bas pour SELL)
-   - Animation séquentielle : SELL illumine de haut en bas, BUY de bas en haut
-   - La flèche est le dernier élément à s'illuminer (glowing drop-shadow)
+   Signal candlestick stairs (v7.2.1)
+   - Escalier de 4 bougies (croquis Helder) + flèche comète soudée à la
+     mèche de la dernière bougie (dégradé, liseré lumineux)
+   - Séquence clignoteur Audi : cascade -> tir de la flèche depuis le
+     corps -> vol le long de la mèche avec sillage -> KICK à l'impact
+     (onde de choc, flash, 6 étincelles) -> extinction simultanée
+   - Deux SVG miroirs (y' = 310 - y) : .stairs-buy (ascendant, flèche
+     vers le haut) et .stairs-sell (descendant, flèche vers le bas).
+     La classe .buy/.sell du verdict sélectionne l'escalier affiché.
+   - Toute l'animation est pilotée en CSS (var --blink-cycle = 1.6s).
    ==================================================================== */
 function setupSignalChart() {
   const host = ui.vSignalChart;
   if (!host) return;
-  if (host.dataset.ready === "1") return;
-  // ViewBox : 80 large × 240 haut
-  // 3 chandeliers : top (i=0) à y=30-78, mid (i=1) à y=88-136, bot (i=2) à y=146-194
-  // Flèche haute (BUY) : y=0-22
-  // Flèche basse (SELL) : y=210-232
+  if (host.dataset.ready === "2") return;
   const svg = `
-<svg viewBox="0 0 80 240" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-  <!-- Arrow UP (visible only for BUY) -->
-  <path class="signal-arrow arrow-up" data-i="3" d="M28 22 L52 22 L40 0 Z"/>
-  <!-- Top candle (data-i=0) -->
-  <line class="candle-wick" data-i="0" x1="40" y1="28" x2="40" y2="86"/>
-  <rect class="candle-body" data-i="0" x="32" y="38" width="16" height="40" rx="1"/>
-  <!-- Mid candle (data-i=1) -->
-  <line class="candle-wick" data-i="1" x1="40" y1="92" x2="40" y2="150"/>
-  <rect class="candle-body" data-i="1" x="32" y="102" width="16" height="40" rx="1"/>
-  <!-- Bottom candle (data-i=2) -->
-  <line class="candle-wick" data-i="2" x1="40" y1="156" x2="40" y2="214"/>
-  <rect class="candle-body" data-i="2" x="32" y="166" width="16" height="40" rx="1"/>
-  <!-- Arrow DOWN (visible only for SELL) -->
-  <path class="signal-arrow arrow-down" data-i="3" d="M28 218 L52 218 L40 240 Z"/>
+<svg class="stairs-buy" viewBox="0 0 190 310" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <linearGradient id="dartGradBuy" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#5fa47e"/>
+      <stop offset="55%" stop-color="#82bd9c"/>
+      <stop offset="100%" stop-color="#c9f0da"/>
+    </linearGradient>
+  </defs>
+  <g data-step="0">
+    <line class="candle-wick" x1="32" y1="192" x2="32" y2="292"/>
+    <rect class="candle-body" x="21" y="208" width="22" height="66" rx="2"/>
+  </g>
+  <g data-step="1">
+    <line class="candle-wick" x1="74" y1="142" x2="74" y2="238"/>
+    <rect class="candle-body" x="63" y="158" width="22" height="58" rx="2"/>
+  </g>
+  <g data-step="2">
+    <line class="candle-wick" x1="116" y1="92" x2="116" y2="188"/>
+    <rect class="candle-body" x="105" y="108" width="22" height="58" rx="2"/>
+  </g>
+  <g data-step="3">
+    <line class="candle-wick" x1="158" y1="33" x2="158" y2="136"/>
+    <rect class="candle-body" x="147" y="54" width="22" height="62" rx="2"/>
+  </g>
+  <line class="dart-trail" x1="158" y1="70" x2="158" y2="36"/>
+  <g class="dart">
+    <path class="dart-body" fill="url(#dartGradBuy)" d="M158 0 C153.5 11 148.5 21 142.5 31 L152.5 26 L158 34.5 L163.5 26 L173.5 31 C167.5 21 162.5 11 158 0 Z"/>
+    <path class="dart-highlight" d="M156.2 6 C153.5 13 150.5 19.5 147 26.5"/>
+  </g>
+  <circle class="burst-ring" cx="158" cy="2" r="14"/>
+  <circle class="burst-core" cx="158" cy="2" r="5"/>
+  <circle class="spark" cx="158" cy="2" r="2.4" style="--dx:-30px;--dy:-14px"/>
+  <circle class="spark" cx="158" cy="2" r="2.4" style="--dx:30px;--dy:-14px"/>
+  <circle class="spark" cx="158" cy="2" r="1.9" style="--dx:-18px;--dy:-30px"/>
+  <circle class="spark" cx="158" cy="2" r="1.9" style="--dx:18px;--dy:-30px"/>
+  <circle class="spark" cx="158" cy="2" r="1.5" style="--dx:-6px;--dy:-40px"/>
+  <circle class="spark" cx="158" cy="2" r="1.5" style="--dx:8px;--dy:-38px"/>
+</svg>
+<svg class="stairs-sell" viewBox="0 0 190 310" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <linearGradient id="dartGradSell" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c46b5c"/>
+      <stop offset="55%" stop-color="#d88c7e"/>
+      <stop offset="100%" stop-color="#f6d3c9"/>
+    </linearGradient>
+  </defs>
+  <g data-step="0">
+    <line class="candle-wick" x1="32" y1="18" x2="32" y2="118"/>
+    <rect class="candle-body" x="21" y="36" width="22" height="66" rx="2"/>
+  </g>
+  <g data-step="1">
+    <line class="candle-wick" x1="74" y1="72" x2="74" y2="168"/>
+    <rect class="candle-body" x="63" y="94" width="22" height="58" rx="2"/>
+  </g>
+  <g data-step="2">
+    <line class="candle-wick" x1="116" y1="122" x2="116" y2="218"/>
+    <rect class="candle-body" x="105" y="144" width="22" height="58" rx="2"/>
+  </g>
+  <g data-step="3">
+    <line class="candle-wick" x1="158" y1="174" x2="158" y2="277"/>
+    <rect class="candle-body" x="147" y="194" width="22" height="62" rx="2"/>
+  </g>
+  <line class="dart-trail" x1="158" y1="240" x2="158" y2="274"/>
+  <g class="dart">
+    <path class="dart-body" fill="url(#dartGradSell)" d="M158 310 C153.5 299 148.5 289 142.5 279 L152.5 284 L158 275.5 L163.5 284 L173.5 279 C167.5 289 162.5 299 158 310 Z"/>
+    <path class="dart-highlight" d="M156.2 304 C153.5 297 150.5 290.5 147 283.5"/>
+  </g>
+  <circle class="burst-ring" cx="158" cy="308" r="14"/>
+  <circle class="burst-core" cx="158" cy="308" r="5"/>
+  <circle class="spark" cx="158" cy="308" r="2.4" style="--dx:-30px;--dy:14px"/>
+  <circle class="spark" cx="158" cy="308" r="2.4" style="--dx:30px;--dy:14px"/>
+  <circle class="spark" cx="158" cy="308" r="1.9" style="--dx:-18px;--dy:30px"/>
+  <circle class="spark" cx="158" cy="308" r="1.9" style="--dx:18px;--dy:30px"/>
+  <circle class="spark" cx="158" cy="308" r="1.5" style="--dx:-6px;--dy:40px"/>
+  <circle class="spark" cx="158" cy="308" r="1.5" style="--dx:8px;--dy:38px"/>
 </svg>`;
   host.innerHTML = svg.trim();
-  host.dataset.ready = "1";
+  host.dataset.ready = "2";
 }
 
 function renderVerdict(result) {
