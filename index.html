@@ -400,6 +400,40 @@
     min-height:128px;
   }
   .verdict.idle .vdirmain{min-height:96px}
+  /* ---------- Commutateur de timeframe (header) ---------- */
+  .tf-switch{
+    display:inline-flex;
+    align-items:center;
+    gap:2px;
+    padding:3px;
+    border-radius:10px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid #2a3441;
+  }
+  .tf-switch .tf-opt{
+    appearance:none;
+    border:none;
+    background:transparent;
+    color:#8a94a6;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    padding:5px 11px;
+    border-radius:7px;
+    cursor:pointer;
+    transition:all .18s ease;
+  }
+  .tf-switch .tf-opt:hover{color:#ece8db}
+  .tf-switch .tf-opt.active{
+    color:#0d0f14;
+    background:linear-gradient(180deg,#e3c77b,#c9a961);
+    box-shadow:0 2px 8px rgba(201,169,97,0.35);
+  }
+  @media (max-width:540px){
+    .tf-switch .tf-opt{padding:4px 8px;font-size:10.5px}
+  }
+
   /* ====================================================================
      Candlestick stairs (v7.2.1) — escalier de 4 bougies + flèche comète
      Séquence type clignoteur Audi, validée en preview v6 :
@@ -1763,6 +1797,10 @@
       <span class="version-pill" id="appVersion" title="Numéro de version">v6</span>
     </div>
     <div class="row gap-12" style="align-items:center">
+      <div class="tf-switch" id="tfSwitch" role="tablist" aria-label="Timeframe de trading">
+        <button type="button" class="tf-opt" data-tf="5m" role="tab" title="Trading 5 min · tendance 30 min">5m</button>
+        <button type="button" class="tf-opt active" data-tf="15m" role="tab" title="Trading 15 min · tendance 1 h">15m</button>
+      </div>
       <div id="sessionBadge" class="session">
         <span class="pulse"></span>
         <span id="sessionText">…</span>
@@ -1913,11 +1951,11 @@
   <!-- ============== MULTI-TIMEFRAME + DXY ============== -->
   <div class="grid grid-2 mb-12">
     <section class="card">
-      <h2>Tendance 1 h</h2>
+      <h2 id="trendTitle">Tendance 1 h</h2>
       <div id="tfTrend" class="tftrend flat">
         <div class="arrow">→</div>
         <div>
-          <div class="lbl">Direction 1h</div>
+          <div class="lbl" id="trendDirLbl">Direction 1h</div>
           <div class="desc" id="tfDesc">—</div>
         </div>
       </div>
@@ -1939,7 +1977,7 @@
   <!-- ============== INDICATORS ============== -->
   <div class="grid grid-2 mb-12">
     <section class="card">
-      <h2>Indicateurs 15 min</h2>
+      <h2 id="indTitle">Indicateurs 15 min</h2>
       <div id="ind15"></div>
     </section>
     <section class="card">
@@ -1951,7 +1989,7 @@
   <!-- ============== CHART ============== -->
   <section class="card mb-12">
     <h2>
-      <span>Graphique 15 min · XAUUSD</span>
+      <span id="chartTitle">Graphique 15 min · XAUUSD</span>
       <span class="label-tools">
         <span class="badge" id="chartSrc">—</span>
         <span class="badge" id="chartRange">100 bougies</span>
@@ -2118,7 +2156,7 @@
 
 /* ====================================================================
    XAUUSD SIGNAL — single-file app
-   Helder · prop firm XAUUSD 15min
+   Helder · prop firm XAUUSD · Hydratrade · TF commutable 5 min / 15 min
    - Données: Twelve Data (XAU/USD) > Binance PAXG direct > Yahoo (GC=F) via proxies ; DXY: DX=F/DX-Y.NYB
    - Synthèse technique locale (indicateurs + score + garde-fous)
    - Indicateurs: RSI, MACD, BB, ADX, EMA, ATR, S/R, VWAP, Ichimoku,
@@ -2133,7 +2171,11 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.2.2";
+const APP_VERSION = "7.3.0";
+// v7.3.0 — timeframe commutable 5 min / 15 min (tendance adaptative 30m/1h), version complète
+//           affichée dans le header, +5 indicateurs directionnels (SuperTrend, Parabolic SAR,
+//           Heikin-Ashi, OBV, Choppiness Index), consensus directionnel 🐂/🐻, garde-fous
+//           marché en range (CHOP > 61.8 plafonne la confiance) et calibration 5 min
 // v7.2.2 — data layer durci : Binance PAXG/USDT en source directe sans clé ni proxy (CORS natif),
 //           hiérarchie Twelve Data > Binance > Yahoo/proxies, corsproxy.io réparé (format ?url=),
 //           DXY via DX=F (DX-Y.NYB cassé côté Yahoo depuis 03/2026), erreurs diagnostiques
@@ -2183,7 +2225,25 @@ const REFRESH_MS = 4 * 60 * 1000;
 const MAX_HISTORY = 50;
 const COOLDOWN_MS = 0;                     // 0 = pas de cooldown, Analyser toujours dispo
 const BUY_SCORE_GATE = 55;                  // BUY exige score >= 55
-const TF_ALIGN_WEIGHT = 20;                 // bonus/malus alignement 1h
+const TF_ALIGN_WEIGHT = 20;                 // bonus/malus alignement TF supérieur
+
+/* ---------- TIMEFRAMES ----------
+   TF de trading commutable (5 min / 15 min). Le TF de tendance suit la
+   règle standard 4-6x : 5m -> filtre 30m, 15m -> filtre 1h. Chaque entrée
+   porte les intervalles propres à chaque source de données. */
+const TIMEFRAMES = {
+  "5m": {
+    key: "5m", label: "5 min",
+    td: "5min",  binance: "5m",  yahoo: "5m",  yahooRange: "5d",  limit: 300,
+    trendLabel: "30 min", trendTd: "30min", trendBinance: "30m", trendYahoo: "30m", trendYahooRange: "1mo", trendLimit: 150
+  },
+  "15m": {
+    key: "15m", label: "15 min",
+    td: "15min", binance: "15m", yahoo: "15m", yahooRange: "5d", limit: 200,
+    trendLabel: "1 h", trendTd: "1h", trendBinance: "1h", trendYahoo: "60m", trendYahooRange: "1mo", trendLimit: 120
+  }
+};
+function TF() { return TIMEFRAMES[state.tf] || TIMEFRAMES["15m"]; }
 
 // Session & jour — calibration 20 trades Helder (heure Berlin)
 const SESSION_SCORES = [
@@ -2207,6 +2267,7 @@ const PROP_FIRM = {
 
 /* ---------- STATE ---------- */
 const state = {
+  tf: "15m",                   // timeframe de trading actif ("5m" | "15m")
   twelveKey: "",
   notifLevel: "fort",
   autoRefresh: false,
@@ -2250,6 +2311,8 @@ const ui = {
   autoRefresh: $("autoRefresh"), autoMorning: $("autoMorning"),
   autoAnalyze: $("autoAnalyze"),
   appVersion: $("appVersion"),
+  tfSwitch: $("tfSwitch"), indTitle: $("indTitle"), chartTitle: $("chartTitle"),
+  trendTitle: $("trendTitle"), trendDirLbl: $("trendDirLbl"),
   btnSave: $("btnSave"), btnClose: $("btnClose"),
   btnExport: $("btnExport"), btnImport: $("btnImport"), importInput: $("importInput"),
   btnHelp: $("btnHelp"), helpModal: $("helpModal"), btnCloseHelp: $("btnCloseHelp"),
@@ -2276,6 +2339,8 @@ const LS = {
   del(k) { try { localStorage.removeItem(k); } catch {} }
 };
 function loadSettings() {
+  state.tf = LS.get("xa_tf", "15m");
+  if (!TIMEFRAMES[state.tf]) state.tf = "15m";
   state.twelveKey = LS.get("xa_tk", "");
   state.notifLevel = LS.get("xa_nl", "fort");
   state.autoRefresh = LS.get("xa_ar", false);
@@ -2582,41 +2647,45 @@ async function fetchTwelve(symbol, interval = "15min", outputsize = 200) {
   }));
 }
 async function fetchCandles15() {
+  // Bougies du TF de trading actif (5 min ou 15 min selon le commutateur)
+  const t = TF();
   const fails = [];
   // 1. Twelve Data (XAU/USD réel) si clé configurée — direct, CORS natif
   if (state.twelveKey) {
-    try { return { candles: await fetchTwelve(TD_SYMBOL, "15min", 200), source: "Twelve Data" }; }
-    catch (e) { console.warn("Twelve Data 15m:", e); fails.push("Twelve Data (" + e.message + ")"); }
+    try { return { candles: await fetchTwelve(TD_SYMBOL, t.td, t.limit), source: "Twelve Data" }; }
+    catch (e) { console.warn("Twelve Data " + t.key + ":", e); fails.push("Twelve Data (" + e.message + ")"); }
   }
   // 2. Binance PAXG/USDT — direct, sans clé, sans proxy (le plus fiable sans clé)
   try {
-    return { candles: await fetchBinance("15m", 200), source: "Binance PAXG (≈XAU spot)" };
-  } catch (e) { console.warn("Binance 15m:", e); fails.push("Binance (" + e.message + ")"); }
+    return { candles: await fetchBinance(t.binance, t.limit), source: "Binance PAXG (≈XAU spot)" };
+  } catch (e) { console.warn("Binance " + t.key + ":", e); fails.push("Binance (" + e.message + ")"); }
   // 3. Yahoo GC=F via proxies CORS publics — dernier recours (fragile)
   try {
-    return { candles: await fetchYahoo(YF_GOLD, "15m", "5d"), source: "Yahoo (GC=F)" };
+    return { candles: await fetchYahoo(YF_GOLD, t.yahoo, t.yahooRange), source: "Yahoo (GC=F)" };
   } catch (e) {
-    console.warn("Yahoo 15m:", e); fails.push("Yahoo/proxies (" + e.message + ")");
+    console.warn("Yahoo " + t.key + ":", e); fails.push("Yahoo/proxies (" + e.message + ")");
     throw new Error(
-      "Impossible de récupérer les bougies 15 min — sources en échec : " + fails.join(" · ") +
+      "Impossible de récupérer les bougies " + t.label + " — sources en échec : " + fails.join(" · ") +
       ". " + (state.twelveKey ? "Réessayez dans 30 s." :
       "Astuce : ajoutez une clé Twelve Data gratuite (Réglages) pour une source directe et stable.")
     );
   }
 }
 async function fetchCandles1h() {
+  // Bougies du TF de TENDANCE (30 min quand on trade en 5 min, 1 h en 15 min)
+  const t = TF();
   if (state.twelveKey) {
-    try { return { candles: await fetchTwelve(TD_SYMBOL, "1h", 100), source: "Twelve Data" }; }
-    catch (e) { console.warn("Twelve Data 1h:", e); }
+    try { return { candles: await fetchTwelve(TD_SYMBOL, t.trendTd, t.trendLimit), source: "Twelve Data" }; }
+    catch (e) { console.warn("Twelve Data " + t.trendLabel + ":", e); }
   }
   try {
-    return { candles: await fetchBinance("1h", 120), source: "Binance PAXG (≈XAU spot)" };
-  } catch (e) { console.warn("Binance 1h:", e); }
+    return { candles: await fetchBinance(t.trendBinance, t.trendLimit), source: "Binance PAXG (≈XAU spot)" };
+  } catch (e) { console.warn("Binance " + t.trendLabel + ":", e); }
   try {
-    return { candles: await fetchYahoo(YF_GOLD, "60m", "1mo"), source: "Yahoo (GC=F)" };
+    return { candles: await fetchYahoo(YF_GOLD, t.trendYahoo, t.trendYahooRange), source: "Yahoo (GC=F)" };
   } catch (e) {
-    console.warn("Yahoo 1h:", e);
-    // non-fatal: on continue sans 1h, mais on dégrade le score
+    console.warn("Yahoo " + t.trendLabel + ":", e);
+    // non-fatal: on continue sans TF de tendance, mais on dégrade le score
     return { candles: [], source: "indisponible" };
   }
 }
@@ -3095,6 +3164,125 @@ function supportsResistances(candles, lookback = 80) {
 }
 
 /* ---------- ANALYSE GLOBALE ---------- */
+/* ====================================================================
+   INDICATEURS DIRECTIONNELS v7.3.0
+   SuperTrend, Parabolic SAR, Heikin-Ashi, OBV, Choppiness Index —
+   ajoutés pour renforcer la lecture BUY/SELL (SuperTrend et PSAR sont
+   binaires par construction) et filtrer les régimes en range (CHOP),
+   principal tueur de win rate en intraday.
+   ==================================================================== */
+function supertrend(candles, period = 10, mult = 3) {
+  // Implémentation standard (bandes ATR "collantes" + bascule de tendance).
+  // Retourne { dir: +1/-1, value: niveau du stop, flippedAgo: barres depuis
+  // le dernier retournement } — dir est LA lecture directionnelle.
+  if (!candles || candles.length < period + 2) return null;
+  const atrArr = atr(candles, period);
+  if (!atrArr) return null;
+  const n = candles.length;
+  let finalUpper = null, finalLower = null, trendUp = true, value = null;
+  const dirs = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {
+    const a = atrArr[i];
+    if (a == null) continue;
+    const hl2 = (candles[i].h + candles[i].l) / 2;
+    const basicUpper = hl2 + mult * a;
+    const basicLower = hl2 - mult * a;
+    const prevClose = i > 0 ? candles[i - 1].c : candles[i].c;
+    finalUpper = (finalUpper == null || basicUpper < finalUpper || prevClose > finalUpper) ? basicUpper : finalUpper;
+    finalLower = (finalLower == null || basicLower > finalLower || prevClose < finalLower) ? basicLower : finalLower;
+    if (trendUp) {
+      if (candles[i].c < finalLower) trendUp = false;
+    } else {
+      if (candles[i].c > finalUpper) trendUp = true;
+    }
+    value = trendUp ? finalLower : finalUpper;
+    dirs[i] = trendUp ? 1 : -1;
+  }
+  const lastDir = dirs[n - 1];
+  if (lastDir == null) return null;
+  let flippedAgo = 0;
+  for (let i = n - 1; i >= 0 && dirs[i] === lastDir; i--) flippedAgo = n - 1 - i;
+  return { dir: lastDir, value, flippedAgo };
+}
+function parabolicSAR(candles, step = 0.02, maxStep = 0.2) {
+  // Wilder classique. Retourne { dir: +1/-1, value: SAR courant }.
+  if (!candles || candles.length < 5) return null;
+  let up = candles[1].c >= candles[0].c;
+  let sar = up ? candles[0].l : candles[0].h;
+  let ep  = up ? candles[0].h : candles[0].l;
+  let af  = step;
+  for (let i = 1; i < candles.length; i++) {
+    const c = candles[i];
+    sar = sar + af * (ep - sar);
+    if (up) {
+      // le SAR ne peut pas dépasser les bas des 2 dernières bougies
+      sar = Math.min(sar, candles[i - 1].l, i >= 2 ? candles[i - 2].l : candles[i - 1].l);
+      if (c.l < sar) { up = false; sar = ep; ep = c.l; af = step; }
+      else if (c.h > ep) { ep = c.h; af = Math.min(maxStep, af + step); }
+    } else {
+      sar = Math.max(sar, candles[i - 1].h, i >= 2 ? candles[i - 2].h : candles[i - 1].h);
+      if (c.h > sar) { up = true; sar = ep; ep = c.h; af = step; }
+      else if (c.l < ep) { ep = c.l; af = Math.min(maxStep, af + step); }
+    }
+  }
+  return { dir: up ? 1 : -1, value: sar };
+}
+function heikinAshi(candles) {
+  // Bougies Heikin-Ashi : lissage du bruit. Retourne { dir: couleur de la
+  // dernière HA (+1 verte / -1 rouge), run: nb de HA consécutives de cette
+  // couleur }. Un run long = tendance propre — précieux en 5 min.
+  if (!candles || candles.length < 3) return null;
+  let haO = (candles[0].o + candles[0].c) / 2;
+  let haC = (candles[0].o + candles[0].h + candles[0].l + candles[0].c) / 4;
+  const colors = [haC >= haO ? 1 : -1];
+  for (let i = 1; i < candles.length; i++) {
+    const c = candles[i];
+    const newO = (haO + haC) / 2;
+    const newC = (c.o + c.h + c.l + c.c) / 4;
+    haO = newO; haC = newC;
+    colors.push(haC >= haO ? 1 : -1);
+  }
+  const dir = colors[colors.length - 1];
+  let run = 0;
+  for (let i = colors.length - 1; i >= 0 && colors[i] === dir; i--) run++;
+  return { dir, run };
+}
+function obvTrend(candles, lookback = 20) {
+  // On-Balance Volume : accumulation/distribution. Direction = signe de la
+  // pente (régression linéaire) de l'OBV sur `lookback` barres.
+  if (!candles || candles.length < lookback + 2) return null;
+  const obv = [0];
+  for (let i = 1; i < candles.length; i++) {
+    const d = candles[i].c - candles[i - 1].c;
+    obv.push(obv[i - 1] + (d > 0 ? (candles[i].v || 0) : d < 0 ? -(candles[i].v || 0) : 0));
+  }
+  const seg = obv.slice(-lookback);
+  const nn = seg.length;
+  const xm = (nn - 1) / 2;
+  const ym = seg.reduce((a, b) => a + b, 0) / nn;
+  let num = 0, den = 0;
+  for (let i = 0; i < nn; i++) { num += (i - xm) * (seg[i] - ym); den += (i - xm) * (i - xm); }
+  const slope = den ? num / den : 0;
+  if (slope === 0) return { dir: 0, slope: 0 };
+  return { dir: slope > 0 ? 1 : -1, slope };
+}
+function choppiness(candles, period = 14) {
+  // Choppiness Index (0-100). > 61.8 : marché en range (éviter les entrées
+  // directionnelles) ; < 38.2 : marché en tendance. Non directionnel — sert
+  // de filtre de régime.
+  if (!candles || candles.length < period + 1) return null;
+  let sumTR = 0, hi = -Infinity, lo = Infinity;
+  for (let i = candles.length - period; i < candles.length; i++) {
+    const c = candles[i], pc = candles[i - 1].c;
+    sumTR += Math.max(c.h - c.l, Math.abs(c.h - pc), Math.abs(c.l - pc));
+    if (c.h > hi) hi = c.h;
+    if (c.l < lo) lo = c.l;
+  }
+  const range = hi - lo;
+  if (range <= 0 || sumTR <= 0) return null;
+  return 100 * Math.log10(sumTR / range) / Math.log10(period);
+}
+
 async function analyze(candles15, candles1h, dxy) {
   const closes = candles15.map(c => c.c);
   const last = closes[closes.length - 1];
@@ -3116,6 +3304,11 @@ async function analyze(candles15, candles1h, dxy) {
   const cc = cci(candles15, 20);
   const ich = ichimoku(candles15);
   const vw = vwap(candles15);
+  const st  = supertrend(candles15, 10, 3);
+  const ps  = parabolicSAR(candles15);
+  const ha  = heikinAshi(candles15);
+  const ob  = obvTrend(candles15, 20);
+  const chop = choppiness(candles15, 14);
   const piv = pivotPoints(candles15);
   const fib = fibo(candles15, 60);
   const sr = supportsResistances(candles15, 80);
@@ -3138,6 +3331,7 @@ async function analyze(candles15, candles1h, dxy) {
     cci: get(cc),
     ichTenkan: get(ich?.tenkan), ichKijun: get(ich?.kijun), ichSpanA: get(ich?.spanA), ichSpanB: get(ich?.spanB),
     vwap: get(vw),
+    supertrend: st, psar: ps, ha, obv: ob, chop,
     piv, fib, sr
   };
 
@@ -3261,6 +3455,46 @@ async function analyze(candles15, candles1h, dxy) {
     techScore += vScore;
   }
 
+  // 12) SuperTrend(10,3) — direction binaire par construction, poids fort
+  if (st) {
+    const stScore = st.dir > 0 ? 8 : -8;
+    const fresh = st.flippedAgo <= 3 ? " (flip récent)" : "";
+    components.push({ name: "SuperTrend(10,3) " + (st.dir > 0 ? "haussier" : "baissier") + fresh, val: stScore });
+    techScore += stScore;
+  }
+
+  // 13) Parabolic SAR — direction binaire, poids modéré
+  if (ps) {
+    const psScore = ps.dir > 0 ? 4 : -4;
+    components.push({ name: "PSAR " + (ps.dir > 0 ? "sous le prix" : "sur le prix"), val: psScore });
+    techScore += psScore;
+  }
+
+  // 14) Heikin-Ashi — run de bougies lissées consécutives (anti-bruit, clé en 5m)
+  if (ha) {
+    const haScore = ha.dir * Math.min(6, Math.max(1, Math.round(ha.run * 1.2)));
+    components.push({ name: "Heikin-Ashi " + ha.run + " bougie" + (ha.run > 1 ? "s" : "") + " " + (ha.dir > 0 ? "vertes" : "rouges"), val: haScore });
+    techScore += haScore;
+  }
+
+  // 15) OBV(20) — le volume confirme-t-il la direction ?
+  if (ob && ob.dir !== 0) {
+    const obScore = ob.dir * 4;
+    components.push({ name: "OBV pente " + (ob.dir > 0 ? "haussière" : "baissière"), val: obScore });
+    techScore += obScore;
+  }
+
+  // 16) Choppiness Index — filtre de RÉGIME (non directionnel)
+  // > 61.8 : marché en range = terrain à faux signaux -> pénalité
+  if (chop != null) {
+    let chopScore = 0;
+    let chopTag = "";
+    if (chop > 61.8) { chopScore = -6; chopTag = " (range)"; }
+    else if (chop < 38.2) { chopTag = " (tendance)"; }
+    components.push({ name: "Choppiness " + chop.toFixed(0) + chopTag, val: chopScore });
+    techScore += chopScore;
+  }
+
   // Cap technique à ±50
   techScore = Math.max(-50, Math.min(50, techScore));
 
@@ -3325,18 +3559,18 @@ async function analyze(candles15, candles1h, dxy) {
   if (trend1h.dir !== 0) {
     if (trend1h.dir === provisionalDir) {
       trendScore = TF_ALIGN_WEIGHT;
-      alignment = "✓ Aligné avec 1h (" + trend1h.label.toLowerCase() + ")";
+      alignment = "✓ Aligné avec " + TF().trendLabel + " (" + trend1h.label.toLowerCase() + ")";
       trend1h.aligned = true;
     } else {
       trendScore = -TF_ALIGN_WEIGHT;
-      alignment = "⚠️ Opposé à 1h (" + trend1h.label.toLowerCase() + ") — pénalité";
+      alignment = "⚠️ Opposé à " + TF().trendLabel + " (" + trend1h.label.toLowerCase() + ") — pénalité";
       trend1h.aligned = false;
     }
   } else {
-    alignment = "1h neutre";
+    alignment = TF().trendLabel + " neutre";
     trend1h.aligned = null;
   }
-  components.push({ name: "Tendance 1h", val: trendScore });
+  components.push({ name: "Tendance " + TF().trendLabel, val: trendScore });
   globalScore += trendScore;
 
   // Clamp final
@@ -3353,9 +3587,22 @@ async function analyze(candles15, candles1h, dxy) {
   try { us10y = await fetchUS10Y(); } catch (e) { /* tolerere */ }
   const upcomingEvents = getUpcomingEvents();
 
+  // ===== CONSENSUS DIRECTIONNEL =====
+  // Votes 🐂/🐻 parmi les composants directionnels (on exclut régime & contexte :
+  // session, jour, volatilité, choppiness — qui ne "votent" pas une direction)
+  const NON_DIRECTIONAL = ["Session", "Jour", "Volatilité", "Choppiness"];
+  const dirComponents = components.filter(c =>
+    c.val !== 0 && !NON_DIRECTIONAL.some(pfx => c.name.startsWith(pfx)));
+  const votes = {
+    bull: dirComponents.filter(c => c.val > 0).length,
+    bear: dirComponents.filter(c => c.val < 0).length,
+    total: dirComponents.length
+  };
+
   return {
     current: cur,
     components,
+    votes,
     techScore, trend1h, trendScore, dxyScore, sessDayScore, volScore,
     globalScore, alignment, provisionalDir,
     smc: { h15: smc15, h1: smc1h, orderBlocks, fvgs },
@@ -3380,15 +3627,27 @@ function generateReasoning(analysis, signal) {
   // 2. Tendance 1h alignée ou opposée
   if (analysis.trend1h.aligned === true) {
     const t1h = analysis.trend1h.label ? analysis.trend1h.label.toLowerCase() : "alignée";
-    reasons.push(`tendance 1h ${t1h} (alignée)`);
+    reasons.push(`tendance ${TF().trendLabel} ${t1h} (alignée)`);
   } else if (analysis.trend1h.aligned === false) {
-    reasons.push(`tendance 1h opposée au signal`);
+    reasons.push(`tendance ${TF().trendLabel} opposée au signal`);
   }
 
   // 3. RSI extrême
   if (c.rsi != null) {
     if (c.rsi < 30) reasons.push(`RSI survendu (${c.rsi.toFixed(0)})`);
     if (c.rsi > 70) reasons.push(`RSI suracheté (${c.rsi.toFixed(0)})`);
+  }
+
+  // 3bis. SuperTrend — lecture directionnelle la plus lisible
+  if (c.supertrend) {
+    reasons.push(`SuperTrend ${c.supertrend.dir > 0 ? "haussier" : "baissier"}${c.supertrend.flippedAgo <= 3 ? " (flip récent)" : ""}`);
+  }
+
+  // 3ter. Consensus des indicateurs directionnels
+  if (analysis.votes && analysis.votes.total >= 6) {
+    const v = analysis.votes;
+    const maj = Math.max(v.bull, v.bear) / v.total;
+    if (maj >= 0.7) reasons.push(`consensus ${v.bull > v.bear ? "haussier" : "baissier"} ${Math.max(v.bull, v.bear)}/${v.total} indicateurs`);
   }
 
   // 4. ADX (force de la tendance)
@@ -3434,8 +3693,8 @@ function generateSynthesis(analysis, dxy) {
   const c = analysis.current;
   const dir = analysis.globalScore > 0 ? "BUY" : "SELL";
   const align = analysis.trend1h.aligned === true ? "alignée"
-              : analysis.trend1h.aligned === false ? "opposée à la tendance 1h"
-              : "tendance 1h neutre";
+              : analysis.trend1h.aligned === false ? "opposée à la tendance " + TF().trendLabel
+              : "tendance " + TF().trendLabel + " neutre";
 
   // Top contributeurs (positifs et négatifs)
   const sorted = [...analysis.components].sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
@@ -3560,7 +3819,7 @@ function applySafetyNets(aiResult, analysis) {
         confidence = "FAIBLE";
       }
       if (!aligns) {
-        flags.push({ tone: "r", text: "BUY contre tendance 1h (" + analysis.trend1h.label.toLowerCase() + ") — dangereux" });
+        flags.push({ tone: "r", text: "BUY contre tendance " + TF().trendLabel + " (" + analysis.trend1h.label.toLowerCase() + ") — dangereux" });
         confidence = "FAIBLE";
       }
     }
@@ -3583,9 +3842,9 @@ function applySafetyNets(aiResult, analysis) {
     flags.push({ tone: "g", text: "Mercredi — 100% WR historique" });
   }
 
-  // Garde 5: opposé 1h
+  // Garde 5: opposé au TF de tendance
   if (analysis.trend1h.aligned === false) {
-    flags.push({ tone: "y", text: "Signal opposé à la tendance 1h — confiance réduite" });
+    flags.push({ tone: "y", text: "Signal opposé à la tendance " + TF().trendLabel + " — confiance réduite" });
   }
 
   // Garde 6: volatilité extrême
@@ -3602,7 +3861,19 @@ function applySafetyNets(aiResult, analysis) {
     flags.push({ tone: "r", text: "Session fermée — pas de nouvelle position" });
   }
 
-  // (Garde 8 cooldown supprimée — pas de blocage)
+  // Garde 8: marché en range (Choppiness > 61.8) — terrain à faux signaux
+  if (analysis.current.chop != null && analysis.current.chop > 61.8) {
+    if (confidence === "FORT") confidence = "MOYEN";
+    flags.push({ tone: "y", text: "Marché en range (CHOP " + analysis.current.chop.toFixed(0) + ") — faux signaux fréquents, confiance plafonnée" });
+  }
+
+  // Garde 8bis: TF 5 min — la calibration historique (sessions/jours/WR)
+  // provient de trades 15 min : signal valable mais stats non transposées
+  if (state.tf === "5m") {
+    flags.push({ tone: "y", text: "TF 5 min : calibration sessions/jours établie sur vos trades 15 min — bruit accru, prudence sur la taille" });
+  }
+
+  // (ancienne Garde 8 cooldown supprimée — pas de blocage)
 
   // Garde 9: événements macro majeurs (NFP/FOMC/CPI)
   if (analysis.macro && analysis.macro.events && analysis.macro.events.length > 0) {
@@ -3761,7 +4032,7 @@ function renderVerdict(result) {
   if (price) {
     ui.vPrice.classList.remove("hide");
     ui.vPriceVal.textContent = price.toFixed(2);
-    ui.vPriceSub.textContent = "XAUUSD · 15 min";
+    ui.vPriceSub.textContent = "XAUUSD · " + ((result.tf && TIMEFRAMES[result.tf]) ? TIMEFRAMES[result.tf].label : TF().label);
   }
   ui.vConf.classList.remove("hide");
   const cMap = { FORT: "fort", MOYEN: "moy", FAIBLE: "faible" };
@@ -3856,17 +4127,27 @@ function renderScore(analysis) {
   ui.scoreLabel.style.left = (50 + (s > 0 ? pct / 2 : -pct / 2)) + "%";
   ui.scoreLabel.style.transform = "translate(-50%,-50%)";
 
-  ui.scoreComp.innerHTML = analysis.components.map(c => {
+  // Consensus directionnel en tête du détail
+  let compHtml = "";
+  if (analysis.votes && analysis.votes.total > 0) {
+    const v = analysis.votes;
+    const majCls = v.bull > v.bear ? "pos" : v.bear > v.bull ? "neg" : "zero";
+    compHtml += `<div class="sc" style="border-bottom:1px solid #232b38;margin-bottom:4px;padding-bottom:6px">` +
+      `<span class="name"><strong>Consensus directionnel</strong></span>` +
+      `<span class="val ${majCls}">🐂 ${v.bull} / 🐻 ${v.bear} (sur ${v.total})</span></div>`;
+  }
+  compHtml += analysis.components.map(c => {
     const cls = c.val > 0 ? "pos" : c.val < 0 ? "neg" : "zero";
     return `<div class="sc"><span class="name">${escapeHtml(c.name)}</span><span class="val ${cls}">${c.val > 0 ? "+" : ""}${c.val}</span></div>`;
   }).join("");
+  ui.scoreComp.innerHTML = compHtml;
 }
 function renderTF(analysis) {
   if (!analysis || analysis.trend1h.dir === 0) {
     ui.tfTrend.className = "tftrend flat";
     ui.tfTrend.querySelector(".arrow").textContent = "→";
     ui.tfDesc.textContent = "Indisponible";
-    ui.tfAlign.textContent = "Données 1h insuffisantes";
+    ui.tfAlign.textContent = "Données " + TF().trendLabel + " insuffisantes";
     return;
   }
   const dir = analysis.trend1h.dir;
@@ -3910,7 +4191,20 @@ function renderIndicators(analysis) {
     { n: "CCI(20)", v: c.cci, fmt: 0, cls: c.cci > 150 ? "dn" : c.cci < -150 ? "up" : "ne" },
     { n: "Ichimoku Tenkan", v: c.ichTenkan, fmt: 2, cls: c.price > c.ichTenkan ? "up" : "dn" },
     { n: "Ichimoku Kijun", v: c.ichKijun, fmt: 2, cls: c.price > c.ichKijun ? "up" : "dn" },
-    { n: "VWAP", v: c.vwap, fmt: 2, cls: c.price > c.vwap ? "up" : "dn" }
+    { n: "VWAP", v: c.vwap, fmt: 2, cls: c.price > c.vwap ? "up" : "dn" },
+    { n: "SuperTrend(10,3)", v: c.supertrend ? c.supertrend.value : null, fmt: 2,
+      cls: c.supertrend ? (c.supertrend.dir > 0 ? "up" : "dn") : "ne",
+      pill: c.supertrend ? (c.supertrend.dir > 0 ? "haussier" : "baissier") : "" },
+    { n: "Parabolic SAR", v: c.psar ? c.psar.value : null, fmt: 2,
+      cls: c.psar ? (c.psar.dir > 0 ? "up" : "dn") : "ne" },
+    { n: "Heikin-Ashi run", v: c.ha ? c.ha.run : null, fmt: 0,
+      cls: c.ha ? (c.ha.dir > 0 ? "up" : "dn") : "ne",
+      pill: c.ha ? (c.ha.dir > 0 ? "vertes" : "rouges") : "" },
+    { n: "OBV(20) pente", v: c.obv ? c.obv.slope : null, fmt: 0,
+      cls: c.obv ? (c.obv.dir > 0 ? "up" : c.obv.dir < 0 ? "dn" : "ne") : "ne" },
+    { n: "Choppiness(14)", v: c.chop, fmt: 0,
+      cls: c.chop > 61.8 ? "dn" : c.chop < 38.2 ? "up" : "ne",
+      pill: c.chop > 61.8 ? "range" : c.chop < 38.2 ? "tendance" : "" }
   ];
   ui.ind15.innerHTML = rows.map(r => {
     const val = r.v == null ? "n/d" : r.v.toFixed(r.fmt);
@@ -4043,6 +4337,7 @@ function exportData() {
     version: 1,
     exportedAt: new Date().toISOString(),
     settings: {
+      tf: state.tf,
       twelveKey: state.twelveKey,
       notifLevel: state.notifLevel,
       autoRefresh: state.autoRefresh,
@@ -4075,6 +4370,8 @@ async function importData(file) {
     }
     // Settings
     if (data.settings) {
+      state.tf           = TIMEFRAMES[data.settings.tf] ? data.settings.tf : "15m";
+      LS.set("xa_tf", state.tf);
       state.twelveKey    = data.settings.twelveKey    || "";
       state.notifLevel   = data.settings.notifLevel   || "fort";
       state.autoRefresh  = !!data.settings.autoRefresh;
@@ -4293,6 +4590,7 @@ async function analyzeNow(opts = {}) {
     };
     final = applySafetyNets(final, analysis);
     final.source = "technique local";
+    final.tf = state.tf;
     final.score = analysis.globalScore;
     final.price = analysis.current.price;
     final.ts = Date.now();
@@ -4506,14 +4804,47 @@ setInterval(updateCycleUI, 1000);
 setInterval(updateSessionBadge, 30000);
 
 /* ====================================================================
+   TIMEFRAME SWITCH (v7.3.0)
+   Bascule 5 min <-> 15 min. Persiste le choix, met à jour tous les labels,
+   invalide les bougies en cache et relance automatiquement l'analyse si un
+   signal était déjà affiché.
+   ==================================================================== */
+function updateTfUI() {
+  const t = TF();
+  if (ui.tfSwitch) {
+    ui.tfSwitch.querySelectorAll(".tf-opt").forEach(b =>
+      b.classList.toggle("active", b.dataset.tf === state.tf));
+  }
+  if (ui.indTitle)    ui.indTitle.textContent    = "Indicateurs " + t.label;
+  if (ui.chartTitle)  ui.chartTitle.textContent  = "Graphique " + t.label + " · XAUUSD";
+  if (ui.trendTitle)  ui.trendTitle.textContent  = "Tendance " + t.trendLabel;
+  if (ui.trendDirLbl) ui.trendDirLbl.textContent = "Direction " + t.trendLabel;
+  if (ui.tfAlign && !state.lastResult) ui.tfAlign.textContent = "Filtre anti faux signaux " + t.label;
+  if (ui.chart) ui.chart.setAttribute("aria-label", "Graphique XAUUSD " + t.label);
+}
+function setTimeframe(tf) {
+  if (!TIMEFRAMES[tf] || state.tf === tf) return;
+  state.tf = tf;
+  LS.set("xa_tf", tf);
+  // Les bougies en cache appartiennent à l'ancien TF — on invalide
+  state.candles15 = [];
+  state.candles1h = [];
+  updateTfUI();
+  const t = TF();
+  toast("Timeframe " + t.label + " — tendance filtrée en " + t.trendLabel, "info");
+  // Relance auto si un signal était affiché (sinon l'utilisateur clique Analyser)
+  if (state.lastResult && !state.analyzing) analyzeNow({ reason: "tf-switch" });
+}
+
+/* ====================================================================
    INIT
    ==================================================================== */
 function init() {
   loadSettings();
-  // Version pill : dérive le "v6" depuis "6.0.0" automatiquement
+  // Version pill : version complète (ex. v7.3.0), source unique = APP_VERSION
   if (ui.appVersion) {
-    const major = (APP_VERSION || "1.0.0").split(".")[0];
-    ui.appVersion.textContent = "v" + major;
+    ui.appVersion.textContent = "v" + APP_VERSION;
+    ui.appVersion.title = "XAUUSD Signal v" + APP_VERSION;
   }
   state.capture = loadCapture();
   renderCapture();
@@ -4522,6 +4853,12 @@ function init() {
   updateCycleUI();
   // Pré-injecter le SVG chandeliers pour qu'il soit prêt à s'afficher dès le 1er signal
   setupSignalChart();
+  // Commutateur de timeframe : bind + labels selon le TF persistant
+  if (ui.tfSwitch) {
+    ui.tfSwitch.querySelectorAll(".tf-opt").forEach(b =>
+      b.addEventListener("click", () => setTimeframe(b.dataset.tf)));
+  }
+  updateTfUI();
   setupAutoTimers();
   // Précharge les données pour avoir un verdict instantané au premier clic
   refreshDataOnly();
