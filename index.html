@@ -2181,6 +2181,12 @@
     </div>
 
     <div class="field">
+      <label for="holidaysList">Jours fériés — marché fermé <span class="muted">(YYYY-MM-DD, un par ligne)</span></label>
+      <textarea id="holidaysList" rows="4" style="width:100%;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:12px" spellcheck="false"></textarea>
+      <div class="hint">Utilisé pour la reprise après remboursement (prochain jour de bourse) et l'alerte « marché fermé ». Prérempli avec les fermetures confirmées — le 19/06/2026 (Juneteenth) est volontairement absent : tes trades réels prouvent que ta plateforme était ouverte ce jour-là.</div>
+    </div>
+
+    <div class="field">
       <label for="notifLevel">Notifications navigateur (optionnel)</label>
       <select id="notifLevel">
         <option value="off">Désactivées</option>
@@ -2309,7 +2315,22 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.8.0";
+const APP_VERSION = "7.11.0";
+// v7.11.0 — JOURS FÉRIÉS US : le remboursement arrive le prochain JOUR DE BOURSE (week-ends ET
+//            fériés — confirmé par Helder : 03/07/2026 Independence Day observé = fermé),
+//            calendrier data-driven (Juneteenth 19/06/2026 exclu car tradé dans le CSV réel)
+//            éditable dans les Réglages, garde-fou rouge « marché fermé » les jours fériés,
+//            reprise effective via nextTradingDayKey, export/import/reset étendus
+// v7.10.0 — raffinements validés par captures de l'app Hydratrade (05/07/2026) : SL exact
+//            118.75$, blocage à 3 ÉTATS (bloqué / timer écoulé-confirmation requise / débloqué)
+//            car le déblocage réel = ARRIVÉE du remboursement (mention « Refund being processed »
+//            disparue), reprise effective reportée à lundi 05h Berlin si le timer expire le
+//            week-end, 1 challenge ID par cycle documenté, bannières/garde-fous/prompt adaptés
+// v7.9.0 — TRÉSORERIE : transfert quotidien calculé automatiquement (fee × challenges terminés
+//           la veille, jour civil Berlin), registre complet des transferts reconstruit depuis les
+//           cycles, fonds de roulement estimé, rappel matinal en garde-fou (<12h), et
+//           DISCRIMINATEUR de l'hypothèse frais : les matins suivant un remboursement sont
+//           listés pour vérification sur le relevé USDC (tranche la question à ~376 $)
 // v7.8.0 — ÉCONOMIE NETTE : frais de cycle ~125.45 USDC (observé 125.3-125.6, réglable) intégré
 //           partout — P/L net réel après frais, marge par cycle gagné (~+25$), EV nette/cycle,
 //           SEUIL DE RENTABILITÉ (fee/net ≈ 83.15% de cycles gagnés) comparé au WR réel avec
@@ -2429,7 +2450,7 @@ const DEFAULT_DAY_SCORES = {
   4: { score: +3,  label: "Jeudi — correct" }
 };
 const PROP_FIRM = {
-  tp: 150, sl: 118, account: 25000, defaultLot: 0.07,
+  tp: 150, sl: 118.75, account: 25000, defaultLot: 0.07,
   openHour: 5, closeHour: 18, hardCloseHour: 22, fridayCloseHour: 21,
   // Règle « A Caccia di Trader » : cycle de 4 tentatives max à lots croissants
   // (échelle ~0.07/0.14/0.25/0.44). Un TP à n'importe quel step nette ~+150$
@@ -2439,6 +2460,12 @@ const PROP_FIRM = {
   // Après un remboursement : 48h de BLOCAGE (aucun nouveau trade possible).
   // Ancre validée sur les données réelles : OUVERTURE du 4e trade + 48h
   // (reprise observée à +28 min du déblocage le 17/06/2026).
+  // IMPORTANT (capture 05/07/2026) : le timer 48h est une condition NÉCESSAIRE
+  // mais le déblocage EFFECTIF = arrivée du remboursement dans l'app ; la
+  // mention « Refund being processed » doit avoir disparu. Le remboursement
+  // arrive le PROCHAIN JOUR DE BOURSE (week-ends ET fériés US le retardent —
+  // confirmé le 03/07/2026, Independence Day observé, marché fermé).
+  // Chaque cycle a son propre CHALLENGE ID.
   refundLockoutHours: 48,
   // Frais par cycle observés : 125.3 à 125.6 USDC (défaut = médiane 125.45,
   // modifiable dans les Réglages). Hypothèse par défaut : payé sur TOUT cycle.
@@ -2454,6 +2481,7 @@ const state = {
   cycles: [],                   // cycles A Caccia di Trader reconstruits depuis le CSV
   cycleStats: null,             // { won, refunded, cycleWR, effectivePL, truePL, ... }
   cycleFee: 125.45,             // frais par cycle en USDC (observé : 125.3-125.6)
+  holidays: null,               // jours fériés marché fermé (YYYY-MM-DD), défaut DEFAULT_US_HOLIDAYS
   feeRefunded: false,           // le frais est-il rendu lors d'un remboursement de cycle ?
   twelveKey: "",
   anthropicKey: "",             // clé API Anthropic (analyse Fable 5 des captures)
@@ -2498,7 +2526,7 @@ const ui = {
   modal: $("modal"),
   apiTwelve: $("apiTwelve"),
   apiAnthropic: $("apiAnthropic"),
-  cycleFee: $("cycleFee"), feeRefunded: $("feeRefunded"),
+  cycleFee: $("cycleFee"), feeRefunded: $("feeRefunded"), holidaysList: $("holidaysList"),
   btnFable: $("btnFable"), btnOpenClaude: $("btnOpenClaude"),
   notifLevel: $("notifLevel"),
   autoRefresh: $("autoRefresh"), autoMorning: $("autoMorning"),
@@ -2543,6 +2571,8 @@ function loadSettings() {
   const feeLS = Number(LS.get("xa_fee", PROP_FIRM.cycleFeeDefault));
   state.cycleFee = isFinite(feeLS) && feeLS >= 0 ? feeLS : PROP_FIRM.cycleFeeDefault;
   state.feeRefunded = !!LS.get("xa_feeref", false);
+  const hol = LS.get("xa_hol", null);
+  state.holidays = Array.isArray(hol) && hol.length ? hol.filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)) : DEFAULT_US_HOLIDAYS.slice();
   state.notifLevel = LS.get("xa_nl", "fort");
   state.autoRefresh = LS.get("xa_ar", false);
   state.autoMorning = LS.get("xa_am", true);
@@ -2551,6 +2581,7 @@ function loadSettings() {
   if (ui.apiAnthropic) ui.apiAnthropic.value = state.anthropicKey;
   if (ui.cycleFee) ui.cycleFee.value = state.cycleFee;
   if (ui.feeRefunded) ui.feeRefunded.checked = state.feeRefunded;
+  if (ui.holidaysList) ui.holidaysList.value = (state.holidays || []).join("\n");
   if (ui.notifLevel) ui.notifLevel.value = state.notifLevel;
   if (ui.autoRefresh) ui.autoRefresh.checked = !!state.autoRefresh;
   if (ui.autoMorning) ui.autoMorning.checked = !!state.autoMorning;
@@ -2566,6 +2597,10 @@ function saveSettings() {
     state.cycleFee = isFinite(f) && f >= 0 ? f : PROP_FIRM.cycleFeeDefault;
   }
   if (ui.feeRefunded) state.feeRefunded = !!ui.feeRefunded.checked;
+  if (ui.holidaysList) {
+    const parsed = ui.holidaysList.value.split(/[\n,;\s]+/).map(x => x.trim()).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k));
+    state.holidays = parsed.length ? parsed : DEFAULT_US_HOLIDAYS.slice();
+  }
   state.notifLevel = ui.notifLevel.value;
   state.autoRefresh = ui.autoRefresh.checked;
   state.autoMorning = ui.autoMorning.checked;
@@ -2574,6 +2609,7 @@ function saveSettings() {
   LS.set("xa_ak", state.anthropicKey);
   LS.set("xa_fee", state.cycleFee);
   LS.set("xa_feeref", state.feeRefunded);
+  LS.set("xa_hol", state.holidays);
   // Les frais impactent l'économie affichée : recalcul immédiat du panneau
   recalibrate();
   LS.set("xa_nl", state.notifLevel);
@@ -3823,13 +3859,62 @@ function finalizeCycle(c) {
     lockoutUntil: refunded ? last.openTime + PROP_FIRM.refundLockoutHours * 3600000 : null
   };
 }
+function berlinInstantAt(dateKey, hourBerlin) {
+  // Instant UTC correspondant à dateKey à hourBerlin heure de Berlin
+  // (correction d'offset via berlinHourDay, DST-safe pour nos usages).
+  const parts = dateKey.split("-").map(Number);
+  let t = Date.UTC(parts[0], parts[1] - 1, parts[2], hourBerlin, 0, 0);
+  let diff = hourBerlin - berlinHourDay(t).hour;
+  if (diff > 12) diff -= 24;
+  if (diff < -12) diff += 24;
+  return t + diff * 3600000;
+}
+/* Jours fériés US où le marché est fermé pour la plateforme de Helder.
+   DATA-DRIVEN : Juneteenth (19/06/2026) volontairement EXCLU — le CSV réel
+   contient des trades ce jour-là. Préremplis : fermetures confirmées
+   (03/07/2026 par Helder) + quasi-universelles (Good Friday, Thanksgiving,
+   Noël, Nouvel An). Liste éditable dans les Réglages (une date par ligne). */
+const DEFAULT_US_HOLIDAYS = [
+  "2026-04-03", // Good Friday
+  "2026-07-03", // Independence Day observé (4 juillet = samedi) — CONFIRMÉ fermé
+  "2026-11-26", // Thanksgiving
+  "2026-12-25", // Noël
+  "2027-01-01", // Nouvel An
+  "2027-03-26", // Good Friday
+  "2027-07-05", // Independence Day observé (4 juillet = dimanche)
+  "2027-11-25", // Thanksgiving
+  "2027-12-24"  // Noël observé (25 = samedi)
+];
+function weekdayOfKey(dateKey) {
+  const parts = dateKey.split("-").map(Number);
+  return new Date(Date.UTC(parts[0], parts[1] - 1, parts[2])).getUTCDay();
+}
+function isTradingDay(dateKey, holidays) {
+  const wd = weekdayOfKey(dateKey);
+  if (wd === 0 || wd === 6) return false;
+  const list = holidays || state.holidays || DEFAULT_US_HOLIDAYS;
+  return list.indexOf(dateKey) === -1;
+}
+function nextTradingDayKey(dateKey, holidays) {
+  let k = dateKey, guard = 0;
+  while (!isTradingDay(k, holidays) && guard++ < 30) k = shiftDateKey(k, 1);
+  return k;
+}
+function computeEffectiveResume(untilMs) {
+  // Si le timer 48h expire un jour SANS bourse (samedi, dimanche OU férié US
+  // — confirmé par Helder le 03/07/2026), la reprise effective est le
+  // PROCHAIN JOUR DE BOURSE à l'ouverture de session (05h Berlin).
+  const key = berlinDateKey(untilMs);
+  if (isTradingDay(key)) return untilMs;
+  return berlinInstantAt(nextTradingDayKey(shiftDateKey(key, 1)), PROP_FIRM.openHour);
+}
 function getLockoutStatus(cycles, nowMs) {
   // Statut de blocage 48h : bloqué si le DERNIER cycle est un remboursement
   // dont la fenêtre court encore et qu'aucun trade n'existe après lui.
   // Détecte aussi les violations historiques (trade ouvert pendant une
   // fenêtre de blocage = incohérence de données ou règle mal comprise).
   const now = nowMs != null ? nowMs : Date.now();
-  const status = { locked: false, until: null, remainingMs: 0, violations: 0, lastRefundEnd: null };
+  const status = { locked: false, pendingConfirm: false, until: null, effectiveResume: null, remainingMs: 0, violations: 0, lastRefundEnd: null };
   if (!cycles || !cycles.length) return status;
   for (let i = 0; i < cycles.length; i++) {
     const c = cycles[i];
@@ -3837,10 +3922,19 @@ function getLockoutStatus(cycles, nowMs) {
     status.lastRefundEnd = c.endTs;
     const next = cycles[i + 1];
     if (next && next.trades[0].openTime < c.lockoutUntil) status.violations++;
-    if (!next && now < c.lockoutUntil) {
-      status.locked = true;
+    if (!next) {
       status.until = c.lockoutUntil;
-      status.remainingMs = c.lockoutUntil - now;
+      status.effectiveResume = computeEffectiveResume(c.lockoutUntil);
+      if (now < c.lockoutUntil) {
+        // État 1 : timer 48h en cours -> BLOQUÉ
+        status.locked = true;
+        status.remainingMs = c.lockoutUntil - now;
+      } else if (now < c.lockoutUntil + 5 * 86400000) {
+        // État 2 : timer écoulé mais aucun trade depuis -> le remboursement
+        // doit être ARRIVÉ pour retrader (mention « Refund being processed »
+        // disparue dans l'app). Horizon 5 j, au-delà on considère le CSV périmé.
+        status.pendingConfirm = true;
+      }
     }
   }
   return status;
@@ -3933,6 +4027,115 @@ function fmtUsd(v) {
   if (v == null || !isFinite(v)) return "n/d";
   return (v >= 0 ? "+" : "−") + Math.abs(v).toLocaleString("fr-CH", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " $";
 }
+/* ====================================================================
+   TRÉSORERIE — TRANSFERTS QUOTIDIENS (v7.9.0)
+   Règle : chaque matin, retirer (prix du challenge × challenges TERMINÉS
+   la veille, jour civil Berlin) d'Hydratrade pour racheter les challenges
+   du jour. Le registre est reconstruit depuis les cycles ; les matins qui
+   suivent un REMBOURSEMENT sont marqués : ce sont les jours discriminants
+   pour trancher l'hypothèse « frais perdu vs rendu » (vérifiables sur le
+   relevé USDC réel).
+   ==================================================================== */
+function berlinDateKey(ms) {
+  try {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit"
+    }).format(new Date(ms));
+    return parts; // en-CA -> "YYYY-MM-DD"
+  } catch (e) {
+    return new Date(ms).toISOString().slice(0, 10);
+  }
+}
+function shiftDateKey(key, days) {
+  // Arithmétique sur le LIBELLÉ de date (immune aux DST) : "2026-06-30" +1 -> "2026-07-01"
+  const [y, m, d] = key.split("-").map(Number);
+  const t = Date.UTC(y, m - 1, d) + days * 86400000;
+  const nd = new Date(t);
+  return nd.getUTCFullYear() + "-" + String(nd.getUTCMonth() + 1).padStart(2, "0") + "-" + String(nd.getUTCDate()).padStart(2, "0");
+}
+function fmtDateKeyFr(key) {
+  const [y, m, d] = key.split("-");
+  return d + "/" + m + (String(new Date().getFullYear()) === y ? "" : "/" + y.slice(2));
+}
+function computeDailyLedger(cycles, fee) {
+  // Registre par jour civil Berlin : démarrés, terminés (W/R), transfert dû
+  // le LENDEMAIN du jour de fin. Retourne { rows (triées), transfersTotal,
+  // transferDays, maxStartedPerDay, discriminatorDays }.
+  const F = fee != null ? fee : (state.cycleFee != null ? state.cycleFee : PROP_FIRM.cycleFeeDefault);
+  const byDay = {};
+  const row = k => (byDay[k] = byDay[k] || { date: k, started: 0, completed: 0, won: 0, refunded: 0, transferDue: 0, refundInvolved: false });
+  for (const c of (cycles || [])) {
+    row(berlinDateKey(c.startTs)).started++;
+    if (c.ongoing) continue;
+    const endKey = berlinDateKey(c.endTs);
+    const r = row(endKey);
+    r.completed++;
+    if (c.won) r.won++; else if (c.refunded) r.refunded++;
+    // Transfert dû le lendemain matin
+    const t = row(shiftDateKey(endKey, 1));
+    t.transferDue += F;
+    if (c.refunded) t.refundInvolved = true;
+  }
+  const rows = Object.values(byDay).sort((a, b) => a.date < b.date ? -1 : 1);
+  const transferRows = rows.filter(r => r.transferDue > 0);
+  return {
+    rows,
+    transfersTotal: transferRows.reduce((sm, r) => sm + r.transferDue, 0),
+    transferDays: transferRows.length,
+    maxStartedPerDay: rows.reduce((mx, r) => Math.max(mx, r.started), 0),
+    discriminatorDays: transferRows.filter(r => r.refundInvolved).map(r => r.date)
+  };
+}
+function getTodayTransfer(cycles, fee, nowMs) {
+  // Montant à retirer CE matin = fee × challenges terminés HIER (jour civil Berlin)
+  const F = fee != null ? fee : (state.cycleFee != null ? state.cycleFee : PROP_FIRM.cycleFeeDefault);
+  const now = nowMs != null ? nowMs : Date.now();
+  const todayKey = berlinDateKey(now);
+  const yKey = shiftDateKey(todayKey, -1);
+  let count = 0, won = 0, refunded = 0;
+  for (const c of (cycles || [])) {
+    if (c.ongoing) continue;
+    if (berlinDateKey(c.endTs) === yKey) {
+      count++;
+      if (c.won) won++; else if (c.refunded) refunded++;
+    }
+  }
+  return { amount: count * F, count, won, refunded, yesterdayKey: yKey, todayKey };
+}
+function renderTreasurySection() {
+  if (!state.cycles || !state.cycles.length) return "";
+  const fee = state.cycleFee != null ? state.cycleFee : PROP_FIRM.cycleFeeDefault;
+  const ledger = computeDailyLedger(state.cycles, fee);
+  if (!ledger.transferDays) return "";
+  const today = getTodayTransfer(state.cycles, fee);
+  const lastTradeTs = state.cycles[state.cycles.length - 1].endTs;
+  const stale = Date.now() - lastTradeTs > 3 * 86400000;
+  let html = `<div class="calib-section-title">Trésorerie — transfert quotidien (${fee.toFixed(2)} USDC × challenges terminés la veille)</div>`;
+  html += `<div class="calib-summary">`;
+  if (today.count > 0) {
+    html += `<div class="calib-stat cycle-hero"><div class="lbl">Transfert de CE matin (${fmtDateKeyFr(today.todayKey)})</div><div class="val up">${today.amount.toFixed(2)} USDC</div></div>`;
+    html += `<div class="calib-stat"><div class="lbl">Terminés hier (${fmtDateKeyFr(today.yesterdayKey)})</div><div class="val ne">${today.count} · ${today.won}W/${today.refunded}R</div></div>`;
+  } else {
+    html += `<div class="calib-stat"><div class="lbl">Transfert de CE matin (${fmtDateKeyFr(today.todayKey)})</div><div class="val ne">0 — aucun challenge terminé hier</div></div>`;
+  }
+  html += `<div class="calib-stat"><div class="lbl">Total transféré (registre)</div><div class="val ne">${ledger.transfersTotal.toFixed(2)} USDC · ${ledger.transferDays} jours</div></div>`;
+  html += `<div class="calib-stat"><div class="lbl">Fonds de roulement</div><div class="val ne">≈ ${(ledger.maxStartedPerDay * fee).toFixed(0)} USDC<br><span style="font-weight:400;font-size:10px">(max ${ledger.maxStartedPerDay} challenge${ledger.maxStartedPerDay > 1 ? "s" : ""}/jour observé)</span></div></div>`;
+  html += `</div>`;
+  if (stale) {
+    html += `<div class="calib-skipped">📅 CSV à jour au ${new Date(lastTradeTs).toLocaleDateString("fr-CH")} — réimporte un export récent pour un montant du matin fiable.</div>`;
+  }
+  // Registre des 12 derniers jours de transfert
+  const recent = ledger.rows.filter(r => r.transferDue > 0).slice(-12);
+  html += recent.map(r =>
+    `<div class="ind"><span class="n">${fmtDateKeyFr(r.date)} — transfert${r.refundInvolved ? " (lendemain de remboursement)" : ""}</span>` +
+    `<span class="v ${r.refundInvolved ? "dn" : "ne"}">${r.transferDue.toFixed(2)} USDC</span></div>`).join("");
+  // Discriminateur d'hypothèse (question à 376$ de la v7.8)
+  if (ledger.discriminatorDays.length) {
+    html += `<div class="calib-skipped" style="border-color:rgba(201,169,97,0.35);background:rgba(201,169,97,0.06)">🔎 <strong>Pour trancher l'hypothèse des frais</strong> (v7.8, écart ${""}≈ 376 $) : vérifie sur ton relevé USDC les matins suivants, lendemains de remboursement — <strong>${ledger.discriminatorDays.map(fmtDateKeyFr).join(", ")}</strong>. Retrait de ${fee.toFixed(0)} USDC possible → le frais est RENDU (coche le réglage ⚙️) ; retrait impossible → frais PERDU (réglage par défaut).</div>`;
+  }
+  return html;
+}
+
 function renderCycleSection(stats) {
   if (!stats || !stats.done) return "";
   let html = `<div class="calib-section-title">Économie des cycles « A Caccia di Trader » (remboursement 4 pertes appliqué)</div>`;
@@ -3990,6 +4193,13 @@ function renderCycleSection(stats) {
       `🔒 <strong>Remboursement en cours — trading BLOQUÉ 48 h.</strong> Déblocage le ` +
       `${new Date(lk.until).toLocaleString("fr-CH", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })} ` +
       `(<span class="lockout-remaining">reste ${h} h ${String(m).padStart(2, "0")} min</span>). Aucun nouveau trade possible d'ici là.</div>`;
+  } else if (lk.pendingConfirm) {
+    const wkd = lk.effectiveResume > lk.until;
+    html += `<div class="calib-skipped" style="border-color:rgba(201,169,97,0.45);background:rgba(201,169,97,0.10)">` +
+      `⏳ <strong>Timer 48 h écoulé (${new Date(lk.until).toLocaleString("fr-CH", { weekday: "short", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}) — remboursement en cours d'arrivée.</strong> ` +
+      `Ouvre l'app Hydratrade et vérifie que la mention « Refund being processed » a DISPARU avant de passer un ordre` +
+      (wkd ? ` — le timer a expiré hors jour de bourse (week-end/férié) : reprise effective au plus tôt ${new Date(lk.effectiveResume).toLocaleString("fr-CH", { weekday: "long", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })} (prochain jour de bourse, ouverture de session)` : "") +
+      `. Nouveau cycle de 4 (nouveau challenge ID) au redémarrage.</div>`;
   } else if (lk.lastRefundEnd && Date.now() - lk.lastRefundEnd < 5 * 86400000) {
     html += `<div class="calib-skipped" style="border-color:rgba(130,189,156,0.35);background:rgba(130,189,156,0.06)">🔓 Dernier blocage de 48 h expiré — trading autorisé (dans les fenêtres de session habituelles).</div>`;
   }
@@ -4624,6 +4834,29 @@ function applySafetyNets(aiResult, analysis) {
     flags.push({ tone: "y", text: "TF 5 min : calibration sessions/jours établie sur vos trades 15 min — bruit accru, prudence sur la taille" });
   }
 
+  // Garde 8septies: jour férié US — marché fermé (confirmé 03/07/2026)
+  {
+    const todayKey = berlinDateKey(Date.now());
+    if ((state.holidays || DEFAULT_US_HOLIDAYS).indexOf(todayKey) !== -1) {
+      flags.push({ tone: "r", text: "📅 Jour férié US (" + fmtDateKeyFr(todayKey) + ") — marché fermé, aucun ordre ne sera exécuté aujourd'hui" });
+      confidence = "FAIBLE";
+    }
+  }
+
+  // Garde 8sexies: rappel du transfert matinal (retrait avant rachat des challenges)
+  if (state.cycles && state.cycles.length) {
+    const lastEnd = state.cycles[state.cycles.length - 1].endTs;
+    if (Date.now() - lastEnd <= 3 * 86400000 && nowBerlin().getHours() < 12) {
+      const tt = getTodayTransfer(state.cycles, state.cycleFee);
+      if (tt.count > 0) {
+        flags.push({ tone: "b", text: "💸 Transfert du matin : " + tt.amount.toFixed(2) + " USDC à retirer d'Hydratrade (" +
+          tt.count + " challenge" + (tt.count > 1 ? "s" : "") + " terminé" + (tt.count > 1 ? "s" : "") + " hier" +
+          (tt.refunded ? ", dont " + tt.refunded + " remboursé — matin discriminant pour l'hypothèse frais" : "") +
+          ") avant d'acheter les nouveaux challenges" });
+      }
+    }
+  }
+
   // Garde 8quinquies: économie nette négative (WR sous le seuil de rentabilité)
   if (state.cycleStats && state.cycleStats.done >= 10 && state.cycleStats.trueEvPerCycle != null && state.cycleStats.trueEvPerCycle < 0) {
     flags.push({ tone: "y", text: "Économie nette NÉGATIVE : WR cycle " + state.cycleStats.cycleWR + "% sous le seuil de rentabilité " +
@@ -4639,8 +4872,12 @@ function applySafetyNets(aiResult, analysis) {
       const mm = Math.floor((lk.remainingMs % 3600000) / 60000);
       flags.push({ tone: "r", text: "🔒 BLOCAGE 48 h en cours (remboursement) — aucun nouveau trade avant le " +
         new Date(lk.until).toLocaleString("fr-CH", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) +
-        " (reste " + hh + " h " + String(mm).padStart(2, "0") + "). Signal informatif uniquement" });
+        " (reste " + hh + " h " + String(mm).padStart(2, "0") + "). L'app affiche « Refund being processed ». Signal informatif uniquement" });
       confidence = "FAIBLE";
+    } else if (lk.pendingConfirm) {
+      const wkd = lk.effectiveResume > lk.until;
+      flags.push({ tone: "y", text: "⏳ Timer 48 h écoulé — vérifie dans l'app Hydratrade que « Refund being processed » a DISPARU avant de passer l'ordre" +
+        (wkd ? " (expiration hors jour de bourse : reprise effective " + new Date(lk.effectiveResume).toLocaleString("fr-CH", { weekday: "long", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" }) + ")" : "") });
     }
   }
 
@@ -4777,6 +5014,8 @@ function buildFablePrompt() {
     const lkP = getLockoutStatus(state.cycles);
     if (lkP.locked) {
       lines.push("- ATTENTION : le trader est ACTUELLEMENT BLOQUÉ (remboursement en cours) jusqu'au " + new Date(lkP.until).toISOString() + " — ton analyse est informative, aucun trade ne peut être passé.");
+    } else if (lkP.pendingConfirm) {
+      lines.push("- ATTENTION : le timer 48 h post-remboursement est écoulé mais le trader doit d'abord vérifier que le remboursement est ARRIVÉ (mention « Refund being processed » disparue dans l'app) avant de trader.");
     }
   }
   if (state.cycleStats && state.cycleStats.ongoing) {
@@ -5247,6 +5486,7 @@ function renderTradeImportPanel() {
 
   if (state.cycleStats && state.cycleStats.done) {
     html += renderCycleSection(state.cycleStats);
+    html += renderTreasurySection();
   }
   ui.tradeImportStats.innerHTML = html;
 }
@@ -5517,6 +5757,7 @@ function exportData() {
       anthropicKey: state.anthropicKey,
       cycleFee: state.cycleFee,
       feeRefunded: state.feeRefunded,
+      holidays: state.holidays,
       notifLevel: state.notifLevel,
       autoRefresh: state.autoRefresh,
       autoMorning: state.autoMorning,
@@ -5559,6 +5800,11 @@ async function importData(file) {
       state.feeRefunded = !!data.settings.feeRefunded;
       LS.set("xa_fee", state.cycleFee);
       LS.set("xa_feeref", state.feeRefunded);
+      if (Array.isArray(data.settings.holidays)) {
+        state.holidays = data.settings.holidays.filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k));
+        if (!state.holidays.length) state.holidays = DEFAULT_US_HOLIDAYS.slice();
+        LS.set("xa_hol", state.holidays);
+      }
       state.notifLevel   = data.settings.notifLevel   || "fort";
       state.autoRefresh  = !!data.settings.autoRefresh;
       state.autoMorning  = data.settings.autoMorning !== false;
@@ -5686,11 +5932,12 @@ async function runDiagnostic() {
 function resetAllData() {
   if (!confirm("⚠️ Tout effacer :\n\n• Réglages (clé API, notifs, auto-modes)\n• Capture Hydratrade\n• Historique des signaux\n• Préférences UI\n\nCette action est IRRÉVERSIBLE. Continuer ?")) return;
   // Liste des clés à nettoyer
-  ["xa_tk", "xa_ak", "xa_fee", "xa_feeref", "xa_nl", "xa_ar", "xa_am", "xa_aac", "xa_cap", "xa_hist", "xa_cd", "xa_tf", "xa_trades", "xa_trades_meta"].forEach(k => LS.del(k));
+  ["xa_tk", "xa_ak", "xa_fee", "xa_feeref", "xa_hol", "xa_nl", "xa_ar", "xa_am", "xa_aac", "xa_cap", "xa_hist", "xa_cd", "xa_tf", "xa_trades", "xa_trades_meta"].forEach(k => LS.del(k));
   state.twelveKey = "";
   state.anthropicKey = "";
   state.cycleFee = PROP_FIRM.cycleFeeDefault;
   state.feeRefunded = false;
+  state.holidays = DEFAULT_US_HOLIDAYS.slice();
   state.notifLevel = "fort";
   state.autoRefresh = false;
   state.autoMorning = true;
