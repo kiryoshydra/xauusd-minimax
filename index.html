@@ -2315,7 +2315,14 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.11.0";
+const APP_VERSION = "7.12.0";
+// v7.12.0 — 3 correctifs chirurgicaux : (C1) les indicateurs se calculent sur les bougies
+//            CLOSES uniquement (la bougie en formation flippait RSI/MACD/SuperTrend à chaque
+//            refresh) — prix live conservé, bougie en cours affichée avec marqueur ⏳ ;
+//            (C2) visibilitychange : tous les timers suspendus onglet caché (batterie/proxies),
+//            resync des données + rattrapage de l'analyse matinale 05h à la reprise ;
+//            (C3) volume non fiable (Yahoo vol=0, PAXG ≠ XAU spot) -> VWAP/MFI/OBV neutralisés
+//            (pastille « vol. n/d »), score renormalisé ×50/39 pour préserver les seuils
 // v7.11.0 — JOURS FÉRIÉS US : le remboursement arrive le prochain JOUR DE BOURSE (week-ends ET
 //            fériés — confirmé par Helder : 03/07/2026 Independence Day observé = fermé),
 //            calendrier data-driven (Juneteenth 19/06/2026 exclu car tradé dans le CSV réel)
@@ -2424,15 +2431,29 @@ const TIMEFRAMES = {
   "5m": {
     key: "5m", label: "5 min",
     td: "5min",  binance: "5m",  yahoo: "5m",  yahooRange: "5d",  limit: 300,
+    ms: 5 * 60000, trendMs: 30 * 60000,
     trendLabel: "30 min", trendTd: "30min", trendBinance: "30m", trendYahoo: "30m", trendYahooRange: "1mo", trendLimit: 150
   },
   "15m": {
     key: "15m", label: "15 min",
     td: "15min", binance: "15m", yahoo: "15m", yahooRange: "5d", limit: 200,
+    ms: 15 * 60000, trendMs: 60 * 60000,
     trendLabel: "1 h", trendTd: "1h", trendBinance: "1h", trendYahoo: "60m", trendYahooRange: "1mo", trendLimit: 120
   }
 };
 function TF() { return TIMEFRAMES[state.tf] || TIMEFRAMES["15m"]; }
+
+/* CORRECTIF 1 (v7.12.0) — Les sources renvoient la DERNIÈRE BOUGIE EN
+   FORMATION (t = heure d'OUVERTURE, en ms). La passer aux indicateurs fait
+   flipper RSI/MACD/SuperTrend à chaque refresh. On l'exclut donc du CALCUL
+   de décision (le graphique, lui, continue de l'afficher). */
+function closedCandles(candles, intervalMs, nowMs) {
+  if (!Array.isArray(candles) || candles.length < 2 || !isFinite(intervalMs)) return candles;
+  const now = nowMs != null ? nowMs : Date.now();
+  const last = candles[candles.length - 1];
+  if (last && isFinite(last.t) && now - last.t < intervalMs) return candles.slice(0, -1);
+  return candles;
+}
 
 // Session & jour — calibration 20 trades Helder (heure Berlin)
 const DEFAULT_SESSION_SCORES = [
@@ -2491,7 +2512,6 @@ const state = {
   autoRefresh: false,
   autoMorning: true,
   autoAnalyzeOnCapture: true,
-  autoAnalyzeOnCapture: true,
   candles15: [],
   candles1h: [],
   dxy: { value: null, prev: null, change: 0, history: [] },
@@ -2501,6 +2521,10 @@ const state = {
   scheduleTimer: null,
   cooldownUntil: 0,
   refreshCountdown: REFRESH_MS / 1000,
+  paused: false,                // onglet caché : timers suspendus (visibilitychange)
+  uiTimers: [],                 // ids des intervals cosmétiques (pause/reprise)
+  lastDataFetch: 0,             // dernier fetch de données réussi (resync à la reprise)
+  morningFiredKey: "",          // garde anti-double de l'analyse matinale (clé jour)
   capture: null                 // {dataUrl, name, ts}  — capture Hydratrade unique
 };
 
@@ -2615,7 +2639,6 @@ function saveSettings() {
   LS.set("xa_nl", state.notifLevel);
   LS.set("xa_ar", state.autoRefresh);
   LS.set("xa_am", state.autoMorning);
-  LS.set("xa_aac", state.autoAnalyzeOnCapture);
   LS.set("xa_aac", state.autoAnalyzeOnCapture);
   if (ui.autoState) ui.autoState.textContent = state.autoRefresh ? "on" : "off";
   setupAutoTimers();
@@ -2767,6 +2790,7 @@ function sessionInfo(d = nowBerlin()) {
   return { state: "active", label: `Active · ${remH}h${pad2(remM)} restantes`, color: "active", closesAt: close };
 }
 function updateSessionBadge() {
+  if (!ui.sessionBadge || !ui.sessionText) return; // garde (durcissement v7.8)
   const s = sessionInfo();
   ui.sessionBadge.className = "session " + s.color;
   ui.sessionText.textContent = s.label;
@@ -3166,6 +3190,21 @@ function ichimoku(candles) {
     spanB[i] = (Math.max(...w52.map(c => c.h)) + Math.min(...w52.map(c => c.l))) / 2;
   }
   return { tenkan, kijun, spanA, spanB };
+}
+/* CORRECTIF 3 (v7.12.0) — Yahoo GC=F renvoie souvent volume=0 et le volume
+   PAXG/USDT (Binance) n'a rien à voir avec le volume XAU spot. Les
+   indicateurs pondérés par le volume (VWAP/MFI/OBV) deviennent alors du
+   bruit : on les neutralise. Fiable = >70% des bougies ont un volume > 0
+   ET les valeurs ne sont pas constantes. */
+function hasReliableVolume(candles) {
+  if (!Array.isArray(candles) || !candles.length) return false;
+  let nz = 0;
+  const distinct = new Set();
+  for (const c of candles) {
+    const v = c.v || 0;
+    if (v > 0) { nz++; distinct.add(v); }
+  }
+  return nz / candles.length > 0.7 && distinct.size > 1;
 }
 function vwap(candles) {
   // VWAP cumulé sur la journée de la dernière bougie
@@ -3875,13 +3914,24 @@ function berlinInstantAt(dateKey, hourBerlin) {
    (03/07/2026 par Helder) + quasi-universelles (Good Friday, Thanksgiving,
    Noël, Nouvel An). Liste éditable dans les Réglages (une date par ligne). */
 const DEFAULT_US_HOLIDAYS = [
+  // ---- 2026 ----
+  "2026-01-01", // Nouvel An (New Year's Day)
+  "2026-01-19", // MLK Jr. Day (3e lundi janvier)
+  "2026-02-16", // Presidents Day (3e lundi février)
   "2026-04-03", // Good Friday
+  "2026-05-25", // Memorial Day (dernier lundi mai)
   "2026-07-03", // Independence Day observé (4 juillet = samedi) — CONFIRMÉ fermé
+  "2026-09-07", // Labor Day (1er lundi septembre)
   "2026-11-26", // Thanksgiving
   "2026-12-25", // Noël
+  // ---- 2027 ----
   "2027-01-01", // Nouvel An
+  "2027-01-18", // MLK Jr. Day
+  "2027-02-15", // Presidents Day
   "2027-03-26", // Good Friday
+  "2027-05-31", // Memorial Day
   "2027-07-05", // Independence Day observé (4 juillet = dimanche)
+  "2027-09-06", // Labor Day
   "2027-11-25", // Thanksgiving
   "2027-12-24"  // Noël observé (25 = samedi)
 ];
@@ -4242,6 +4292,8 @@ function recalibrate() {
 }
 
 async function analyze(candles15, candles1h, dxy) {
+  // CORRECTIF 3 : volume exploitable ? (sinon VWAP/MFI/OBV neutralisés)
+  const volumeReliable = hasReliableVolume(candles15);
   const closes = candles15.map(c => c.c);
   const last = closes[closes.length - 1];
   const prev = closes[closes.length - 2] ?? last;
@@ -4364,13 +4416,15 @@ async function analyze(candles15, candles1h, dxy) {
     techScore += sScore;
   }
 
-  // 7) MFI (volume-weighted RSI)
-  if (cur.mfi != null) {
+  // 7) MFI (volume-weighted RSI) — neutralisé si volume non fiable (C3)
+  if (cur.mfi != null && volumeReliable) {
     let mScore = 0;
     if (cur.mfi < 20) mScore = 4;
     else if (cur.mfi > 80) mScore = -4;
     components.push({ name: "MFI " + cur.mfi.toFixed(0), val: mScore });
     techScore += mScore;
+  } else if (cur.mfi != null) {
+    components.push({ name: "MFI", val: 0, na: true });
   }
 
   // 8) Williams %R
@@ -4407,10 +4461,12 @@ async function analyze(candles15, candles1h, dxy) {
   }
 
   // 11) VWAP
-  if (cur.vwap != null) {
+  if (cur.vwap != null && volumeReliable) {
     const vScore = cur.price > cur.vwap ? 3 : -3;
     components.push({ name: "VWAP " + (vScore > 0 ? "au-dessus" : "en dessous"), val: vScore });
     techScore += vScore;
+  } else if (cur.vwap != null) {
+    components.push({ name: "VWAP", val: 0, na: true }); // volume non fiable (C3)
   }
 
   // 12) SuperTrend(10,3) — direction binaire par construction, poids fort
@@ -4436,10 +4492,13 @@ async function analyze(candles15, candles1h, dxy) {
   }
 
   // 15) OBV(20) — le volume confirme-t-il la direction ?
-  if (ob && ob.dir !== 0) {
+  // Neutralisé si volume non fiable (C3)
+  if (ob && ob.dir !== 0 && volumeReliable) {
     const obScore = ob.dir * 4;
     components.push({ name: "OBV pente " + (ob.dir > 0 ? "haussière" : "baissière"), val: obScore });
     techScore += obScore;
+  } else if (ob) {
+    components.push({ name: "OBV", val: 0, na: true });
   }
 
   // 16) Choppiness Index — filtre de RÉGIME (non directionnel)
@@ -4452,6 +4511,12 @@ async function analyze(candles15, candles1h, dxy) {
     components.push({ name: "Choppiness " + chop.toFixed(0) + chopTag, val: chopScore });
     techScore += chopScore;
   }
+
+  // CORRECTIF 3 : renormalisation quand VWAP(±3)/MFI(±4)/OBV(±4) sont
+  // neutralisés — l'amplitude atteignable passe de ±50 à ±39, on rescale
+  // pour que le gate BUY_SCORE_GATE et les seuils de confiance gardent
+  // exactement la même sémantique.
+  if (!volumeReliable) techScore = Math.round(techScore * 50 / 39);
 
   // Cap technique à ±50
   techScore = Math.max(-50, Math.min(50, techScore));
@@ -4562,7 +4627,7 @@ async function analyze(candles15, candles1h, dxy) {
     components,
     votes,
     techScore, trend1h, trendScore, dxyScore, sessDayScore, volScore,
-    globalScore, alignment, provisionalDir,
+    globalScore, alignment, provisionalDir, volumeReliable,
     smc: { h15: smc15, h1: smc1h, orderBlocks, fvgs },
     macro: { us10y, events: upcomingEvents }
   };
@@ -5552,6 +5617,9 @@ function renderScore(analysis) {
       `<span class="val ${majCls}">🐂 ${v.bull} / 🐻 ${v.bear} (sur ${v.total})</span></div>`;
   }
   compHtml += analysis.components.map(c => {
+    if (c.na) {
+      return `<div class="sc"><span class="name">${escapeHtml(c.name)}</span><span class="val zero" style="opacity:.65;font-style:italic">vol. n/d</span></div>`;
+    }
     const cls = c.val > 0 ? "pos" : c.val < 0 ? "neg" : "zero";
     return `<div class="sc"><span class="name">${escapeHtml(c.name)}</span><span class="val ${cls}">${c.val > 0 ? "+" : ""}${c.val}</span></div>`;
   }).join("");
@@ -5601,12 +5669,16 @@ function renderIndicators(analysis) {
     { n: "-DI", v: c.minusDI, fmt: 1, cls: c.minusDI > c.plusDI ? "dn" : "ne" },
     { n: "ATR(14)", v: c.atr, fmt: 2, cls: c.atr / c.price > 0.003 ? "dn" : "ne" },
     { n: "StochRSI K", v: c.stochK, fmt: 0, cls: c.stochK > 80 ? "dn" : c.stochK < 20 ? "up" : "ne" },
-    { n: "MFI", v: c.mfi, fmt: 0, cls: c.mfi > 80 ? "dn" : c.mfi < 20 ? "up" : "ne" },
+    { n: "MFI", v: analysis.volumeReliable === false ? null : c.mfi, fmt: 0,
+      cls: analysis.volumeReliable === false ? "ne" : (c.mfi > 80 ? "dn" : c.mfi < 20 ? "up" : "ne"),
+      pill: analysis.volumeReliable === false ? "vol. n/d" : "" },
     { n: "Williams %R", v: c.wr, fmt: 0, cls: c.wr > -20 ? "dn" : c.wr < -80 ? "up" : "ne" },
     { n: "CCI(20)", v: c.cci, fmt: 0, cls: c.cci > 150 ? "dn" : c.cci < -150 ? "up" : "ne" },
     { n: "Ichimoku Tenkan", v: c.ichTenkan, fmt: 2, cls: c.price > c.ichTenkan ? "up" : "dn" },
     { n: "Ichimoku Kijun", v: c.ichKijun, fmt: 2, cls: c.price > c.ichKijun ? "up" : "dn" },
-    { n: "VWAP", v: c.vwap, fmt: 2, cls: c.price > c.vwap ? "up" : "dn" },
+    { n: "VWAP", v: analysis.volumeReliable === false ? null : c.vwap, fmt: 2,
+      cls: analysis.volumeReliable === false ? "ne" : (c.price > c.vwap ? "up" : "dn"),
+      pill: analysis.volumeReliable === false ? "vol. n/d" : "" },
     { n: "SuperTrend(10,3)", v: c.supertrend ? c.supertrend.value : null, fmt: 2,
       cls: c.supertrend ? (c.supertrend.dir > 0 ? "up" : "dn") : "ne",
       pill: c.supertrend ? (c.supertrend.dir > 0 ? "haussier" : "baissier") : "" },
@@ -5615,8 +5687,9 @@ function renderIndicators(analysis) {
     { n: "Heikin-Ashi run", v: c.ha ? c.ha.run : null, fmt: 0,
       cls: c.ha ? (c.ha.dir > 0 ? "up" : "dn") : "ne",
       pill: c.ha ? (c.ha.dir > 0 ? "vertes" : "rouges") : "" },
-    { n: "OBV(20) pente", v: c.obv ? c.obv.slope : null, fmt: 0,
-      cls: c.obv ? (c.obv.dir > 0 ? "up" : c.obv.dir < 0 ? "dn" : "ne") : "ne" },
+    { n: "OBV(20) pente", v: (analysis.volumeReliable === false || !c.obv) ? null : c.obv.slope, fmt: 0,
+      cls: (analysis.volumeReliable === false || !c.obv) ? "ne" : (c.obv.dir > 0 ? "up" : c.obv.dir < 0 ? "dn" : "ne"),
+      pill: analysis.volumeReliable === false ? "vol. n/d" : "" },
     { n: "Choppiness(14)", v: c.chop, fmt: 0,
       cls: c.chop > 61.8 ? "dn" : c.chop < 38.2 ? "up" : "ne",
       pill: c.chop > 61.8 ? "range" : c.chop < 38.2 ? "tendance" : "" }
@@ -5648,6 +5721,9 @@ function renderIndicators(analysis) {
    ==================================================================== */
 function renderChart(candles) {
   const svg = ui.chart;
+  // CORRECTIF 1 : la bougie en formation reste AFFICHÉE mais est marquée
+  const liveIdx = (candles && candles.length &&
+    Date.now() - candles[candles.length - 1].t < TF().ms) ? candles.length - 1 : -1;
   if (!candles || candles.length < 5) {
     svg.innerHTML = '<text x="500" y="200" fill="#5d6675" text-anchor="middle" font-size="14">Données insuffisantes</text>';
     return;
@@ -5676,6 +5752,13 @@ function renderChart(candles) {
   const srLines = [...sr.supports.slice(0, 2), ...sr.resists.slice(0, 2)];
 
   let html = "";
+
+  // CORRECTIF 1 : marqueur « bougie en cours » (guide pointillé + sablier)
+  if (liveIdx >= 0) {
+    const lx = xScale(liveIdx);
+    html += `<line x1="${lx}" x2="${lx}" y1="${PAD_T}" y2="${H - PAD_B}" stroke="#c9a961" stroke-width="1" stroke-dasharray="3,4" opacity="0.45"/>`;
+    html += `<text x="${lx}" y="${PAD_T + 12}" fill="#c9a961" font-size="11" text-anchor="middle" opacity="0.85">⏳</text>`;
+  }
 
   // Grid horizontal (lignes de prix)
   const ticks = 5;
@@ -6009,10 +6092,18 @@ async function analyzeNow(opts = {}) {
     state.candles15 = c15.candles;
     state.candles1h = c1h.candles;
     state.dxy = dxy;
+    state.lastDataFetch = Date.now();
     ui.chartSrc.textContent = c15.source;
 
-    // 2) Analyse technique
-    const analysis = await analyze(c15.candles, c1h.candles, dxy);
+    // 2) Analyse technique — CORRECTIF 1 : les indicateurs se calculent sur
+    // les bougies CLOSES uniquement (la dernière bougie en formation flippe
+    // à chaque refresh) ; le prix affiché reste le prix LIVE.
+    const _tf = TF();
+    const c15Closed = closedCandles(c15.candles, _tf.ms);
+    const c1hClosed = closedCandles(c1h.candles, _tf.trendMs);
+    const analysis = await analyze(c15Closed, c1hClosed, dxy);
+    const _liveLast = c15.candles[c15.candles.length - 1];
+    if (_liveLast && isFinite(_liveLast.c)) analysis.current.price = _liveLast.c;
     state.lastAnalysis = analysis;
     renderScore(analysis);
     renderTF(analysis);
@@ -6122,15 +6213,60 @@ function setupAutoTimers() {
     }, 1000);
   }
   if (state.autoMorning) {
-    let lastFired = "";
     state.scheduleTimer = setInterval(() => {
       const d = nowBerlin();
-      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`;
-      if (d.getHours() === 5 && d.getMinutes() < 2 && d.getDay() >= 1 && d.getDay() <= 5 && lastFired !== key) {
-        lastFired = key;
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      if (d.getHours() === 5 && d.getMinutes() < 2 && d.getDay() >= 1 && d.getDay() <= 5 && state.morningFiredKey !== key) {
+        state.morningFiredKey = key; // garde anti-double partagée avec le rattrapage
         analyzeNow();
       }
     }, 30000);
+  }
+}
+
+/* CORRECTIF 2 (v7.12.0) — Onglet caché : TOUT s'arrête (auto-refresh qui
+   tapait les proxies dans le vide, intervals cosmétiques 1 s/30 s/60 s).
+   À la reprise : timers relancés, données resynchronisées si périmées, et
+   analyse matinale 05h00 RATTRAPÉE si la fenêtre a été manquée. */
+function startUiTimers() {
+  stopUiTimers();
+  state.uiTimers.push(setInterval(updateCycleUI, 1000));
+  state.uiTimers.push(setInterval(updateSessionBadge, 30000));
+  state.uiTimers.push(setInterval(() => {
+    if (state.cycles && state.cycles.length && getLockoutStatus(state.cycles).locked) {
+      renderTradeImportPanel();
+    }
+  }, 60000));
+}
+function stopUiTimers() {
+  for (const id of state.uiTimers) clearInterval(id);
+  state.uiTimers = [];
+}
+function pauseAllTimers() {
+  if (state.paused) return;
+  state.paused = true;
+  if (state.autoTimer) { clearInterval(state.autoTimer); state.autoTimer = null; }
+  if (state.scheduleTimer) { clearInterval(state.scheduleTimer); state.scheduleTimer = null; }
+  stopUiTimers();
+}
+function resumeAllTimers() {
+  if (!state.paused) return;
+  state.paused = false;
+  startUiTimers();
+  setupAutoTimers();
+  updateSessionBadge();
+  // Resynchronisation : données périmées -> refresh immédiat
+  if (state.autoRefresh && Date.now() - state.lastDataFetch > REFRESH_MS) {
+    refreshDataOnly();
+  }
+  // Rattrapage de l'analyse matinale 05h00-05h02 (jour ouvré) manquée en arrière-plan
+  if (state.autoMorning && !state.analyzing) {
+    const d = nowBerlin();
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    if (d.getDay() >= 1 && d.getDay() <= 5 && d.getHours() >= 5 && state.morningFiredKey !== key) {
+      state.morningFiredKey = key;
+      analyzeNow();
+    }
   }
 }
 async function refreshDataOnly() {
@@ -6138,6 +6274,7 @@ async function refreshDataOnly() {
     const [c15, dxy] = await Promise.all([fetchCandles15(), fetchDXY()]);
     state.candles15 = c15.candles;
     state.dxy = dxy;
+    state.lastDataFetch = Date.now();
     renderChart(c15.candles);
     renderDXY(dxy);
   } catch (e) { console.warn("refresh:", e); }
@@ -6247,8 +6384,11 @@ ui.captureDel.addEventListener("click", e => {
 ui.btnReplaceCapture.addEventListener("click", () => openFilePicker(ui.captureInput));
 
 /* Cooldown tick */
-setInterval(updateCycleUI, 1000);
-setInterval(updateSessionBadge, 30000);
+startUiTimers(); // CORRECTIF 2 : intervals cosmétiques centralisés (pause/reprise)
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) pauseAllTimers();
+  else resumeAllTimers();
+});
 
 /* ====================================================================
    TIMEFRAME SWITCH (v7.3.0)
@@ -6346,13 +6486,7 @@ function init() {
     });
   }
   // Boutons Fable 5 sur la capture
-  bindSafe("lockout-tick", () => {
-    setInterval(() => {
-      if (state.cycles && state.cycles.length && getLockoutStatus(state.cycles).locked) {
-        renderTradeImportPanel();
-      }
-    }, 60000);
-  });
+  // (tick lockout 60 s déplacé dans startUiTimers() — CORRECTIF 2)
   bindSafe("fable", () => {
     if (ui.btnFable) ui.btnFable.addEventListener("click", () => analyzeWithFable());
     if (ui.btnOpenClaude) ui.btnOpenClaude.addEventListener("click", () => openInClaudeApp());
