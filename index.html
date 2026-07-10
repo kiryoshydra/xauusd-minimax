@@ -530,6 +530,9 @@
   }
   .verdict.buy .signal-chart,
   .verdict.sell .signal-chart{display:block}
+  /* Permettre au SVG animé (dart, sparks) de déborder la section verdict */
+  .verdict.buy,
+  .verdict.sell{overflow:visible}
   /* un seul escalier visible selon la direction */
   .verdict .signal-chart .stairs-buy,
   .verdict .signal-chart .stairs-sell{display:none}
@@ -2315,7 +2318,14 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.12.0";
+const APP_VERSION = "7.13.0";
+// v7.13.0 — FIX animation chandeliers/flèche invisible : l'affichage du signal-chart est
+//            maintenant piloté en JS (style.display="block") dans renderVerdict(), immunisé
+//            contre les problèmes de spécificité CSS / cache ; réinjection défensive du SVG
+//            si le DOM est vide ; guard setupSignalChart assoupli (vérifie le contenu réel,
+//            pas un flag data-ready) ; doublon autoAnalyzeOnCapture + LS.set("xa_aac") supprimé ;
+//            dead code liveCandleExcluded supprimé ; calendrier fériés US 2026/2027 complété ;
+//            overflow:visible sur .verdict.buy/.sell pour les étincelles du SVG
 // v7.12.0 — 3 correctifs chirurgicaux : (C1) les indicateurs se calculent sur les bougies
 //            CLOSES uniquement (la bougie en formation flippait RSI/MACD/SuperTrend à chaque
 //            refresh) — prix live conservé, bougie en cours affichée avec marqueur ⏳ ;
@@ -5320,7 +5330,8 @@ function convertBlobToPng(blob) {
 function setupSignalChart() {
   const host = ui.vSignalChart;
   if (!host) return;
-  if (host.dataset.ready === "2") return;
+  // Idempotent : ne réinjecte que si le contenu est absent ou corrompu
+  if (host.querySelector && host.querySelector(".stairs-buy") && host.querySelector(".stairs-sell")) return;
   const svg = `
 <svg class="stairs-buy" viewBox="0 0 190 310" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
   <defs>
@@ -5406,6 +5417,7 @@ function renderVerdict(result) {
   if (!result) {
     ui.verdict.className = "verdict idle";
     ui.vDir.textContent = "—";
+    if (ui.vSignalChart) ui.vSignalChart.style.display = ""; // masqué par CSS en idle
     ui.vPrice.classList.add("hide");
     ui.vConf.classList.add("hide");
     ui.vRaison.textContent = "Cliquez sur « Analyser » pour générer un signal.";
@@ -5422,7 +5434,13 @@ function renderVerdict(result) {
   const { signal, confidence, price, ts, score, source } = result;
   ui.verdict.className = "verdict " + (signal === "BUY" ? "buy" : "sell");
   ui.vDir.textContent = signal === "BUY" ? "BUY" : "SELL";
-  // Le SVG chandeliers est pré-injecté à init ; ici on s'assure qu'il est prêt
+  // Forcer l'affichage de l'animation chandeliers (le CSS seul ne suffit pas
+  // dans certaines conditions de cache/spécificité — piloté en JS, définitif)
+  if (ui.vSignalChart) {
+    ui.vSignalChart.style.display = "block";
+    // Réinjecter les SVG si l'innerHTML est vide (race condition init ou DOM purgé)
+    if (!ui.vSignalChart.innerHTML || ui.vSignalChart.innerHTML.length < 100) setupSignalChart();
+  }
   if (price) {
     ui.vPrice.classList.remove("hide");
     ui.vPriceVal.textContent = price.toFixed(2);
