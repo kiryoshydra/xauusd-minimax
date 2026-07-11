@@ -407,6 +407,16 @@
   }
   .calib-stat.cycle-hero .val{font-size:17px}
 
+  /* ---------- Verdict en attente de confirmation ---------- */
+  .verdict.wait .vdir{animation:waitBlink 1.8s ease-in-out infinite}
+  @keyframes waitBlink{0%,100%{opacity:1} 50%{opacity:0.45}}
+  .verdict.wait::after{
+    content:"ATTENDRE CONFIRMATION";
+    position:absolute;top:12px;left:50%;transform:translateX(-50%);
+    font-size:10px;letter-spacing:0.12em;text-transform:uppercase;
+    color:var(--gold);opacity:0.85;
+  }
+
   /* ---------- Bouton Fable 5 ---------- */
   .btn-fable{
     border-color:rgba(157,107,255,0.45) !important;
@@ -2318,7 +2328,13 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.13.0";
+const APP_VERSION = "7.14.3";
+// v7.14.0 — POST-MORTEM STRATÉGIQUE (semaine 06-09/07 à 25% WR) : (1) gate RANGE bloquant
+//            (ADX<20 ou CHOP>61.8 = signal tendance SUSPENDU, pas juste pénalisé), (2) veto
+//            d'extension (prix > 1.5×ATR de EMA20 + RSI extrême = ATTENDRE pullback), (3) signal
+//            matinal décalé de 05:00 à 08:45 Berlin (pré-Londres, liquidité réelle), (4) bougie
+//            de confirmation requise (dernière 15m close dans le sens du signal sinon ATTENDRE),
+//            (5) mode mean-reversion en RANGE (BB+RSI), verdict « ⏳ ATTENDRE CONFIRMATION »
 // v7.13.0 — FIX animation chandeliers/flèche invisible : l'affichage du signal-chart est
 //            maintenant piloté en JS (style.display="block") dans renderVerdict(), immunisé
 //            contre les problèmes de spécificité CSS / cache ; réinjection défensive du SVG
@@ -4339,6 +4355,7 @@ async function analyze(candles15, candles1h, dxy) {
   const cur = {
     price: last,
     prev: prev,
+    open: candles15[i] ? candles15[i].o : null,  // v7.14.2 : open de la dernière bougie close (confirmation)
     ema9: get(e9), ema21: get(e21), ema50: get(e50), ema200: get(e200),
     rsi: get(r),
     macd: get(m?.macd), macdSig: get(m?.signal), macdHist: get(m?.hist),
@@ -4639,7 +4656,22 @@ async function analyze(candles15, candles1h, dxy) {
     techScore, trend1h, trendScore, dxyScore, sessDayScore, volScore,
     globalScore, alignment, provisionalDir, volumeReliable,
     smc: { h15: smc15, h1: smc1h, orderBlocks, fvgs },
-    macro: { us10y, events: upcomingEvents }
+    macro: { us10y, events: upcomingEvents },
+    regime: (cur.adx != null && cur.adx < 20) || (chop != null && chop > 61.8) ? "RANGE" : "TREND",
+    regimeDetail: { adx: cur.adx, chop, adxBelow20: cur.adx != null && cur.adx < 20, chopAbove618: chop != null && chop > 61.8 },
+    extension: (() => {
+      if (cur.ema21 == null || cur.atr == null || cur.atr <= 0) return { extended: false };
+      const dist = cur.price - cur.ema21;
+      const ratio = Math.abs(dist) / cur.atr;
+      return { extended: ratio > 1.5, bullExtended: dist > 0 && ratio > 1.5, bearExtended: dist < 0 && ratio > 1.5,
+               distance: dist, ratioATR: ratio, rsiOverbought: cur.rsi != null && cur.rsi > 65, rsiOversold: cur.rsi != null && cur.rsi < 35 };
+    })(),
+    meanReversion: (() => {
+      if (cur.bbUp == null || cur.bbLo == null || cur.rsi == null) return null;
+      if (cur.price <= cur.bbLo && cur.rsi < 35) return { signal: "BUY", reason: "prix " + String.fromCharCode(8804) + " BB inf + RSI " + cur.rsi.toFixed(0) + " < 35 (survente en range)" };
+      if (cur.price >= cur.bbUp && cur.rsi > 65) return { signal: "SELL", reason: "prix " + String.fromCharCode(8805) + " BB sup + RSI " + cur.rsi.toFixed(0) + " > 65 (surachat en range)" };
+      return null;
+    })()
   };
 }
 
@@ -4737,6 +4769,25 @@ function generateSynthesis(analysis, dxy) {
   const fmt = (v, n = 2) => v == null ? "n/d" : v.toFixed(n);
 
   let txt = `Tendance dominante <strong>${dir}</strong> — score technique ${analysis.globalScore > 0 ? "+" : ""}${analysis.globalScore}/100, ${align}.`;
+
+  // v7.14.2 : RÉGIME DE MARCHÉ en tête de synthèse (cohérence avec les flags)
+  if (analysis.regime === "RANGE") {
+    const rd = analysis.regimeDetail;
+    let why = [];
+    if (rd.adxBelow20) why.push("ADX " + (rd.adx != null ? rd.adx.toFixed(0) : "?") + " < 20");
+    if (rd.chopAbove618) why.push("Choppiness " + (rd.chop != null ? rd.chop.toFixed(0) : "?") + " > 61.8");
+    txt += ` <br><strong>⚠️ MARCHÉ EN RANGE</strong> (${why.join(" + ")}) — le signal de tendance ci-dessus est <strong>SUSPENDU</strong>.`;
+    if (analysis.meanReversion) {
+      txt += ` Signal alternatif mean-reversion actif : <strong>${analysis.meanReversion.signal}</strong> (${analysis.meanReversion.reason}).`;
+    } else {
+      txt += ` Aucune condition mean-reversion réunie — ATTENDRE un retour aux extrêmes des bandes de Bollinger.`;
+    }
+  }
+  if (analysis.regime !== "RANGE" && analysis.extension && analysis.extension.extended) {
+    const ext = analysis.extension;
+    const side = ext.bullExtended ? "haussière" : "baissière";
+    txt += ` <br><strong>⚠️ EXTENSION ${side.toUpperCase()}</strong> : prix à ${ext.ratioATR.toFixed(1)}× ATR de l'EMA20 — ATTENDRE un pullback avant d'entrer.`;
+  }
 
   // RSI
   if (c.rsi != null) {
@@ -4932,6 +4983,34 @@ function applySafetyNets(aiResult, analysis) {
     }
   }
 
+  // Garde RANGE bloquant (v7.14.0) — ADX<20 ou CHOP>61.8 = signal tendance SUSPENDU
+  if (analysis.regime === "RANGE") {
+    const rd = analysis.regimeDetail;
+    let rr = [];
+    if (rd.adxBelow20) rr.push("ADX " + (rd.adx != null ? rd.adx.toFixed(1) : "?") + " < 20");
+    if (rd.chopAbove618) rr.push("Choppiness " + (rd.chop != null ? rd.chop.toFixed(0) : "?") + " > 61.8");
+    if (analysis.meanReversion) {
+      const mr = analysis.meanReversion;
+      flags.push({ tone: "y", text: "\ud83d\udcca MARCH\u00c9 EN RANGE (" + rr.join(" + ") + ") \u2014 signal tendance suspendu. Signal ALTERNATIF mean-reversion : " + mr.signal + " (" + mr.reason + ")" });
+      signal = mr.signal; confidence = "MOYEN";
+    } else {
+      flags.push({ tone: "r", text: "\ud83d\udcca MARCH\u00c9 EN RANGE (" + rr.join(" + ") + ") \u2014 signal tendance SUSPENDU, pas de condition mean-reversion r\u00e9unie. ATTENDRE un retour aux extr\u00eames des bandes de Bollinger" });
+      confidence = "FAIBLE";
+    }
+  }
+
+  // Veto d'extension (v7.14.0) — prix > 1.5*ATR de EMA20 dans le sens du signal
+  if (analysis.regime !== "RANGE" && analysis.extension && analysis.extension.extended) {
+    const ext = analysis.extension;
+    if (signal === "BUY" && ext.bullExtended) {
+      flags.push({ tone: "y", text: "\u26a0\ufe0f EXTENSION HAUSSIÈRE : prix à " + ext.ratioATR.toFixed(1) + "\u00d7 ATR au-dessus de l'EMA20" + (ext.rsiOverbought ? " + RSI > 65" : "") + " \u2014 ATTENDRE un pullback vers EMA20/VWAP avant d'entrer BUY" });
+      confidence = "FAIBLE";
+    } else if (signal === "SELL" && ext.bearExtended) {
+      flags.push({ tone: "y", text: "\u26a0\ufe0f EXTENSION BAISSIÈRE : prix à " + ext.ratioATR.toFixed(1) + "\u00d7 ATR en dessous de l'EMA20" + (ext.rsiOversold ? " + RSI < 35" : "") + " \u2014 ATTENDRE un retour vers EMA20/VWAP avant d'entrer SELL" });
+      confidence = "FAIBLE";
+    }
+  }
+
   // Garde 8quinquies: économie nette négative (WR sous le seuil de rentabilité)
   if (state.cycleStats && state.cycleStats.done >= 10 && state.cycleStats.trueEvPerCycle != null && state.cycleStats.trueEvPerCycle < 0) {
     flags.push({ tone: "y", text: "Économie nette NÉGATIVE : WR cycle " + state.cycleStats.cycleWR + "% sous le seuil de rentabilité " +
@@ -5007,7 +5086,27 @@ function applySafetyNets(aiResult, analysis) {
     }
   }
 
-  return { signal, confidence, flags, raison: aiResult.raison || "", analyse: aiResult.analyse || "", risque: aiResult.risque || "" };
+  // Bougie de confirmation (v7.14.0) — la dernière bougie 15m CLOSE doit être
+  // dans le sens du signal, sinon on recommande d'ATTENDRE la prochaine.
+  let waitForConfirmation = false;
+  if (analysis.current) {
+    const c = analysis.current;
+    // v7.14.2 : une bougie est haussière si close > open (pas close > close précédent)
+    // Si open est null (données manquantes), on ne bloque pas — pas de vérification possible.
+    if (c.open != null) {
+      const lastBullish = c.price > c.open;
+      const lastBearish = c.price < c.open;
+      if (signal === "BUY" && !lastBullish) {
+        waitForConfirmation = true;
+        flags.push({ tone: "b", text: "\u23f3 Dernière bougie close non haussière \u2014 ATTENDRE une bougie 15 min haussière de confirmation avant d'entrer BUY" });
+      } else if (signal === "SELL" && !lastBearish) {
+        waitForConfirmation = true;
+        flags.push({ tone: "b", text: "\u23f3 Dernière bougie close non baissière \u2014 ATTENDRE une bougie 15 min baissière de confirmation avant d'entrer SELL" });
+      }
+    }
+  }
+
+  return { signal, confidence, flags, raison: aiResult.raison || "", analyse: aiResult.analyse || "", risque: aiResult.risque || "", waitForConfirmation };
 }
 
 /* ====================================================================
@@ -5128,6 +5227,12 @@ function buildFablePrompt() {
   lines.push("TÂCHE : analyse visuellement le graphique (structure, chandeliers, momentum, supports/résistances visibles, contexte des indicateurs affichés) et donne UNE direction.");
   lines.push("Réponds UNIQUEMENT avec un objet JSON strict, sans texte autour, sans backticks :");
   lines.push('{"signal":"BUY|SELL","confidence":"FAIBLE|MOYEN|FORT","raison":"phrase courte max 80 caractères","analyse":"2-3 phrases sur ce que tu vois dans le graphique","risque":"une phrase sur le risque principal"}');
+  if (state.lastAnalysis && state.lastAnalysis.regime) {
+    lines.push("- RÉGIME ACTUEL du marché : " + state.lastAnalysis.regime + (state.lastAnalysis.regime === "RANGE" ? " (ADX < 20 ou Choppiness > 61.8 — PAS de tendance claire)" : " (tendance confirmée)") + ".");
+  }
+  if (state.lastAnalysis && state.lastAnalysis.extension && state.lastAnalysis.extension.extended) {
+    lines.push("- ATTENTION EXTENSION : le prix est à " + state.lastAnalysis.extension.ratioATR.toFixed(1) + "× ATR de l'EMA20 — pullback probable. NE PAS entrer dans le sens de l'extension.");
+  }
   lines.push("Interdits : WAIT/NEUTRAL, caractères < > &, texte hors du JSON.");
   return lines.join("\n");
 }
@@ -5432,8 +5537,9 @@ function renderVerdict(result) {
     return;
   }
   const { signal, confidence, price, ts, score, source } = result;
-  ui.verdict.className = "verdict " + (signal === "BUY" ? "buy" : "sell");
-  ui.vDir.textContent = signal === "BUY" ? "BUY" : "SELL";
+  const isWait = !!result.waitForConfirmation;
+  ui.verdict.className = "verdict " + (signal === "BUY" ? "buy" : "sell") + (isWait ? " wait" : "");
+  ui.vDir.textContent = isWait ? (signal + " ⏳") : signal;
   // Forcer l'affichage de l'animation chandeliers (le CSS seul ne suffit pas
   // dans certaines conditions de cache/spécificité — piloté en JS, définitif)
   if (ui.vSignalChart) {
@@ -6234,8 +6340,9 @@ function setupAutoTimers() {
     state.scheduleTimer = setInterval(() => {
       const d = nowBerlin();
       const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      if (d.getHours() === 5 && d.getMinutes() < 2 && d.getDay() >= 1 && d.getDay() <= 5 && state.morningFiredKey !== key) {
-        state.morningFiredKey = key; // garde anti-double partagée avec le rattrapage
+      // v7.14.0 : signal matinal décalé de 05:00 à 08:45 (pré-Londres, liquidité réelle)
+      if (d.getHours() === 8 && d.getMinutes() >= 45 && d.getMinutes() < 47 && d.getDay() >= 1 && d.getDay() <= 5 && state.morningFiredKey !== key) {
+        state.morningFiredKey = key;
         analyzeNow();
       }
     }, 30000);
@@ -6281,7 +6388,7 @@ function resumeAllTimers() {
   if (state.autoMorning && !state.analyzing) {
     const d = nowBerlin();
     const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-    if (d.getDay() >= 1 && d.getDay() <= 5 && d.getHours() >= 5 && state.morningFiredKey !== key) {
+    if (d.getDay() >= 1 && d.getDay() <= 5 && (d.getHours() > 8 || (d.getHours() === 8 && d.getMinutes() >= 45)) && state.morningFiredKey !== key) {
       state.morningFiredKey = key;
       analyzeNow();
     }
