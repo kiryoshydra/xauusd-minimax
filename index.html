@@ -2185,7 +2185,7 @@
 
     <div class="field">
       <label for="cycleFee">Coût par cycle <span class="muted">(USDC — observé 125.3 à 125.6)</span></label>
-      <input type="number" id="cycleFee" min="0" step="0.01" placeholder="125.45" />
+      <input type="number" id="cycleFee" min="0" step="0.01" placeholder="125.81" />
       <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12.5px;cursor:pointer">
         <input type="checkbox" id="feeRefunded" style="width:auto" />
         <span>Le frais est <strong>rendu</strong> lors d'un remboursement de cycle (4 pertes)</span>
@@ -2328,7 +2328,11 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.14.3";
+const APP_VERSION = "7.14.5";
+// v7.14.4 — fee confirmé 125.30 USDC (était 125.45), doc PROP_FIRM précisée : 1 fee par cycle
+//            (step 2/3/4 après SL = même challenge = gratuit), résultats semaine 13-17/07 :
+//            7/7 cycles gagnés, +173.60$ net, WR global passé de 80% à 85.2% (au-dessus du
+//            seuil de rentabilité), système devenu RENTABLE (EV nette +2.88$/cycle)
 // v7.14.0 — POST-MORTEM STRATÉGIQUE (semaine 06-09/07 à 25% WR) : (1) gate RANGE bloquant
 //            (ADX<20 ou CHOP>61.8 = signal tendance SUSPENDU, pas juste pénalisé), (2) veto
 //            d'extension (prix > 1.5×ATR de EMA20 + RSI extrême = ATTENDRE pullback), (3) signal
@@ -2514,9 +2518,9 @@ const PROP_FIRM = {
   // confirmé le 03/07/2026, Independence Day observé, marché fermé).
   // Chaque cycle a son propre CHALLENGE ID.
   refundLockoutHours: 48,
-  // Frais par cycle observés : 125.3 à 125.6 USDC (défaut = médiane 125.45,
-  // modifiable dans les Réglages). Hypothèse par défaut : payé sur TOUT cycle.
-  cycleFeeDefault: 125.45
+  // Frais par cycle : 125.81 USDC (moyenne réelle sur 6 retraits, captures 17/07/2026). 1 fee par CYCLE (le step 2/3/4
+  // après un SL est le même challenge = gratuit). Hypothèse par défaut : payé sur tout cycle.
+  cycleFeeDefault: 125.81
 };
 
 /* ---------- STATE ---------- */
@@ -2527,7 +2531,7 @@ const state = {
   calibration: null,            // { session, day, directional, totalAll, totalXau, isDefault, importedAt }
   cycles: [],                   // cycles A Caccia di Trader reconstruits depuis le CSV
   cycleStats: null,             // { won, refunded, cycleWR, effectivePL, truePL, ... }
-  cycleFee: 125.45,             // frais par cycle en USDC (observé : 125.3-125.6)
+  cycleFee: 125.81,             // frais par cycle en USDC (moyenne réelle 125.81, captures 17/07/2026)
   holidays: null,               // jours fériés marché fermé (YYYY-MM-DD), défaut DEFAULT_US_HOLIDAYS
   feeRefunded: false,           // le frais est-il rendu lors d'un remboursement de cycle ?
   twelveKey: "",
