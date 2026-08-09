@@ -2782,18 +2782,19 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.16.2";
+const APP_VERSION = "7.17.0";
 // v7.14.4 — fee confirmé 125.30 USDC (était 125.45), doc PROP_FIRM précisée : 1 fee par cycle
 //            (step 2/3/4 après SL = même challenge = gratuit), résultats semaine 13-17/07 :
 //            7/7 cycles gagnés, +173.60$ net, WR global passé de 80% à 85.2% (au-dessus du
 //            seuil de rentabilité), système devenu RENTABLE (EV nette +2.88$/cycle)
-// v7.16.2 — CORRECTIF RACINE : fmtBytes() n'avait jamais été défini. Dès qu'une
-//            capture était en mémoire, renderCapture() levait une ReferenceError
-//            et init() s'arrêtait là — historique, recalibration, badge de session,
-//            graphe, timers et préchargement ne démarraient jamais. Chaque étape
-//            d'init() est désormais isolée par step().
-// v7.16.1 — La navigation PropFirm se branche via son propre boot().
-// v7.16.0 — ONGLET PROPFIRM / FTMO : garde-fous, jauges, PAPER/LIVE, bridge, chat.
+// v7.17.0 — RÈGLES FTMO VÉRIFIÉES sur ftmo.com/fr/trading-objectives. Trois écarts
+//            corrigés : (1) la Perte Maximale Journalière se calcule sur le SOLDE à
+//            00:00 CE(S)T, pas sur l'equity de la veille, et se mesure sur l'EQUITY
+//            positions ouvertes comprises ; (2) un Jour de Trading se compte au jour
+//            d'OUVERTURE ; (3) l'Objectif de Profit se valide sur le SOLDE, toutes
+//            positions fermées. Blocages désormais évalués sur le pire cas.
+// v7.16.2 — CORRECTIF RACINE : fmtBytes() n'avait jamais été défini.
+// v7.16.0 — ONGLET PROPFIRM / FTMO.
 // v7.14.0 — POST-MORTEM STRATÉGIQUE (semaine 06-09/07 à 25% WR) : (1) gate RANGE bloquant
 //            (ADX<20 ou CHOP>61.8 = signal tendance SUSPENDU, pas juste pénalisé), (2) veto
 //            d'extension (prix > 1.5×ATR de EMA20 + RSI extrême = ATTENDRE pullback), (3) signal
@@ -7025,9 +7026,7 @@ function setTimeframe(tf) {
   if (state.lastResult && !state.analyzing) analyzeNow({ reason: "tf-switch" });
 }
 
-/* ====================================================================
-   PROPFIRM — moteur
-   ==================================================================== */
+/* PROPFIRM — moteur */
 /* ======================================================================
    PROPFIRM ENGINE v1.0 — Moteur de garde-fous FTMO
    ----------------------------------------------------------------------
@@ -7067,17 +7066,28 @@ function setTimeframe(tf) {
     account: {
       initialBalance: 200000,
       type: "SWING",              // SWING | STANDARD
-      // [VÉRIFIER] 5% / 10% sur capture FTMO du 06/08/2026
-      dailyLossPct: 0.05,         // $10 000
-      maxLossPct: 0.10,           // $20 000 → plancher statique $180 000
-      // [VÉRIFIER] l'Étape 2 repart-elle d'un solde remis à l'initial ?
+      // Challenge 2-Step. Le 1-Step a des règles différentes : perte
+      // journalière 3 %, perte maximale GLISSANTE, et règle du Meilleur Jour.
+      program: "2-STEP",          // 2-STEP | 1-STEP
+      // Vérifié : ftmo.com/fr/trading-objectives (2-Step)
+      dailyLossPct: 0.05,         // Montant fixe : 5 % du capital INITIAL
+      maxLossPct: 0.10,           // 10 % du capital initial
+      // Vérifié : en 2-Step la Perte Maximale est une « limite fixe ».
+      // En 1-Step elle est glissante (plus haut solde à minuit, ne baisse jamais).
+      maxLossTrailing: false,
+      // Vérifié : « Il n'y a pas d'Objectif de Profit sur le FTMO Account »
       phases: {
         STEP_1:  { label: "Étape 1", targetPct: 0.10, hasTarget: true  },
         STEP_2:  { label: "Étape 2", targetPct: 0.05, hasTarget: true  },
         FUNDED:  { label: "Financé", targetPct: null, hasTarget: false }
       },
+      // Vérifié : « au moins 4 Jours de Trading ». Un Jour de Trading est un
+      // jour où une position est OUVERTE (l'exemple FTMO compte les jours
+      // d'ouverture, pas les jours de détention).
       minTradingDays: 4,
       inactivityDays: 30,
+      // Vérifié : règle du Meilleur Jour — 1-Step uniquement.
+      bestDayMaxShare: null,      // 0.50 en 1-Step
       timezone: "Europe/Prague"   // siège FTMO — JAMAIS d'offset en dur
     },
 
@@ -7270,7 +7280,10 @@ function setTimeframe(tf) {
       refBalance: o.refBalance != null ? o.refBalance : initial,
       ratchetFloor: null,
       ratchetPeak: 0,
-      dayStartEquity: o.dayStartEquity != null ? o.dayStartEquity : initial,
+      // FTMO recalcule la limite journalière à partir du SOLDE à 00:00 CE(S)T,
+      // pas de l'equity. Les deux diffèrent si une position est ouverte à minuit.
+      dayStartBalance: o.dayStartBalance != null ? o.dayStartBalance : initial,
+      highestMidnightBalance: o.highestMidnightBalance != null ? o.highestMidnightBalance : initial,
       dailyPnL: 0,
       openPosition: null,
       tradingDays: o.tradingDays || [],
@@ -7295,10 +7308,44 @@ function setTimeframe(tf) {
     state.global.tradesToday = 0;
     Object.keys(accounts).forEach(id => {
       const a = accounts[id];
-      a.dayStartEquity = a.equity;
+      a.dayStartBalance = a.balance;
+      if (a.balance > a.highestMidnightBalance) a.highestMidnightBalance = a.balance;
       a.dailyPnL = 0;
     });
     return true;
+  }
+
+  /**
+   * Plancher de Perte Maximale Journalière.
+   *   limite = solde à 00:00 CE(S)T − (5 % du capital initial)
+   * L'equity (positions ouvertes comprises) ne doit jamais passer dessous.
+   */
+  function dailyLossFloor(account, cfg) {
+    const C = cfg || CONFIG;
+    return round2(account.dayStartBalance - account.initialBalance * C.account.dailyLossPct);
+  }
+
+  /**
+   * Plancher de Perte Maximale.
+   *   2-Step : limite FIXE  = capital initial − 10 %
+   *   1-Step : limite GLISSANTE = max(plus haut solde à minuit, initial) − 10 %
+   */
+  function maxLossFloor(account, cfg) {
+    const C = cfg || CONFIG;
+    const amount = account.initialBalance * C.account.maxLossPct;
+    if (!C.account.maxLossTrailing) return round2(account.initialBalance - amount);
+    const base = Math.max(account.highestMidnightBalance, account.initialBalance);
+    return round2(base - amount);
+  }
+
+  /**
+   * Equity dans le pire cas : si la position ouverte touche son stop, et si
+   * le trade envisagé touche le sien. C'est cette valeur qu'on compare aux
+   * planchers — attendre la perte réalisée serait attendre trop tard.
+   */
+  function worstCaseEquity(account, pendingRisk) {
+    const open = account.openPosition ? (account.openPosition.riskAmount || 0) : 0;
+    return round2(account.equity - open - (pendingRisk || 0));
   }
 
   /* ====================================================================
@@ -7447,25 +7494,36 @@ function setTimeframe(tf) {
       push("DAILY_BUDGET", `Budget journalier épuisé : $${Math.round(lossToday)} / $${C.limits.dailyBudget}.`);
     }
 
-    /* --- 6. Limite FTMO journalière (blocage anticipé) -------------- */
-    const ftmoDailyLimit = account.initialBalance * C.account.dailyLossPct;
-    const ftmoDailyGuard = ftmoDailyLimit * C.limits.ftmoDailyGuardPct;
-    if (lossToday >= ftmoDailyGuard) {
-      push("FTMO_DAILY", `Approche de la limite FTMO journalière.`,
-           `$${Math.round(lossToday)} perdus — blocage à $${Math.round(ftmoDailyGuard)} (limite réelle $${Math.round(ftmoDailyLimit)}).`);
-    }
-
-    /* --- 7. Limite FTMO totale (blocage anticipé) ------------------- */
-    const wall = account.initialBalance * (1 - C.account.maxLossPct);
-    const guardEquity = account.initialBalance - (account.initialBalance - wall) * C.limits.ftmoTotalGuardPct;
-    if (account.equity <= guardEquity) {
-      push("FTMO_TOTAL", `Approche du plancher FTMO.`,
-           `Equity $${Math.round(account.equity)} — blocage à $${Math.round(guardEquity)} (mur $${Math.round(wall)}).`);
-    }
-
     /* --- 8 & 9. Validation SL et calcul du lot ---------------------- */
+    // Calculé avant les contrôles 6 et 7 : ils ont besoin du risque engagé.
     const sizing = computeLot(account.equity, input.slDistance, C);
     if (!sizing.ok) push("SIZING", sizing.reason);
+    const pendingRisk = sizing.ok ? sizing.riskAmount : 0;
+
+    /* --- 6. Perte Maximale Journalière ------------------------------
+       FTMO mesure l'EQUITY, positions ouvertes comprises. On compare donc
+       le pire cas — si tout touche le stop — et non la perte déjà réalisée. */
+    const dailyFloor = dailyLossFloor(account, C);
+    const dailyBuffer = account.equity - dailyFloor;                 // marge actuelle
+    const worstDaily = worstCaseEquity(account, pendingRisk);
+    const dailyGuardFloor = round2(dailyFloor + (account.initialBalance * C.account.dailyLossPct)
+                                   * (1 - C.limits.ftmoDailyGuardPct));
+    if (worstDaily <= dailyGuardFloor) {
+      push("FTMO_DAILY", "Approche de la Perte Maximale Journalière.",
+           `Plancher du jour $${Math.round(dailyFloor)} — equity dans le pire cas ` +
+           `$${Math.round(worstDaily)}, blocage à $${Math.round(dailyGuardFloor)}.`);
+    }
+
+    /* --- 7. Perte Maximale ------------------------------------------ */
+    const wall = maxLossFloor(account, C);
+    const guardEquity = round2(wall + (account.initialBalance * C.account.maxLossPct)
+                               * (1 - C.limits.ftmoTotalGuardPct));
+    if (worstCaseEquity(account, pendingRisk) <= guardEquity) {
+      push("FTMO_TOTAL", "Approche de la Perte Maximale.",
+           `Plancher $${Math.round(wall)}${C.account.maxLossTrailing ? " (glissant)" : " (fixe)"} — ` +
+           `equity dans le pire cas $${Math.round(worstCaseEquity(account, pendingRisk))}, ` +
+           `blocage à $${Math.round(guardEquity)}.`);
+    }
 
     /* --- 10. Cliquet (compte financé) ------------------------------- */
     if (ratchetActive(account, C) && account.ratchetFloor != null
@@ -7529,7 +7587,7 @@ function setTimeframe(tf) {
     const sizing = computeLot(account.equity, 16.96, C);
     const perSL = sizing.ok ? sizing.riskAmount : null;
     const lossToday = Math.max(0, -account.dailyPnL);
-    const wall = account.initialBalance * (1 - C.account.maxLossPct);
+    const wall = maxLossFloor(account, C);
 
     const count = (remaining) => perSL && perSL > 0 ? Math.max(0, Math.floor(remaining / perSL)) : null;
 
@@ -7557,10 +7615,16 @@ function setTimeframe(tf) {
         currentTier: riskTierFor(account.equity, C),
         stopAt: C.risk.hardStopEquity
       },
+      ftmoDaily: {
+        label: "Plancher du jour",
+        remaining: count(account.equity - dailyLossFloor(account, C)),
+        floorAt: dailyLossFloor(account, C)
+      },
       ftmoWall: {
-        label: "Mur FTMO",
+        label: "Perte Maximale",
         remaining: count(account.equity - wall),
         wallAt: wall,
+        trailing: C.account.maxLossTrailing,
         margin: round2(C.risk.hardStopEquity - wall)
       }
     };
@@ -7586,9 +7650,9 @@ function setTimeframe(tf) {
     account.dailyPnL = round2(account.dailyPnL + opts.netProfit);
     account.openPosition = null;
     account.lastTradeDate = dayKey(now, C.account.timezone);
-
-    const dk = account.lastTradeDate;
-    if (account.tradingDays.indexOf(dk) === -1) account.tradingDays.push(dk);
+    // Le Jour de Trading est compté à l'OUVERTURE (voir registerOpen) :
+    // dans l'exemple FTMO, une position ouverte le 12 et fermée le 14 ne
+    // compte que pour le 12.
 
     if (opts.countGlobal !== false) {
       state.global.lastClosedResults.unshift(isWin ? "TP" : "SL");
@@ -7613,6 +7677,10 @@ function setTimeframe(tf) {
   function registerOpen(state, account, position, opts) {
     const o = opts || {};
     account.openPosition = position;
+    // Jour de Trading FTMO : jour d'OUVERTURE de la position.
+    const dk = dayKey(position.openedAt ? new Date(position.openedAt) : new Date(),
+                      (o.cfg || CONFIG).account.timezone);
+    if (account.tradingDays.indexOf(dk) === -1) account.tradingDays.push(dk);
     if (o.countGlobal !== false) {
       state.global.tradesToday += 1;
       state.global.lastTradeAt = (position.openedAt || new Date().toISOString());
@@ -7631,7 +7699,12 @@ function setTimeframe(tf) {
       return { hasTarget: false, label: phase ? phase.label : account.phase };
     }
     const target = account.initialBalance * phase.targetPct;
-    const achieved = account.equity - account.initialBalance;
+    // « le SOLDE dépassera le Capital Simulé Initial […] avec toutes les
+    //   positions fermées » — donc balance, pas equity.
+    const achieved = account.balance - account.initialBalance;
+    const daysOk = account.tradingDays.length >= C.account.minTradingDays;
+    const targetOk = achieved >= target;
+    const flat = !account.openPosition;
     return {
       hasTarget: true,
       label: phase.label,
@@ -7641,7 +7714,10 @@ function setTimeframe(tf) {
       remaining: round2(Math.max(0, target - achieved)),
       tradingDays: account.tradingDays.length,
       minTradingDays: C.account.minTradingDays,
-      daysOk: account.tradingDays.length >= C.account.minTradingDays
+      daysOk: daysOk,
+      flat: flat,
+      // Les trois conditions doivent être réunies simultanément
+      passed: targetOk && daysOk && flat
     };
   }
 
@@ -7675,6 +7751,7 @@ function setTimeframe(tf) {
     dayKey: dayKey, localHour: localHour, localWeekday: localWeekday,
     // dimensionnement
     riskTierFor: riskTierFor, computeLot: computeLot, expectedReward: expectedReward,
+    dailyLossFloor: dailyLossFloor, maxLossFloor: maxLossFloor, worstCaseEquity: worstCaseEquity,
     // état
     createState: createState, createAccount: createAccount, rollDay: rollDay,
     // cliquet
@@ -7690,9 +7767,7 @@ function setTimeframe(tf) {
 });
 
 
-/* ====================================================================
-   PROPFIRM — UI (auto-démarrage indépendant de init())
-   ==================================================================== */
+/* PROPFIRM — UI */
 /* ======================================================================
    PROPFIRM UI v1.0
    Relie PropFirmEngine au DOM. Aucune règle métier ici : toute décision
@@ -8407,7 +8482,7 @@ function setTimeframe(tf) {
     if (!r.navBoutons) pb.push("Aucun bouton .mainnav-btn — mauvais fichier en ligne.");
     if (r.navBoutons && !r.navBranchee) pb.push("Boutons présents mais non branchés.");
     if (!r.vuePropFirm) pb.push("La vue #view-propfirm est absente du HTML.");
-    if (String(r.version).indexOf("7.16") === -1) pb.push("Version " + r.version + " — ce n'est pas la v7.16.0 (cache ?).");
+    if (!/7\.1[6-9]\./.test(String(r.version))) pb.push("Version " + r.version + " — ce n'est pas la v7.16.0 (cache ?).");
     console.log(pb.length ? "PROBLÈMES :\n  · " + pb.join("\n  · ") : "Tout est en place.");
     return r;
   }
@@ -8497,7 +8572,6 @@ function init() {
     if (ui.btnOpenClaude) ui.btnOpenClaude.addEventListener("click", () => openInClaudeApp());
   });
   step("timers", () => setupAutoTimers());
-  // PropFirm : déjà démarré par son propre boot(). Sécurité idempotente.
   step("propfirm", () => { if (window.PropFirmUI) window.PropFirmUI.init(); });
   // Précharge les données pour avoir un verdict instantané au premier clic
   step("preload", () => refreshDataOnly());
