@@ -1861,6 +1861,262 @@
     color:var(--text-2);
     margin:0 1px;
   }
+
+  /* ======================================================================
+     PROPFIRM v1.0 — navigation principale + onglet FTMO
+     Charte Minimax : tokens existants uniquement, aucune nouvelle couleur.
+     ====================================================================== */
+
+  /* ---------- Navigation principale ---------- */
+  .mainnav{
+    display:flex; gap:4px; margin:0 0 24px;
+    border-bottom:1px solid var(--border-soft);
+    overflow-x:auto; scrollbar-width:none;
+  }
+  .mainnav::-webkit-scrollbar{display:none}
+  .mainnav-btn{
+    position:relative; padding:12px 20px 14px; white-space:nowrap;
+    background:transparent; border:0; cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:13.5px; font-weight:500;
+    letter-spacing:.02em; color:var(--text-3);
+    transition:color .2s var(--ease);
+  }
+  .mainnav-btn:hover{color:var(--text-2)}
+  .mainnav-btn.active{color:var(--gold-soft)}
+  .mainnav-btn.active::after{
+    content:''; position:absolute; left:14px; right:14px; bottom:-1px; height:2px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);
+    border-radius:2px;
+  }
+  .mainnav-btn .nav-dot{
+    display:inline-block; width:5px; height:5px; border-radius:50%;
+    background:var(--bull); margin-left:8px; vertical-align:middle;
+    box-shadow:0 0 8px rgba(95,164,126,.6);
+  }
+  .mainnav-btn .nav-dot.off{background:var(--text-4); box-shadow:none}
+  .mainnav-btn .nav-dot.warn{background:var(--bear); box-shadow:0 0 8px rgba(196,107,92,.6)}
+
+  .view{display:none}
+  .view.active{display:block; animation:viewIn .28s var(--ease)}
+  @keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.view.active{animation:none}}
+
+  /* ---------- Sous-navigation ---------- */
+  .subnav{display:flex; gap:8px; margin:0 0 20px; flex-wrap:wrap}
+  .subnav-btn{
+    padding:8px 16px; border-radius:999px; cursor:pointer;
+    background:var(--surface-2); border:1px solid var(--border);
+    font-family:'Inter',sans-serif; font-size:12.5px; font-weight:500;
+    color:var(--text-3); transition:all .2s var(--ease);
+  }
+  .subnav-btn:hover:not(:disabled){border-color:var(--border-strong); color:var(--text-2)}
+  .subnav-btn.active{
+    background:rgba(201,169,97,.1); border-color:var(--gold-deep); color:var(--gold-soft);
+  }
+  .subnav-btn:disabled{opacity:.34; cursor:not-allowed}
+
+  /* ---------- Bandeau de compte ---------- */
+  .pf-header{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:20px; flex-wrap:wrap; margin-bottom:18px;
+  }
+  .pf-account{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap}
+  .pf-account .name{
+    font-family:'Instrument Serif',serif; font-size:26px; font-weight:400;
+    color:var(--text); letter-spacing:.01em;
+  }
+  .pf-phase{
+    padding:4px 12px; border-radius:999px; font-size:11px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase;
+    background:rgba(201,169,97,.12); border:1px solid var(--gold-deep); color:var(--gold-soft);
+  }
+  .pf-phase.funded{background:rgba(95,164,126,.12); border-color:var(--bull-deep); color:var(--bull-soft)}
+
+  .pf-mode{
+    display:flex; align-items:center; gap:10px; padding:7px 14px;
+    border-radius:999px; font-size:11.5px; font-weight:600; letter-spacing:.06em;
+    background:rgba(201,169,97,.08); border:1px solid var(--gold-deep); color:var(--gold-soft);
+    cursor:pointer; transition:all .2s var(--ease);
+  }
+  .pf-mode.live{background:rgba(196,107,92,.1); border-color:var(--bear); color:var(--bear-soft)}
+  .pf-mode .mode-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+  .pf-mode.live .mode-dot{animation:livePulse 2s ease-in-out infinite}
+  @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
+  @media(prefers-reduced-motion:reduce){.pf-mode.live .mode-dot{animation:none}}
+
+  /* ---------- Chiffres clés ---------- */
+  .pf-figures{display:grid; grid-template-columns:repeat(2,1fr); gap:1px;
+    background:var(--border-soft); border:1px solid var(--border);
+    border-radius:var(--r); overflow:hidden; margin-bottom:18px}
+  @media(min-width:760px){.pf-figures{grid-template-columns:repeat(4,1fr)}}
+  .pf-fig{background:var(--surface); padding:16px 18px}
+  .pf-fig .lab{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--text-4); margin-bottom:7px}
+  .pf-fig .val{font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:500;
+    color:var(--text); font-variant-numeric:tabular-nums; letter-spacing:-.02em}
+  .pf-fig .val.up{color:var(--bull-soft)} .pf-fig .val.down{color:var(--bear-soft)}
+  .pf-fig .sub{font-size:11px; color:var(--text-3); margin-top:5px;
+    font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums}
+
+  /* ---------- Progression de phase ---------- */
+  .pf-progress{margin-bottom:18px}
+  .pf-progress .head{display:flex; justify-content:space-between; align-items:baseline;
+    margin-bottom:9px; font-size:12px}
+  .pf-progress .track{height:6px; background:var(--surface-3); border-radius:999px; overflow:hidden}
+  .pf-progress .fill{height:100%; border-radius:999px;
+    background:linear-gradient(90deg,var(--gold-deep),var(--gold-soft));
+    transition:width .5s var(--ease)}
+  .pf-progress .fill.done{background:linear-gradient(90deg,var(--bull-deep),var(--bull-soft))}
+
+  /* ---------- Jauges de distance ---------- */
+  .gauges{display:flex; flex-direction:column; gap:13px}
+  .gauge{display:grid; grid-template-columns:1fr auto; gap:4px 14px; align-items:center}
+  .gauge .g-lab{font-size:12px; color:var(--text-2)}
+  .gauge .g-val{font-family:'JetBrains Mono',monospace; font-size:12px;
+    color:var(--text-3); font-variant-numeric:tabular-nums; text-align:right}
+  .gauge .g-track{grid-column:1/-1; display:flex; gap:3px; height:7px}
+  .gauge .g-seg{flex:1; border-radius:2px; background:var(--surface-3); transition:background .3s var(--ease)}
+  .gauge .g-seg.on{background:var(--bull-deep)}
+  .gauge.warn .g-seg.on{background:var(--gold-deep)}
+  .gauge.danger .g-seg.on{background:var(--bear-deep)}
+  .gauge.danger .g-lab{color:var(--bear-soft)}
+
+  /* ---------- Ticket d'ordre ---------- */
+  .ticket{display:grid; gap:16px}
+  .ticket-row{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .ticket-field label{display:block; font-size:11px; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--text-4); margin-bottom:7px}
+  .ticket-field input{
+    width:100%; padding:13px 15px; border-radius:var(--r-sm);
+    background:var(--bg-2); border:1px solid var(--border); color:var(--text);
+    font-family:'JetBrains Mono',monospace; font-size:16px; font-variant-numeric:tabular-nums;
+    transition:border-color .2s var(--ease);
+  }
+  .ticket-field input:focus{outline:none; border-color:var(--gold-deep)}
+  .ticket-field input.invalid{border-color:var(--bear)}
+
+  .computed{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:14px;
+    padding:15px 17px; border-radius:var(--r-sm);
+    background:var(--bg-2); border:1px solid var(--border-soft);
+  }
+  @media(min-width:560px){.computed{grid-template-columns:repeat(4,1fr)}}
+  .computed .c-item .c-lab{font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--text-4); margin-bottom:5px}
+  .computed .c-item .c-val{font-family:'JetBrains Mono',monospace; font-size:15px;
+    color:var(--text); font-variant-numeric:tabular-nums}
+  .computed .c-item .c-val.gold{color:var(--gold-soft)}
+  .computed .c-item .c-val.up{color:var(--bull-soft)}
+  .computed .c-item .c-val.down{color:var(--bear-soft)}
+
+  .side-buttons{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .btn-side{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    min-height:62px; border-radius:12px; cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:15px; font-weight:600; letter-spacing:.06em;
+    transition:all .2s var(--ease); border:1px solid;
+  }
+  .btn-side .side-sub{font-size:10.5px; font-weight:400; letter-spacing:.02em; opacity:.72}
+  .btn-buy{background:rgba(95,164,126,.13); border-color:var(--bull-deep); color:var(--bull-soft)}
+  .btn-buy:hover:not(:disabled){background:rgba(95,164,126,.22); border-color:var(--bull)}
+  .btn-sell{background:rgba(196,107,92,.13); border-color:var(--bear-deep); color:var(--bear-soft)}
+  .btn-sell:hover:not(:disabled){background:rgba(196,107,92,.22); border-color:var(--bear)}
+  .btn-side:disabled{opacity:.3; cursor:not-allowed}
+
+  /* ---------- Blocages et avertissements ---------- */
+  .blocks{display:flex; flex-direction:column; gap:9px; margin-top:4px}
+  .block-item{
+    display:flex; gap:12px; padding:12px 15px; border-radius:var(--r-sm);
+    background:rgba(196,107,92,.07); border:1px solid var(--bear-deep);
+  }
+  .block-item.warn{background:rgba(201,169,97,.06); border-color:var(--gold-deep)}
+  .block-item .b-icon{flex:0 0 auto; width:16px; height:16px; margin-top:1px; color:var(--bear-soft)}
+  .block-item.warn .b-icon{color:var(--gold-soft)}
+  .block-item .b-msg{font-size:12.5px; color:var(--text); line-height:1.5}
+  .block-item .b-detail{font-size:11.5px; color:var(--text-3); margin-top:3px; line-height:1.5}
+
+  /* ---------- Option D ---------- */
+  .optd{display:flex; flex-direction:column; gap:7px; margin-top:12px;
+    padding:13px 15px; border-radius:var(--r-sm);
+    background:var(--bg-2); border:1px solid var(--border-soft)}
+  .optd .o-title{font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--text-4); margin-bottom:3px}
+  .optd .o-check{display:flex; align-items:center; gap:9px; font-size:12px}
+  .optd .o-check .o-mark{flex:0 0 auto; width:14px; text-align:center; font-weight:600}
+  .optd .o-check.pass .o-mark{color:var(--bull-soft)}
+  .optd .o-check.fail .o-mark{color:var(--bear-soft)}
+  .optd .o-check.fail .o-lab{color:var(--bear-soft)}
+  .optd .o-detail{color:var(--text-4); font-family:'JetBrains Mono',monospace; font-size:11px}
+
+  /* ---------- Confirmation par saisie ---------- */
+  .confirm-phrase{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px}
+  .confirm-phrase input{
+    flex:1; min-width:140px; padding:11px 14px; border-radius:var(--r-sm);
+    background:var(--bg-2); border:1px solid var(--border); color:var(--text);
+    font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.12em;
+  }
+  .confirm-phrase input:focus{outline:none; border-color:var(--gold-deep)}
+
+  /* ---------- Journal ---------- */
+  .journal-list{display:flex; flex-direction:column; gap:1px;
+    background:var(--border-soft); border:1px solid var(--border);
+    border-radius:var(--r-sm); overflow:hidden}
+  .journal-row{display:grid; grid-template-columns:auto 1fr auto; gap:14px;
+    align-items:center; padding:12px 15px; background:var(--surface); font-size:12.5px}
+  .journal-row .j-res{font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+    padding:3px 8px; border-radius:5px; letter-spacing:.04em}
+  .journal-row .j-res.tp{background:rgba(95,164,126,.14); color:var(--bull-soft)}
+  .journal-row .j-res.sl{background:rgba(196,107,92,.14); color:var(--bear-soft)}
+  .journal-row .j-res.open{background:rgba(201,169,97,.14); color:var(--gold-soft)}
+  .journal-row .j-meta{color:var(--text-3); font-size:11.5px}
+  .journal-row .j-pnl{font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums}
+  .journal-row .j-pnl.up{color:var(--bull-soft)} .journal-row .j-pnl.down{color:var(--bear-soft)}
+  .journal-empty{padding:26px 18px; text-align:center; color:var(--text-4); font-size:12.5px}
+
+  /* ---------- Statut du bridge ---------- */
+  .bridge-status{display:flex; align-items:center; gap:11px; padding:12px 15px;
+    border-radius:var(--r-sm); background:var(--bg-2); border:1px solid var(--border-soft)}
+  .bridge-status .bs-dot{width:7px; height:7px; border-radius:50%; background:var(--text-4); flex:0 0 auto}
+  .bridge-status.online .bs-dot{background:var(--bull); box-shadow:0 0 9px rgba(95,164,126,.6)}
+  .bridge-status.offline .bs-dot{background:var(--bear); box-shadow:0 0 9px rgba(196,107,92,.6)}
+  .bridge-status .bs-txt{font-size:12px; color:var(--text-2)}
+  .bridge-status .bs-sub{font-size:11px; color:var(--text-4);
+    font-family:'JetBrains Mono',monospace; margin-left:auto}
+
+  /* ---------- Chat Claude ---------- */
+  .chat{display:flex; flex-direction:column; height:420px}
+  .chat-log{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px;
+    padding:4px 2px 14px}
+  .chat-msg{max-width:88%; padding:11px 14px; border-radius:var(--r-sm); font-size:13px; line-height:1.6}
+  .chat-msg.user{align-self:flex-end; background:rgba(201,169,97,.09);
+    border:1px solid var(--gold-deep); color:var(--text)}
+  .chat-msg.claude{align-self:flex-start; background:var(--surface-2);
+    border:1px solid var(--border); color:var(--text-2)}
+  .chat-msg.system{align-self:center; font-size:11.5px; color:var(--text-4);
+    background:transparent; border:0; text-align:center}
+  .chat-input{display:flex; gap:10px; padding-top:13px; border-top:1px solid var(--border-soft)}
+  .chat-input input{flex:1; padding:12px 15px; border-radius:var(--r-sm);
+    background:var(--bg-2); border:1px solid var(--border); color:var(--text);
+    font-family:'Inter',sans-serif; font-size:13.5px}
+  .chat-input input:focus{outline:none; border-color:var(--gold-deep)}
+  .chat-quick{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:11px}
+  .chat-quick button{padding:6px 12px; border-radius:999px; cursor:pointer;
+    background:var(--surface-2); border:1px solid var(--border);
+    font-size:11.5px; color:var(--text-3); transition:all .2s var(--ease)}
+  .chat-quick button:hover{border-color:var(--gold-deep); color:var(--gold-soft)}
+  .chat-note{font-size:11px; color:var(--text-4); margin-top:9px; line-height:1.5}
+
+  /* ---------- Divers ---------- */
+  .pf-section-title{font-family:'Instrument Serif',serif; font-size:19px; font-weight:400;
+    color:var(--text); margin-bottom:15px; letter-spacing:.01em}
+  .pf-hint{font-size:11.5px; color:var(--text-4); line-height:1.55; margin-top:9px}
+  .btn-ghost{padding:10px 18px; border-radius:var(--r-sm); cursor:pointer;
+    background:transparent; border:1px solid var(--border-strong); color:var(--text-2);
+    font-size:12.5px; font-weight:500; transition:all .2s var(--ease)}
+  .btn-ghost:hover{border-color:var(--gold-deep); color:var(--gold-soft)}
+  .btn-danger{border-color:var(--bear-deep); color:var(--bear-soft)}
+  .btn-danger:hover{border-color:var(--bear); background:rgba(196,107,92,.08); color:var(--bear-soft)}
+
 </style>
 </head>
 <body>
@@ -1895,6 +2151,18 @@
       </button>
     </div>
   </header>
+
+  <!-- ============== NAVIGATION PRINCIPALE ============== -->
+  <nav class="mainnav" role="tablist" aria-label="Sections">
+    <button type="button" class="mainnav-btn active" data-view="hydratrade" role="tab">
+      HydraTrade
+    </button>
+    <button type="button" class="mainnav-btn" data-view="propfirm" role="tab">
+      PropFirm<span class="nav-dot off" id="pfNavDot"></span>
+    </button>
+  </nav>
+
+  <div id="view-hydratrade" class="view active">
 
   <!-- ============== VERDICT ============== -->
   <section id="verdict" class="verdict idle mb-12" aria-live="polite">
@@ -2155,6 +2423,192 @@
     </div>
   </section>
 
+  </div><!-- /view-hydratrade -->
+
+  <!-- ============== VUE PROPFIRM ============== -->
+  <div id="view-propfirm" class="view">
+
+    <div class="subnav" role="tablist" aria-label="Prop firm">
+      <button type="button" class="subnav-btn active" data-pf="ftmo" role="tab">FTMO</button>
+      <button type="button" class="subnav-btn" data-pf="add" role="tab" disabled
+              title="Un deuxième compte s'ouvre une fois FTMO stable">+ Second compte</button>
+    </div>
+
+    <!-- ---------- Bandeau ---------- -->
+    <div class="pf-header">
+      <div class="pf-account">
+        <span class="name" id="pfAccountName">FTMO $200 000</span>
+        <span class="pf-phase" id="pfPhase">Étape 1</span>
+      </div>
+      <button type="button" class="pf-mode" id="pfModeToggle" title="Basculer PAPER / LIVE">
+        <span class="mode-dot"></span><span id="pfModeLabel">PAPER</span>
+      </button>
+    </div>
+
+    <!-- ---------- Chiffres clés ---------- -->
+    <div class="pf-figures">
+      <div class="pf-fig">
+        <div class="lab">Equity</div>
+        <div class="val" id="pfEquity">$200 000</div>
+        <div class="sub" id="pfEquityDelta">—</div>
+      </div>
+      <div class="pf-fig">
+        <div class="lab">Perte du jour</div>
+        <div class="val" id="pfDailyLoss">$0</div>
+        <div class="sub" id="pfDailyLimit">limite $10 000</div>
+      </div>
+      <div class="pf-fig">
+        <div class="lab">Trades du jour</div>
+        <div class="val" id="pfTradesToday">0 / 2</div>
+        <div class="sub" id="pfTradesSub">2 disponibles</div>
+      </div>
+      <div class="pf-fig">
+        <div class="lab">Palier de risque</div>
+        <div class="val" id="pfRiskTier">0,25 %</div>
+        <div class="sub" id="pfRiskSub">arrêt à $190 000</div>
+      </div>
+    </div>
+
+    <!-- ---------- Progression ---------- -->
+    <section class="card mb-12" id="pfProgressCard">
+      <div class="pf-progress">
+        <div class="head">
+          <span class="muted" id="pfProgressLabel">Objectif Étape 1 — +$20 000</span>
+          <span class="num" id="pfProgressValue">$0 / $20 000</span>
+        </div>
+        <div class="track"><div class="fill" id="pfProgressFill" style="width:0%"></div></div>
+      </div>
+      <div class="pf-hint" id="pfProgressHint">Jours de trading : 0 / 4 minimum.</div>
+    </section>
+
+    <!-- ---------- Jauges ---------- -->
+    <section class="card mb-12">
+      <h2 class="pf-section-title">Distance aux seuils</h2>
+      <div class="gauges" id="pfGauges"></div>
+      <div class="pf-hint">
+        Chaque segment vaut un stop loss consécutif. Les seuils internes se déclenchent
+        avant ceux de FTMO, jamais à leur contact.
+      </div>
+    </section>
+
+    <!-- ---------- Ticket ---------- -->
+    <section class="card mb-12">
+      <h2 class="pf-section-title">Passer un ordre</h2>
+      <div class="ticket">
+        <div class="ticket-row">
+          <div class="ticket-field">
+            <label for="pfSL">Distance du stop loss ($)</label>
+            <input type="number" id="pfSL" value="16.96" step="0.01" min="5" max="60"
+                   inputmode="decimal" autocomplete="off" />
+          </div>
+          <div class="ticket-field">
+            <label for="pfTP">Distance du take profit ($)</label>
+            <input type="number" id="pfTP" value="21.43" step="0.01" min="1"
+                   inputmode="decimal" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="computed" id="pfComputed">
+          <div class="c-item"><div class="c-lab">Lot calculé</div><div class="c-val gold" id="pfLot">—</div></div>
+          <div class="c-item"><div class="c-lab">Risque</div><div class="c-val down" id="pfRisk">—</div></div>
+          <div class="c-item"><div class="c-lab">Gain visé</div><div class="c-val up" id="pfReward">—</div></div>
+          <div class="c-item"><div class="c-lab">R:R</div><div class="c-val" id="pfRR">—</div></div>
+        </div>
+
+        <div class="side-buttons">
+          <button type="button" class="btn-side btn-buy" id="pfBuy">
+            ACHAT<span class="side-sub" id="pfBuySub">—</span>
+          </button>
+          <button type="button" class="btn-side btn-sell" id="pfSell">
+            VENTE<span class="side-sub" id="pfSellSub">—</span>
+          </button>
+        </div>
+
+        <div class="blocks" id="pfBlocks"></div>
+        <div id="pfOptionD"></div>
+      </div>
+    </section>
+
+    <!-- ---------- Position ouverte ---------- -->
+    <section class="card mb-12" id="pfPositionCard" style="display:none">
+      <h2 class="pf-section-title">Position ouverte</h2>
+      <div class="computed">
+        <div class="c-item"><div class="c-lab">Sens</div><div class="c-val" id="pfPosSide">—</div></div>
+        <div class="c-item"><div class="c-lab">Lot</div><div class="c-val" id="pfPosLot">—</div></div>
+        <div class="c-item"><div class="c-lab">Risque engagé</div><div class="c-val down" id="pfPosRisk">—</div></div>
+        <div class="c-item"><div class="c-lab">Ouverte depuis</div><div class="c-val" id="pfPosAge">—</div></div>
+      </div>
+      <div class="row gap-12" style="margin-top:15px">
+        <button type="button" class="btn-ghost" id="pfSimTP">Simuler TP</button>
+        <button type="button" class="btn-ghost" id="pfSimSL">Simuler SL</button>
+        <button type="button" class="btn-ghost btn-danger" id="pfCloseAll">Fermer tout</button>
+      </div>
+      <div class="pf-hint" id="pfPosHint"></div>
+    </section>
+
+    <!-- ---------- Journal ---------- -->
+    <section class="card mb-12">
+      <h2 class="pf-section-title">Journal</h2>
+      <div class="journal-list" id="pfJournal">
+        <div class="journal-empty">Aucun trade enregistré.</div>
+      </div>
+      <div class="row gap-12" style="margin-top:15px">
+        <button type="button" class="btn-ghost" id="pfExport">Exporter en JSON</button>
+        <button type="button" class="btn-ghost btn-danger" id="pfReset">Réinitialiser</button>
+      </div>
+    </section>
+
+    <!-- ---------- Bridge ---------- -->
+    <section class="card mb-12">
+      <h2 class="pf-section-title">Bridge cTrader</h2>
+      <div class="bridge-status" id="pfBridge">
+        <span class="bs-dot"></span>
+        <span class="bs-txt" id="pfBridgeTxt">Non configuré</span>
+        <span class="bs-sub" id="pfBridgeSub">—</span>
+      </div>
+      <div class="ticket-field" style="margin-top:14px">
+        <label for="pfBridgeUrl">Adresse du bridge (Mac Mini)</label>
+        <input type="text" id="pfBridgeUrl" placeholder="http://192.168.1.20:3000"
+               autocomplete="off" style="font-size:13px" />
+      </div>
+      <div class="row gap-12" style="margin-top:13px">
+        <button type="button" class="btn-ghost" id="pfBridgeTest">Tester la connexion</button>
+      </div>
+      <div class="pf-hint">
+        En mode PAPER, le bridge n'est pas nécessaire : tout est simulé localement.
+        Il devient requis pour transmettre de vrais ordres à cTrader.
+      </div>
+    </section>
+
+    <!-- ---------- Chat ---------- -->
+    <section class="card mb-12">
+      <h2 class="pf-section-title">Claude</h2>
+      <div class="chat">
+        <div class="chat-quick">
+          <button type="button" data-q="etat">Où j'en suis ?</button>
+          <button type="button" data-q="trade">Ce trade est-il raisonnable ?</button>
+          <button type="button" data-q="jour">Bilan de la journée</button>
+          <button type="button" data-q="regles">Quels garde-fous sont actifs ?</button>
+        </div>
+        <div class="chat-log" id="pfChatLog">
+          <div class="chat-msg system">
+            Claude lit ton état et tes chiffres. Il ne passe aucun ordre et ne peut lever aucun garde-fou.
+          </div>
+        </div>
+        <div class="chat-input">
+          <input type="text" id="pfChatInput" placeholder="Poser une question…" autocomplete="off" />
+          <button type="button" class="btn-ghost" id="pfChatSend">Envoyer</button>
+        </div>
+      </div>
+      <div class="chat-note">
+        Mémoire : la journée en cours, remise à zéro à minuit (heure de Prague).
+        Nécessite une clé API Anthropic — celle des Réglages est réutilisée.
+      </div>
+    </section>
+
+  </div>
+
+
   <footer class="legal">
     <strong>Analyse technique automatisée</strong> · Ne constitue pas un conseil financier · Décision finale sous votre responsabilité<br>
     Outil d'aide à la décision pour trading manuel sur prop firm. Utilisez-le avec discernement.
@@ -2328,11 +2782,16 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.14.5";
+const APP_VERSION = "7.16.0";
 // v7.14.4 — fee confirmé 125.30 USDC (était 125.45), doc PROP_FIRM précisée : 1 fee par cycle
 //            (step 2/3/4 après SL = même challenge = gratuit), résultats semaine 13-17/07 :
 //            7/7 cycles gagnés, +173.60$ net, WR global passé de 80% à 85.2% (au-dessus du
 //            seuil de rentabilité), système devenu RENTABLE (EV nette +2.88$/cycle)
+// v7.16.0 — ONGLET PROPFIRM / FTMO : navigation principale (HydraTrade | PropFirm),
+//            moteur de garde-fous (sizing 0,25 %, échelle de dé-risquage, coupe-circuit
+//            3 SL glissants, cliquet à profits, option D pour le 3e trade), jauges de
+//            distance aux seuils, mode PAPER/LIVE, journal, bridge cTrader, chat Claude
+//            en lecture seule. Fuseau Europe/Prague en IANA. 167 tests unitaires.
 // v7.14.0 — POST-MORTEM STRATÉGIQUE (semaine 06-09/07 à 25% WR) : (1) gate RANGE bloquant
 //            (ADX<20 ou CHOP>61.8 = signal tendance SUSPENDU, pas juste pénalisé), (2) veto
 //            d'extension (prix > 1.5×ATR de EMA20 + RSI extrême = ATTENDRE pullback), (3) signal
@@ -6553,6 +7012,1327 @@ function setTimeframe(tf) {
 }
 
 /* ====================================================================
+   PROPFIRM — moteur de garde-fous
+   ==================================================================== */
+/* ======================================================================
+   PROPFIRM ENGINE v1.0 — Moteur de garde-fous FTMO
+   ----------------------------------------------------------------------
+   Logique pure, sans DOM, sans réseau. Testable en isolation.
+   Chargeable en navigateur (window.PropFirmEngine) ou en Node (module.exports).
+
+   Principe directeur : plus on perd, plus on ralentit.
+   Aucune fonction de ce fichier ne peut AUTORISER un trade que les règles
+   interdisent. En cas de doute, on bloque.
+   ====================================================================== */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.PropFirmEngine = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  /* ====================================================================
+     1. CONFIGURATION — source unique de vérité
+     --------------------------------------------------------------------
+     Toutes les valeurs marquées [VÉRIFIER] doivent être confirmées sur le
+     contrat FTMO avant passage en LIVE. Voir docs/VERIFICATION.md
+     ==================================================================== */
+  const CONFIG = {
+    version: "1.0.0",
+
+    contract: {
+      symbol: "XAUUSD",
+      // $ par $1 de mouvement, par lot. Vérifié sur 52 trades réels.
+      // [VÉRIFIER] doit être relu depuis cTrader au démarrage du bridge.
+      valuePerLotPerDollar: 100,
+      // $/lot round-turn. [VÉRIFIER] estimation — lire la grille cTrader.
+      commissionPerLot: 7,
+      lotStep: 0.01,
+      lotMin: 0.01
+    },
+
+    account: {
+      initialBalance: 200000,
+      type: "SWING",              // SWING | STANDARD
+      // [VÉRIFIER] 5% / 10% sur capture FTMO du 06/08/2026
+      dailyLossPct: 0.05,         // $10 000
+      maxLossPct: 0.10,           // $20 000 → plancher statique $180 000
+      // [VÉRIFIER] l'Étape 2 repart-elle d'un solde remis à l'initial ?
+      phases: {
+        STEP_1:  { label: "Étape 1", targetPct: 0.10, hasTarget: true  },
+        STEP_2:  { label: "Étape 2", targetPct: 0.05, hasTarget: true  },
+        FUNDED:  { label: "Financé", targetPct: null, hasTarget: false }
+      },
+      minTradingDays: 4,
+      inactivityDays: 30,
+      timezone: "Europe/Prague"   // siège FTMO — JAMAIS d'offset en dur
+    },
+
+    risk: {
+      basePct: 0.0025,            // 0,25 %
+      // Échelle de dé-risquage — évaluée À L'ENTRÉE uniquement, sur equity clôturée
+      ladder: [
+        { minEquity: 200000, pct: 0.0025 },
+        { minEquity: 197000, pct: 0.0020 },
+        { minEquity: 194000, pct: 0.0015 },
+        { minEquity: 191000, pct: 0.0010 }
+      ],
+      hardStopEquity: 190000,     // arrêt total — $10 000 de marge avant le mur
+      lotMax: 1.00,
+      slMin: 5.00,                // SL observés : 10,25 → 25,03
+      slMax: 60.00
+    },
+
+    limits: {
+      // Seuils INTERNES, volontairement très en-deçà des limites FTMO
+      dailyBudget: 2000,          // vs $10 000 FTMO
+      maxTradesPerDay: 2,
+      maxTradesPerDayException: 3,
+      // Blocages anticipés : on s'arrête AVANT la limite FTMO, jamais à son contact
+      ftmoDailyGuardPct: 0.80,    // bloque à 80 % de la limite journalière
+      ftmoTotalGuardPct: 0.60,    // bloque à 60 % du chemin vers le mur
+      consecutiveSLLimit: 3,      // coupe-circuit
+      circuitBreakerHours: 48
+    },
+
+    optionD: {
+      maxHourBerlin: 17,          // durée médiane 97 min → clôture ~18:40
+      minBudgetRemaining: 500,
+      requireZeroSL: true         // pas « au moins 1 TP » : ZÉRO SL
+    },
+
+    ratchet: {
+      enabledInChallenge: false,  // vérifié : nuit pendant le Challenge
+      stepSize: 5000,
+      floorRatio: 0.5
+    },
+
+    // Compte Swing : la restriction news ne s'applique pas.
+    // Conservé comme filtre de volatilité optionnel, désactivé par défaut.
+    news: { enabled: false, bufferMinutes: 2 }
+  };
+
+  /* ====================================================================
+     2. UTILITAIRES
+     ==================================================================== */
+
+  /** Arrondi à la BAISSE au pas de lot. Jamais au plus proche. */
+  function floorToStep(value, step) {
+    if (!isFinite(value) || value <= 0) return 0;
+    const inv = Math.round(1 / step);
+    return Math.floor(value * inv) / inv;
+  }
+
+  function round2(n) { return Math.round(n * 100) / 100; }
+
+  /**
+   * Clé de journée FTMO (YYYY-MM-DD) dans le fuseau du compte.
+   * Utilise IANA — correct au changement d'heure CET/CEST.
+   */
+  function dayKey(date, timeZone) {
+    const tz = timeZone || CONFIG.account.timezone;
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit"
+    }).formatToParts(date);
+    const get = t => parts.find(p => p.type === t).value;
+    return `${get("year")}-${get("month")}-${get("day")}`;
+  }
+
+  /** Heure locale (0-23) dans le fuseau du compte. */
+  function localHour(date, timeZone) {
+    const tz = timeZone || CONFIG.account.timezone;
+    return parseInt(new Intl.DateTimeFormat("en-GB", {
+      timeZone: tz, hour: "2-digit", hour12: false
+    }).format(date), 10);
+  }
+
+  /** Jour de la semaine local : 0 = dimanche … 6 = samedi */
+  function localWeekday(date, timeZone) {
+    const tz = timeZone || CONFIG.account.timezone;
+    const name = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(date);
+    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(name);
+  }
+
+  /* ====================================================================
+     3. DIMENSIONNEMENT
+     ==================================================================== */
+
+  /** Palier de risque selon l'equity. Retourne 0 sous le seuil d'arrêt. */
+  function riskTierFor(equity, cfg) {
+    const C = cfg || CONFIG;
+    if (equity < C.risk.hardStopEquity) return 0;
+    for (const tier of C.risk.ladder) {
+      if (equity >= tier.minEquity) return tier.pct;
+    }
+    return C.risk.ladder[C.risk.ladder.length - 1].pct;
+  }
+
+  /**
+   * Calcule la taille de position.
+   * @returns {{ok:boolean, lot:number, riskAmount:number, riskPct:number, reason:string|null}}
+   */
+  function computeLot(equity, slDistance, cfg) {
+    const C = cfg || CONFIG;
+    const out = { ok: false, lot: 0, riskAmount: 0, riskPct: 0, reason: null, tier: 0 };
+
+    if (!isFinite(slDistance) || slDistance <= 0) {
+      out.reason = "Distance de SL invalide."; return out;
+    }
+    if (slDistance < C.risk.slMin) {
+      out.reason = `SL trop serré : ${slDistance} < ${C.risk.slMin} minimum.`; return out;
+    }
+    if (slDistance > C.risk.slMax) {
+      out.reason = `SL trop large : ${slDistance} > ${C.risk.slMax} maximum.`; return out;
+    }
+
+    const tier = riskTierFor(equity, C);
+    out.tier = tier;
+    if (tier === 0) {
+      out.reason = `Arrêt total : equity ${equity} sous le seuil ${C.risk.hardStopEquity}.`;
+      return out;
+    }
+
+    const target = equity * tier;
+    const raw = target / (slDistance * C.contract.valuePerLotPerDollar);
+    const lot = floorToStep(raw, C.contract.lotStep);
+
+    if (lot < C.contract.lotMin) {
+      out.reason = `Lot calculé ${raw.toFixed(4)} sous le minimum ${C.contract.lotMin}.`; return out;
+    }
+    if (lot > C.risk.lotMax) {
+      out.reason = `Lot ${lot.toFixed(2)} dépasse le plafond ${C.risk.lotMax.toFixed(2)}.`; return out;
+    }
+
+    out.ok = true;
+    out.lot = lot;
+    out.riskPct = tier;
+    out.riskAmount = round2(lot * slDistance * C.contract.valuePerLotPerDollar
+                          + lot * C.contract.commissionPerLot);
+    return out;
+  }
+
+  /** Gain net attendu si le TP est touché. */
+  function expectedReward(lot, tpDistance, cfg) {
+    const C = cfg || CONFIG;
+    return round2(lot * tpDistance * C.contract.valuePerLotPerDollar
+                - lot * C.contract.commissionPerLot);
+  }
+
+  /* ====================================================================
+     4. ÉTAT
+     --------------------------------------------------------------------
+     Portées (voir SPEC §2) :
+       GLOBAL  → SL consécutifs, trades du jour  (un signal mirroré = 1 trade)
+       COMPTE  → equity, drawdown, cliquet
+     ==================================================================== */
+
+  function createState(overrides) {
+    const s = {
+      mode: "PAPER",                 // PAPER | LIVE
+      global: {
+        consecutiveSL: 0,
+        lastClosedResults: [],       // ["TP","SL",…] les plus récents en tête
+        tradesToday: 0,
+        currentDayKey: null,
+        circuitBreakerUntil: null,   // ISO string ou null
+        lastTradeAt: null
+      },
+      accounts: {}                   // id → état de compte
+    };
+    return Object.assign(s, overrides || {});
+  }
+
+  function createAccount(id, opts) {
+    const o = opts || {};
+    const initial = o.initialBalance != null ? o.initialBalance : CONFIG.account.initialBalance;
+    return {
+      id: id,
+      label: o.label || id,
+      phase: o.phase || "STEP_1",
+      type: o.type || CONFIG.account.type,
+      initialBalance: initial,
+      balance: o.balance != null ? o.balance : initial,
+      equity: o.equity != null ? o.equity : initial,
+      // Référence pour le cliquet — remise à jour à CHAQUE payout
+      refBalance: o.refBalance != null ? o.refBalance : initial,
+      ratchetFloor: null,
+      ratchetPeak: 0,
+      dayStartEquity: o.dayStartEquity != null ? o.dayStartEquity : initial,
+      dailyPnL: 0,
+      openPosition: null,
+      tradingDays: o.tradingDays || [],
+      lastTradeDate: o.lastTradeDate || null
+    };
+  }
+
+  /* ====================================================================
+     5. TRANSITIONS DE JOURNÉE
+     ==================================================================== */
+
+  /**
+   * Réinitialise les compteurs journaliers si la journée FTMO a changé.
+   * Doit être appelé avant toute évaluation.
+   */
+  function rollDay(state, accounts, now, cfg) {
+    const C = cfg || CONFIG;
+    const key = dayKey(now, C.account.timezone);
+    if (state.global.currentDayKey === key) return false;
+
+    state.global.currentDayKey = key;
+    state.global.tradesToday = 0;
+    Object.keys(accounts).forEach(id => {
+      const a = accounts[id];
+      a.dayStartEquity = a.equity;
+      a.dailyPnL = 0;
+    });
+    return true;
+  }
+
+  /* ====================================================================
+     6. CLIQUET À PROFITS
+     --------------------------------------------------------------------
+     Raisonne sur le profit DEPUIS LE DERNIER PAYOUT, jamais sur l'equity
+     absolue. Sans cela, un payout est indiscernable d'un drawdown et le
+     système se verrouille au premier retrait.
+     ==================================================================== */
+
+  function ratchetActive(account, cfg) {
+    const C = cfg || CONFIG;
+    if (account.phase !== "FUNDED" && !C.ratchet.enabledInChallenge) return false;
+    return true;
+  }
+
+  function updateRatchet(account, cfg) {
+    const C = cfg || CONFIG;
+    if (!ratchetActive(account, C)) { account.ratchetFloor = null; return; }
+    const cycleProfit = account.equity - account.refBalance;
+    if (cycleProfit > account.ratchetPeak) {
+      account.ratchetPeak = cycleProfit;
+      const steps = Math.floor(account.ratchetPeak / C.ratchet.stepSize);
+      account.ratchetFloor = steps >= 1
+        ? account.refBalance + steps * C.ratchet.stepSize * C.ratchet.floorRatio
+        : null;
+    }
+  }
+
+  /** À appeler dès qu'un dépôt/retrait est détecté chez cTrader. */
+  function registerPayout(account, amount) {
+    account.balance = round2(account.balance - amount);
+    account.equity = round2(account.equity - amount);
+    account.refBalance = account.equity;   // nouvelle référence
+    account.ratchetFloor = null;           // désarmement
+    account.ratchetPeak = 0;
+    return account;
+  }
+
+  /* ====================================================================
+     7. OPTION D — autorisation du 3e trade
+     ==================================================================== */
+
+  function evaluateOptionD(ctx, cfg) {
+    const C = cfg || CONFIG;
+    const checks = [];
+    const slToday = ctx.slToday != null ? ctx.slToday : 0;
+    const hour = localHour(ctx.now, C.account.timezone);
+
+    checks.push({
+      key: "zeroSL", label: "Aucun SL aujourd'hui",
+      pass: C.optionD.requireZeroSL ? slToday === 0 : true,
+      detail: `${slToday} SL aujourd'hui`
+    });
+    checks.push({
+      key: "regime", label: "Régime favorable",
+      pass: ctx.regimeFavourable === true,
+      detail: ctx.regimeLabel || (ctx.regimeFavourable ? "favorable" : "défavorable ou inconnu")
+    });
+    checks.push({
+      key: "hour", label: `Heure ≤ ${C.optionD.maxHourBerlin}:00`,
+      pass: hour <= C.optionD.maxHourBerlin,
+      detail: `${String(hour).padStart(2, "0")}:00 heure du compte`
+    });
+    checks.push({
+      key: "budget", label: `Budget restant ≥ ${C.optionD.minBudgetRemaining}$`,
+      pass: ctx.budgetRemaining >= C.optionD.minBudgetRemaining,
+      detail: `$${Math.round(ctx.budgetRemaining)} restants`
+    });
+    checks.push({
+      key: "circuit", label: "Aucun coupe-circuit actif",
+      pass: !ctx.circuitBreakerActive,
+      detail: ctx.circuitBreakerActive ? "coupe-circuit actif" : "inactif"
+    });
+
+    return { allowed: checks.every(c => c.pass), checks: checks };
+  }
+
+  /* ====================================================================
+     8. ÉVALUATION PRINCIPALE
+     --------------------------------------------------------------------
+     Ordre strict, voir SPEC §10. Retourne TOUS les blocages, pas seulement
+     le premier — l'utilisateur doit voir l'ensemble de sa situation.
+     ==================================================================== */
+
+  function evaluateTrade(input, cfg) {
+    const C = cfg || CONFIG;
+    const now = input.now || new Date();
+    const state = input.state;
+    const account = input.account;
+    const blocks = [];
+    const warnings = [];
+
+    const push = (code, message, detail) => blocks.push({ code, message, detail: detail || null });
+    const warn = (code, message, detail) => warnings.push({ code, message, detail: detail || null });
+
+    /* --- 1. Réconciliation ------------------------------------------ */
+    if (input.reconciled === false) {
+      push("RECONCILE", "État local et cTrader divergent.",
+           "Réconciliation requise avant tout ordre.");
+    }
+
+    /* --- 2. Arrêt global -------------------------------------------- */
+    if (account.equity < C.risk.hardStopEquity) {
+      push("HARD_STOP", `Arrêt total : equity sous $${C.risk.hardStopEquity.toLocaleString("fr-FR")}.`,
+           "Revue manuelle obligatoire. Le mur FTMO est encore à $10 000.");
+    }
+
+    /* --- 3. Coupe-circuit (GLOBAL) ---------------------------------- */
+    const cbUntil = state.global.circuitBreakerUntil ? new Date(state.global.circuitBreakerUntil) : null;
+    const cbActive = cbUntil && cbUntil > now;
+    if (cbActive) {
+      const hoursLeft = Math.ceil((cbUntil - now) / 3600000);
+      push("CIRCUIT_BREAKER", `Coupe-circuit actif — ${hoursLeft} h restantes.`,
+           `${C.limits.consecutiveSLLimit} SL consécutifs. Aucune dérogation.`);
+    }
+
+    /* --- 4. Plafond de trades (GLOBAL) ------------------------------ */
+    const isException = state.global.tradesToday >= C.limits.maxTradesPerDay;
+    const hardCap = C.limits.maxTradesPerDayException;
+    let optionD = null;
+
+    if (state.global.tradesToday >= hardCap) {
+      push("TRADE_CAP", `Plafond atteint : ${hardCap} trades aujourd'hui.`);
+    } else if (isException) {
+      optionD = evaluateOptionD({
+        now: now,
+        slToday: input.slToday || 0,
+        regimeFavourable: input.regimeFavourable,
+        regimeLabel: input.regimeLabel,
+        budgetRemaining: C.limits.dailyBudget + Math.min(0, account.dailyPnL),
+        circuitBreakerActive: cbActive
+      }, C);
+      if (!optionD.allowed) {
+        const failed = optionD.checks.filter(c => !c.pass).map(c => c.label).join(" · ");
+        push("OPTION_D", "3e trade refusé — conditions non réunies.", failed);
+      } else {
+        warn("EXCEPTION", "3e trade — exception.",
+             "Les 5 conditions sont réunies, mais tu sors du rythme normal.");
+      }
+    }
+
+    /* --- 5. Budget journalier interne ------------------------------- */
+    const lossToday = Math.max(0, -account.dailyPnL);
+    if (lossToday >= C.limits.dailyBudget) {
+      push("DAILY_BUDGET", `Budget journalier épuisé : $${Math.round(lossToday)} / $${C.limits.dailyBudget}.`);
+    }
+
+    /* --- 6. Limite FTMO journalière (blocage anticipé) -------------- */
+    const ftmoDailyLimit = account.initialBalance * C.account.dailyLossPct;
+    const ftmoDailyGuard = ftmoDailyLimit * C.limits.ftmoDailyGuardPct;
+    if (lossToday >= ftmoDailyGuard) {
+      push("FTMO_DAILY", `Approche de la limite FTMO journalière.`,
+           `$${Math.round(lossToday)} perdus — blocage à $${Math.round(ftmoDailyGuard)} (limite réelle $${Math.round(ftmoDailyLimit)}).`);
+    }
+
+    /* --- 7. Limite FTMO totale (blocage anticipé) ------------------- */
+    const wall = account.initialBalance * (1 - C.account.maxLossPct);
+    const guardEquity = account.initialBalance - (account.initialBalance - wall) * C.limits.ftmoTotalGuardPct;
+    if (account.equity <= guardEquity) {
+      push("FTMO_TOTAL", `Approche du plancher FTMO.`,
+           `Equity $${Math.round(account.equity)} — blocage à $${Math.round(guardEquity)} (mur $${Math.round(wall)}).`);
+    }
+
+    /* --- 8 & 9. Validation SL et calcul du lot ---------------------- */
+    const sizing = computeLot(account.equity, input.slDistance, C);
+    if (!sizing.ok) push("SIZING", sizing.reason);
+
+    /* --- 10. Cliquet (compte financé) ------------------------------- */
+    if (ratchetActive(account, C) && account.ratchetFloor != null
+        && account.equity < account.ratchetFloor) {
+      push("RATCHET", "Cliquet déclenché : profit acquis entamé.",
+           `Equity $${Math.round(account.equity)} sous le plancher $${Math.round(account.ratchetFloor)}.`);
+    }
+
+    /* --- Avertissements non bloquants ------------------------------- */
+    if (state.global.consecutiveSL === C.limits.consecutiveSLLimit - 1) {
+      warn("NEAR_CIRCUIT", `${state.global.consecutiveSL} SL consécutifs.`,
+           "Un SL de plus déclenche le coupe-circuit de 48 h.");
+    }
+    // Gap week-end : Swing autorise, mais le SL ne protège pas.
+    const wd = localWeekday(now, C.account.timezone);
+    const hr = localHour(now, C.account.timezone);
+    if (wd === 5 && hr >= 17) {
+      const gapLoss = sizing.ok
+        ? round2(sizing.lot * (input.slDistance + 50) * C.contract.valuePerLotPerDollar)
+        : null;
+      warn("WEEKEND_GAP", "Position susceptible de franchir le week-end.",
+           gapLoss ? `Le SL ne protège pas d'un gap. Perte si gap de $50 : $${Math.round(gapLoss)} au lieu de $${Math.round(sizing.riskAmount)}.`
+                   : "Le SL ne protège pas d'un gap à l'ouverture.");
+    }
+    if (state.mode === "PAPER") {
+      warn("PAPER", "Mode PAPER — aucun ordre ne sera transmis à cTrader.");
+    }
+
+    /* --- Synthèse ---------------------------------------------------- */
+    const allowed = blocks.length === 0;
+    const reward = sizing.ok && input.tpDistance
+      ? expectedReward(sizing.lot, input.tpDistance, C) : null;
+
+    return {
+      allowed: allowed,
+      blocks: blocks,
+      warnings: warnings,
+      isException: isException,
+      optionD: optionD,
+      sizing: sizing,
+      preview: sizing.ok ? {
+        lot: sizing.lot,
+        riskAmount: sizing.riskAmount,
+        riskPct: sizing.riskPct,
+        reward: reward,
+        rr: reward != null && sizing.riskAmount > 0 ? round2(reward / sizing.riskAmount) : null,
+        budgetAfter: round2(C.limits.dailyBudget - lossToday - sizing.riskAmount),
+        equityIfSL: round2(account.equity - sizing.riskAmount),
+        equityIfTP: reward != null ? round2(account.equity + reward) : null
+      } : null,
+      distances: distanceToWalls(state, account, C)
+    };
+  }
+
+  /* ====================================================================
+     9. JAUGES — distance aux seuils
+     ==================================================================== */
+
+  function distanceToWalls(state, account, cfg) {
+    const C = cfg || CONFIG;
+    const sizing = computeLot(account.equity, 16.96, C);
+    const perSL = sizing.ok ? sizing.riskAmount : null;
+    const lossToday = Math.max(0, -account.dailyPnL);
+    const wall = account.initialBalance * (1 - C.account.maxLossPct);
+
+    const count = (remaining) => perSL && perSL > 0 ? Math.max(0, Math.floor(remaining / perSL)) : null;
+
+    return {
+      circuitBreaker: {
+        label: "Coupe-circuit",
+        remaining: Math.max(0, C.limits.consecutiveSLLimit - state.global.consecutiveSL),
+        total: C.limits.consecutiveSLLimit
+      },
+      tradesToday: {
+        label: "Trades du jour",
+        remaining: Math.max(0, C.limits.maxTradesPerDay - state.global.tradesToday),
+        total: C.limits.maxTradesPerDay,
+        exceptionAvailable: state.global.tradesToday === C.limits.maxTradesPerDay
+      },
+      dailyBudget: {
+        label: "Budget du jour",
+        remaining: count(C.limits.dailyBudget - lossToday),
+        amountRemaining: round2(C.limits.dailyBudget - lossToday),
+        total: C.limits.dailyBudget
+      },
+      derisk: {
+        label: "Palier de dé-risquage",
+        remaining: count(account.equity - C.risk.hardStopEquity),
+        currentTier: riskTierFor(account.equity, C),
+        stopAt: C.risk.hardStopEquity
+      },
+      ftmoWall: {
+        label: "Mur FTMO",
+        remaining: count(account.equity - wall),
+        wallAt: wall,
+        margin: round2(C.risk.hardStopEquity - wall)
+      }
+    };
+  }
+
+  /* ====================================================================
+     10. ENREGISTREMENT DES RÉSULTATS
+     ==================================================================== */
+
+  /**
+   * Enregistre la clôture d'un trade. Met à jour les compteurs GLOBAUX une
+   * seule fois même si le trade est mirroré sur plusieurs comptes.
+   * @param {object} opts.netProfit  résultat RÉALISÉ remonté par cTrader
+   *                                 (jamais la valeur théorique — slippage)
+   */
+  function registerClose(state, account, opts, cfg) {
+    const C = cfg || CONFIG;
+    const now = opts.now || new Date();
+    const isWin = opts.netProfit > 0;
+
+    account.equity = round2(account.equity + opts.netProfit);
+    account.balance = round2(account.balance + opts.netProfit);
+    account.dailyPnL = round2(account.dailyPnL + opts.netProfit);
+    account.openPosition = null;
+    account.lastTradeDate = dayKey(now, C.account.timezone);
+
+    const dk = account.lastTradeDate;
+    if (account.tradingDays.indexOf(dk) === -1) account.tradingDays.push(dk);
+
+    if (opts.countGlobal !== false) {
+      state.global.lastClosedResults.unshift(isWin ? "TP" : "SL");
+      state.global.lastClosedResults = state.global.lastClosedResults.slice(0, 20);
+      if (isWin) {
+        state.global.consecutiveSL = 0;
+      } else {
+        state.global.consecutiveSL += 1;
+        if (state.global.consecutiveSL >= C.limits.consecutiveSLLimit) {
+          state.global.circuitBreakerUntil =
+            new Date(now.getTime() + C.limits.circuitBreakerHours * 3600000).toISOString();
+          state.global.consecutiveSL = 0;
+        }
+      }
+    }
+
+    updateRatchet(account, C);
+    return { equity: account.equity, consecutiveSL: state.global.consecutiveSL };
+  }
+
+  /** Enregistre l'ouverture. Incrémente le compteur GLOBAL une seule fois. */
+  function registerOpen(state, account, position, opts) {
+    const o = opts || {};
+    account.openPosition = position;
+    if (o.countGlobal !== false) {
+      state.global.tradesToday += 1;
+      state.global.lastTradeAt = (position.openedAt || new Date().toISOString());
+    }
+    return state.global.tradesToday;
+  }
+
+  /* ====================================================================
+     11. PROGRESSION DE PHASE
+     ==================================================================== */
+
+  function phaseProgress(account, cfg) {
+    const C = cfg || CONFIG;
+    const phase = C.account.phases[account.phase];
+    if (!phase || !phase.hasTarget) {
+      return { hasTarget: false, label: phase ? phase.label : account.phase };
+    }
+    const target = account.initialBalance * phase.targetPct;
+    const achieved = account.equity - account.initialBalance;
+    return {
+      hasTarget: true,
+      label: phase.label,
+      target: round2(target),
+      achieved: round2(achieved),
+      pct: Math.max(0, Math.min(100, round2(achieved / target * 100))),
+      remaining: round2(Math.max(0, target - achieved)),
+      tradingDays: account.tradingDays.length,
+      minTradingDays: C.account.minTradingDays,
+      daysOk: account.tradingDays.length >= C.account.minTradingDays
+    };
+  }
+
+  /* ====================================================================
+     12. DÉTECTION DE TILT
+     ==================================================================== */
+
+  function tiltCheck(state, now, cfg) {
+    const C = cfg || CONFIG;
+    if (!state.global.lastTradeAt) return { tilt: false };
+    const gapMin = (now - new Date(state.global.lastTradeAt)) / 60000;
+    const recent = state.global.lastClosedResults.slice(0, 2);
+    const twoSL = recent.length === 2 && recent.every(r => r === "SL");
+    if (twoSL && gapMin < 30) {
+      return {
+        tilt: true,
+        gapMinutes: Math.round(gapMin),
+        message: `2 SL et un nouveau trade en ${Math.round(gapMin)} min. Ton intervalle habituel est de plusieurs heures.`
+      };
+    }
+    return { tilt: false, gapMinutes: Math.round(gapMin) };
+  }
+
+  /* ====================================================================
+     EXPORTS
+     ==================================================================== */
+  return {
+    CONFIG: CONFIG,
+    // utilitaires
+    floorToStep: floorToStep, round2: round2,
+    dayKey: dayKey, localHour: localHour, localWeekday: localWeekday,
+    // dimensionnement
+    riskTierFor: riskTierFor, computeLot: computeLot, expectedReward: expectedReward,
+    // état
+    createState: createState, createAccount: createAccount, rollDay: rollDay,
+    // cliquet
+    ratchetActive: ratchetActive, updateRatchet: updateRatchet, registerPayout: registerPayout,
+    // évaluation
+    evaluateOptionD: evaluateOptionD, evaluateTrade: evaluateTrade,
+    distanceToWalls: distanceToWalls,
+    // enregistrement
+    registerOpen: registerOpen, registerClose: registerClose,
+    // divers
+    phaseProgress: phaseProgress, tiltCheck: tiltCheck
+  };
+});
+
+
+/* ====================================================================
+   PROPFIRM — couche UI
+   ==================================================================== */
+/* ======================================================================
+   PROPFIRM UI v1.0
+   Relie PropFirmEngine au DOM. Aucune règle métier ici : toute décision
+   d'autorisation vient du moteur. Cette couche affiche et persiste.
+   ====================================================================== */
+(function () {
+  "use strict";
+  const PF = window.PropFirmEngine;
+  if (!PF) { console.error("[PropFirm] moteur absent"); return; }
+
+  const LS_KEY = "propfirm_state_v1";
+  const LS_JOURNAL = "propfirm_journal_v1";
+  const LS_BRIDGE = "propfirm_bridge_v1";
+  const CONFIRM_WORD = "LIVE";
+
+  const $ = id => document.getElementById(id);
+  const fmt = n => (n < 0 ? "-" : "") + "$" +
+    Math.abs(Math.round(n)).toLocaleString("fr-FR");
+  const fmt2 = n => (n < 0 ? "-" : "") + "$" +
+    Math.abs(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const pct = n => (n * 100).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " %";
+
+  /* ==================================================================
+     ÉTAT
+     ================================================================== */
+  let S = null;        // état global (moteur)
+  let ACC = null;      // compte actif
+  let JOURNAL = [];    // trades enregistrés
+  let BRIDGE = { url: "", online: false, lastPing: null };
+  let CHAT = [];       // mémoire du jour
+  let CHAT_DAY = null;
+  let lastEval = null;
+
+  function persist() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({ state: S, account: ACC }));
+      localStorage.setItem(LS_JOURNAL, JSON.stringify(JOURNAL.slice(0, 200)));
+      localStorage.setItem(LS_BRIDGE, JSON.stringify({ url: BRIDGE.url }));
+    } catch (e) { console.warn("[PropFirm] persistance impossible", e); }
+  }
+
+  function restore() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && d.state && d.account) { S = d.state; ACC = d.account; }
+      }
+      const j = localStorage.getItem(LS_JOURNAL);
+      if (j) JOURNAL = JSON.parse(j) || [];
+      const b = localStorage.getItem(LS_BRIDGE);
+      if (b) BRIDGE.url = (JSON.parse(b) || {}).url || "";
+    } catch (e) { console.warn("[PropFirm] restauration impossible", e); }
+
+    if (!S || !ACC) {
+      S = PF.createState();
+      ACC = PF.createAccount("ftmo-1", { label: "FTMO $200 000" });
+    }
+    // Toujours repartir en PAPER après un rechargement : le mode LIVE
+    // doit être réarmé explicitement, jamais hérité silencieusement.
+    S.mode = "PAPER";
+  }
+
+  /* ==================================================================
+     RENDU
+     ================================================================== */
+  function renderFigures() {
+    const delta = ACC.equity - ACC.initialBalance;
+    $("pfEquity").textContent = fmt(ACC.equity);
+    $("pfEquity").className = "val" + (delta > 0 ? " up" : delta < 0 ? " down" : "");
+    $("pfEquityDelta").textContent = (delta >= 0 ? "+" : "") + fmt(delta) +
+      "  ·  " + (delta / ACC.initialBalance * 100).toFixed(2) + " %";
+
+    const loss = Math.max(0, -ACC.dailyPnL);
+    $("pfDailyLoss").textContent = ACC.dailyPnL >= 0 ? "+" + fmt(ACC.dailyPnL) : fmt(ACC.dailyPnL);
+    $("pfDailyLoss").className = "val" + (ACC.dailyPnL > 0 ? " up" : ACC.dailyPnL < 0 ? " down" : "");
+    const ftmoDaily = ACC.initialBalance * PF.CONFIG.account.dailyLossPct;
+    $("pfDailyLimit").textContent = "budget " + fmt(PF.CONFIG.limits.dailyBudget) +
+      " · FTMO " + fmt(ftmoDaily);
+
+    const cap = PF.CONFIG.limits.maxTradesPerDay;
+    $("pfTradesToday").textContent = S.global.tradesToday + " / " + cap;
+    const rem = cap - S.global.tradesToday;
+    $("pfTradesSub").textContent = rem > 0
+      ? rem + (rem > 1 ? " disponibles" : " disponible")
+      : (S.global.tradesToday < PF.CONFIG.limits.maxTradesPerDayException
+          ? "3e possible sous conditions" : "plafond atteint");
+
+    const tier = PF.riskTierFor(ACC.equity);
+    $("pfRiskTier").textContent = tier ? pct(tier) : "ARRÊT";
+    $("pfRiskTier").className = "val" + (tier ? "" : " down");
+    $("pfRiskSub").textContent = "arrêt à " + fmt(PF.CONFIG.risk.hardStopEquity);
+  }
+
+  function renderPhase() {
+    const p = PF.phaseProgress(ACC);
+    const el = $("pfPhase");
+    el.textContent = p.label;
+    el.className = "pf-phase" + (ACC.phase === "FUNDED" ? " funded" : "");
+    $("pfAccountName").textContent = ACC.label;
+
+    const card = $("pfProgressCard");
+    if (!p.hasTarget) { card.style.display = "none"; return; }
+    card.style.display = "";
+    $("pfProgressLabel").textContent = "Objectif " + p.label + " — +" + fmt(p.target);
+    $("pfProgressValue").textContent = fmt(p.achieved) + " / " + fmt(p.target);
+    const fill = $("pfProgressFill");
+    fill.style.width = p.pct + "%";
+    fill.className = "fill" + (p.pct >= 100 ? " done" : "");
+    $("pfProgressHint").textContent =
+      "Jours de trading : " + p.tradingDays + " / " + p.minTradingDays + " minimum." +
+      (p.pct >= 100 && !p.daysOk ? "  Objectif atteint, mais le minimum de jours n'est pas rempli." : "");
+  }
+
+  function renderGauges() {
+    const d = PF.distanceToWalls(S, ACC);
+    const rows = [
+      { k: d.circuitBreaker, max: d.circuitBreaker.total },
+      { k: d.tradesToday, max: d.tradesToday.total },
+      { k: d.dailyBudget, max: 4 },
+      { k: d.derisk, max: 20 },
+      { k: d.ftmoWall, max: 40 }
+    ];
+    const host = $("pfGauges");
+    host.innerHTML = "";
+    rows.forEach(r => {
+      const rem = r.k.remaining == null ? 0 : r.k.remaining;
+      const max = Math.max(1, r.max);
+      const shown = Math.min(max, 20);
+      const ratio = rem / max;
+      const cls = ratio <= 0.25 ? "danger" : ratio <= 0.5 ? "warn" : "";
+      const filled = Math.round(Math.min(rem, max) / max * shown);
+      let segs = "";
+      for (let i = 0; i < shown; i++) segs += '<div class="g-seg' + (i < filled ? " on" : "") + '"></div>';
+      const suffix = r.k === d.tradesToday ? " trade(s)" : " SL";
+      host.insertAdjacentHTML("beforeend",
+        '<div class="gauge ' + cls + '">' +
+          '<div class="g-lab">' + r.k.label + '</div>' +
+          '<div class="g-val">' + rem + suffix + '</div>' +
+          '<div class="g-track">' + segs + '</div>' +
+        '</div>');
+    });
+  }
+
+  function currentInputs() {
+    return {
+      sl: parseFloat($("pfSL").value),
+      tp: parseFloat($("pfTP").value)
+    };
+  }
+
+  function evaluate() {
+    const inp = currentInputs();
+    const now = new Date();
+    PF.rollDay(S, { "ftmo-1": ACC }, now);
+
+    const slToday = JOURNAL.filter(t =>
+      t.dayKey === PF.dayKey(now) && t.result === "SL").length;
+
+    lastEval = PF.evaluateTrade({
+      state: S, account: ACC, now: now,
+      slDistance: inp.sl, tpDistance: inp.tp,
+      slToday: slToday,
+      // Le régime vient du moteur de signal v7.14.x s'il est disponible.
+      regimeFavourable: readRegime(),
+      regimeLabel: readRegimeLabel(),
+      reconciled: true
+    });
+    return lastEval;
+  }
+
+  /** Lit le régime du moteur de signal existant, sans le modifier. */
+  function readRegime() {
+    try {
+      if (typeof window.state === "object" && window.state && window.state.lastSignal) {
+        const s = window.state.lastSignal;
+        if (s.regime) return String(s.regime).toUpperCase() !== "RANGE";
+      }
+    } catch (e) { /* le moteur de signal peut ne pas être prêt */ }
+    return null;   // inconnu → l'option D refusera, ce qui est le comportement sûr
+  }
+  function readRegimeLabel() {
+    try {
+      if (typeof window.state === "object" && window.state && window.state.lastSignal) {
+        return window.state.lastSignal.regime || "inconnu";
+      }
+    } catch (e) { /* idem */ }
+    return "inconnu — lancez une analyse";
+  }
+
+  function renderTicket() {
+    const r = evaluate();
+    const p = r.preview;
+
+    $("pfLot").textContent = p ? p.lot.toFixed(2) : "—";
+    $("pfRisk").textContent = p ? fmt2(p.riskAmount) : "—";
+    $("pfReward").textContent = p && p.reward != null ? fmt2(p.reward) : "—";
+    $("pfRR").textContent = p && p.rr != null ? p.rr.toFixed(2) : "—";
+
+    const slInput = $("pfSL");
+    slInput.classList.toggle("invalid", !r.sizing.ok);
+
+    const hasPos = !!ACC.openPosition;
+    const disabled = !r.allowed || hasPos;
+    $("pfBuy").disabled = disabled;
+    $("pfSell").disabled = disabled;
+    const sub = p ? p.lot.toFixed(2) + " lot · risque " + fmt(p.riskAmount) : "indisponible";
+    $("pfBuySub").textContent = hasPos ? "position déjà ouverte" : sub;
+    $("pfSellSub").textContent = hasPos ? "position déjà ouverte" : sub;
+
+    /* Blocages et avertissements */
+    const icon = '<svg class="b-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/>' +
+      '<line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+    const host = $("pfBlocks");
+    host.innerHTML = "";
+    r.blocks.forEach(b => {
+      host.insertAdjacentHTML("beforeend",
+        '<div class="block-item">' + icon + '<div><div class="b-msg">' + esc(b.message) + '</div>' +
+        (b.detail ? '<div class="b-detail">' + esc(b.detail) + '</div>' : '') + '</div></div>');
+    });
+    r.warnings.forEach(w => {
+      host.insertAdjacentHTML("beforeend",
+        '<div class="block-item warn">' + icon + '<div><div class="b-msg">' + esc(w.message) + '</div>' +
+        (w.detail ? '<div class="b-detail">' + esc(w.detail) + '</div>' : '') + '</div></div>');
+    });
+
+    /* Option D */
+    const od = $("pfOptionD");
+    if (r.optionD) {
+      let html = '<div class="optd"><div class="o-title">3e trade — conditions</div>';
+      r.optionD.checks.forEach(c => {
+        html += '<div class="o-check ' + (c.pass ? "pass" : "fail") + '">' +
+          '<span class="o-mark">' + (c.pass ? "✓" : "✗") + '</span>' +
+          '<span class="o-lab">' + esc(c.label) + '</span>' +
+          '<span class="o-detail">' + esc(c.detail || "") + '</span></div>';
+      });
+      html += '</div>';
+      od.innerHTML = html;
+    } else od.innerHTML = "";
+  }
+
+  function renderPosition() {
+    const card = $("pfPositionCard");
+    if (!ACC.openPosition) { card.style.display = "none"; return; }
+    const p = ACC.openPosition;
+    card.style.display = "";
+    $("pfPosSide").textContent = p.side === "BUY" ? "ACHAT" : "VENTE";
+    $("pfPosLot").textContent = p.lot.toFixed(2);
+    $("pfPosRisk").textContent = fmt2(p.riskAmount);
+    const mins = Math.round((Date.now() - new Date(p.openedAt)) / 60000);
+    $("pfPosAge").textContent = mins < 60 ? mins + " min" : (mins / 60).toFixed(1) + " h";
+    $("pfPosHint").textContent = S.mode === "PAPER"
+      ? "Mode PAPER : utilisez « Simuler » pour clôturer et alimenter les compteurs."
+      : "Position réelle chez cTrader. La clôture est remontée automatiquement par le bridge.";
+  }
+
+  function renderJournal() {
+    const host = $("pfJournal");
+    if (!JOURNAL.length) {
+      host.innerHTML = '<div class="journal-empty">Aucun trade enregistré.</div>';
+      return;
+    }
+    host.innerHTML = "";
+    JOURNAL.slice(0, 25).forEach(t => {
+      const cls = t.result === "TP" ? "tp" : t.result === "SL" ? "sl" : "open";
+      const d = new Date(t.openedAt);
+      const time = d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+      host.insertAdjacentHTML("beforeend",
+        '<div class="journal-row">' +
+          '<span class="j-res ' + cls + '">' + t.result + '</span>' +
+          '<span class="j-meta">' + time + " · " + (t.side === "BUY" ? "achat" : "vente") +
+            " · " + t.lot.toFixed(2) + " lot" + (t.mode === "PAPER" ? " · paper" : "") + '</span>' +
+          '<span class="j-pnl ' + (t.netProfit > 0 ? "up" : "down") + '">' +
+            (t.netProfit > 0 ? "+" : "") + fmt2(t.netProfit) + '</span>' +
+        '</div>');
+    });
+  }
+
+  function renderMode() {
+    const btn = $("pfModeToggle");
+    btn.className = "pf-mode" + (S.mode === "LIVE" ? " live" : "");
+    $("pfModeLabel").textContent = S.mode;
+  }
+
+  function renderBridge() {
+    const el = $("pfBridge");
+    el.className = "bridge-status" + (BRIDGE.online ? " online" : BRIDGE.url ? " offline" : "");
+    $("pfBridgeTxt").textContent = !BRIDGE.url ? "Non configuré"
+      : BRIDGE.online ? "Connecté" : "Injoignable";
+    $("pfBridgeSub").textContent = BRIDGE.lastPing
+      ? "dernier contact " + new Date(BRIDGE.lastPing).toLocaleTimeString("fr-FR")
+      : "—";
+    $("pfBridgeUrl").value = BRIDGE.url;
+  }
+
+  function renderAll() {
+    renderFigures(); renderPhase(); renderGauges();
+    renderTicket(); renderPosition(); renderJournal();
+    renderMode(); renderBridge();
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  /* ==================================================================
+     ACTIONS
+     ================================================================== */
+  function placeOrder(side) {
+    const r = evaluate();
+    if (!r.allowed || !r.preview) return;
+
+    const inp = currentInputs();
+    const now = new Date();
+    const position = {
+      clientOrderId: uuid(),
+      side: side,
+      lot: r.preview.lot,
+      slDistance: inp.sl,
+      tpDistance: inp.tp,
+      riskAmount: r.preview.riskAmount,
+      reward: r.preview.reward,
+      openedAt: now.toISOString(),
+      mode: S.mode
+    };
+
+    if (S.mode === "LIVE") {
+      sendToBridge(position);   // asynchrone, non bloquant pour l'UI
+    }
+
+    PF.registerOpen(S, ACC, position);
+    persist(); renderAll();
+    chatSystem((S.mode === "PAPER" ? "Paper — " : "") +
+      (side === "BUY" ? "achat" : "vente") + " " + position.lot.toFixed(2) +
+      " lot, risque " + fmt(position.riskAmount) + ".");
+  }
+
+  function closePosition(result) {
+    const p = ACC.openPosition;
+    if (!p) return;
+    const net = result === "TP" ? p.reward : -p.riskAmount;
+    const now = new Date();
+
+    PF.registerClose(S, ACC, { netProfit: net, now: now });
+
+    JOURNAL.unshift({
+      schemaVersion: 1,
+      clientOrderId: p.clientOrderId,
+      account: ACC.id, phase: ACC.phase,
+      side: p.side, lot: p.lot,
+      slDistance: p.slDistance, tpDistance: p.tpDistance,
+      riskAmount: p.riskAmount,
+      openedAt: p.openedAt, closedAt: now.toISOString(),
+      dayKey: PF.dayKey(now),
+      result: result, netProfit: net,
+      equityAfter: ACC.equity,
+      consecutiveSL: S.global.consecutiveSL,
+      mode: p.mode
+    });
+
+    persist(); renderAll();
+
+    if (S.global.circuitBreakerUntil && new Date(S.global.circuitBreakerUntil) > now) {
+      chatSystem("Coupe-circuit déclenché : 3 stop loss consécutifs. Blocage de 48 heures.");
+    }
+  }
+
+  function uuid() {
+    if (crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
+  function toggleMode() {
+    if (S.mode === "LIVE") { S.mode = "PAPER"; persist(); renderAll(); return; }
+    const answer = prompt(
+      "Passage en mode LIVE — les ordres partiront réellement chez cTrader.\n\n" +
+      "Tapez " + CONFIRM_WORD + " pour confirmer.");
+    if (answer !== CONFIRM_WORD) return;
+    if (!BRIDGE.online) {
+      alert("Le bridge n'est pas joignable. Testez la connexion avant de passer en LIVE.");
+      return;
+    }
+    S.mode = "LIVE"; persist(); renderAll();
+  }
+
+  /* ==================================================================
+     BRIDGE
+     ================================================================== */
+  async function pingBridge() {
+    if (!BRIDGE.url) { BRIDGE.online = false; renderBridge(); return false; }
+    try {
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 4000);
+      const res = await fetch(BRIDGE.url.replace(/\/$/, "") + "/health", { signal: ctl.signal });
+      clearTimeout(t);
+      BRIDGE.online = res.ok;
+      BRIDGE.lastPing = Date.now();
+    } catch (e) {
+      BRIDGE.online = false;
+    }
+    renderBridge();
+    return BRIDGE.online;
+  }
+
+  async function sendToBridge(position) {
+    try {
+      const res = await fetch(BRIDGE.url.replace(/\/$/, "") + "/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(position)
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+    } catch (e) {
+      chatSystem("L'ordre n'a pas pu être transmis au bridge : " + e.message +
+                 ". Vérifiez la position dans cTrader avant d'en ouvrir une autre.");
+    }
+  }
+
+  /* ==================================================================
+     CHAT
+     ================================================================== */
+  function chatDayCheck() {
+    const k = PF.dayKey(new Date());
+    if (CHAT_DAY !== k) { CHAT = []; CHAT_DAY = k; }
+  }
+
+  function chatAppend(role, text) {
+    const log = $("pfChatLog");
+    const cls = role === "user" ? "user" : role === "system" ? "system" : "claude";
+    const div = document.createElement("div");
+    div.className = "chat-msg " + cls;
+    div.textContent = text;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+  function chatSystem(text) { chatAppend("system", text); }
+
+  function buildContext() {
+    const r = lastEval || evaluate();
+    const d = r.distances;
+    const p = PF.phaseProgress(ACC);
+    const tilt = PF.tiltCheck(S, new Date());
+    return [
+      "ÉTAT DU COMPTE",
+      "  mode: " + S.mode,
+      "  phase: " + (p.label || ACC.phase) +
+        (p.hasTarget ? "  progression: " + fmt(p.achieved) + " / " + fmt(p.target) + " (" + p.pct + " %)" : ""),
+      "  equity: " + fmt(ACC.equity) + "  (initial " + fmt(ACC.initialBalance) + ")",
+      "  P&L du jour: " + fmt(ACC.dailyPnL),
+      "  palier de risque: " + (PF.riskTierFor(ACC.equity) ? pct(PF.riskTierFor(ACC.equity)) : "ARRÊT"),
+      "  jours de trading: " + ACC.tradingDays.length + " / " + PF.CONFIG.account.minTradingDays,
+      "",
+      "COMPTEURS",
+      "  trades aujourd'hui: " + S.global.tradesToday + " / " + PF.CONFIG.limits.maxTradesPerDay,
+      "  SL consécutifs: " + S.global.consecutiveSL + " / " + PF.CONFIG.limits.consecutiveSLLimit,
+      "  coupe-circuit: " + (S.global.circuitBreakerUntil || "inactif"),
+      "  derniers résultats: " + (S.global.lastClosedResults.slice(0, 6).join(", ") || "aucun"),
+      "  tilt détecté: " + (tilt.tilt ? "OUI — " + tilt.message : "non"),
+      "",
+      "DISTANCE AUX SEUILS (en stop loss consécutifs)",
+      "  coupe-circuit: " + d.circuitBreaker.remaining,
+      "  budget du jour: " + d.dailyBudget.remaining + " (" + fmt(d.dailyBudget.amountRemaining) + ")",
+      "  arrêt à " + fmt(PF.CONFIG.risk.hardStopEquity) + ": " + d.derisk.remaining,
+      "  mur FTMO à " + fmt(d.ftmoWall.wallAt) + ": " + d.ftmoWall.remaining,
+      "",
+      "TRADE ENVISAGÉ",
+      r.preview
+        ? "  lot " + r.preview.lot.toFixed(2) + " · risque " + fmt2(r.preview.riskAmount) +
+          " · gain visé " + fmt2(r.preview.reward) + " · R:R " + r.preview.rr
+        : "  aucun (dimensionnement refusé)",
+      "  autorisé: " + (r.allowed ? "oui" : "NON"),
+      r.blocks.length ? "  blocages: " + r.blocks.map(b => b.code).join(", ") : "",
+      r.warnings.length ? "  avertissements: " + r.warnings.map(w => w.code).join(", ") : "",
+      "",
+      "HISTORIQUE (10 derniers)",
+      JOURNAL.slice(0, 10).map(t =>
+        "  " + t.openedAt.slice(0, 16).replace("T", " ") + " " + t.side + " " +
+        t.lot.toFixed(2) + " → " + t.result + " " + fmt2(t.netProfit)).join("\n") || "  aucun"
+    ].filter(Boolean).join("\n");
+  }
+
+  const SYSTEM_PROMPT =
+    "Tu assistes Helder sur un compte FTMO $200 000 Swing, en français.\n\n" +
+    "RÈGLES ABSOLUES\n" +
+    "- Tu ne dis JAMAIS d'acheter ou de vendre. Tu ne donnes pas de signal.\n" +
+    "- Tu ne peux lever aucun garde-fou. S'il te le demande, tu refuses et tu " +
+    "rappelles que les blocages sont mécaniques.\n" +
+    "- Tu ne donnes pas de conseil en investissement.\n\n" +
+    "TON RÔLE\n" +
+    "Tu es un miroir, pas un oracle. Tu lis l'état fourni et tu montres à Helder " +
+    "ce qu'il regarde déjà mais ne voit plus quand il est dedans. Tu es direct et " +
+    "factuel, jamais moralisateur, jamais flatteur.\n\n" +
+    "Si un tilt est signalé, tu le dis franchement et tu rappelles les conséquences " +
+    "mécaniques, sans dramatiser.\n\n" +
+    "Sois bref : quelques phrases, pas un rapport. Cite des chiffres précis de l'état.";
+
+  async function chatSend(text) {
+    chatDayCheck();
+    if (!text.trim()) return;
+    chatAppend("user", text);
+    CHAT.push({ role: "user", content: text });
+
+    const key = getApiKey();
+    if (!key) {
+      chatAppend("claude", "Aucune clé API Anthropic n'est enregistrée. " +
+        "Ajoutez-la dans les Réglages pour activer le chat.");
+      return;
+    }
+
+    const thinking = document.createElement("div");
+    thinking.className = "chat-msg claude";
+    thinking.textContent = "…";
+    $("pfChatLog").appendChild(thinking);
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1000,
+          system: SYSTEM_PROMPT + "\n\nÉTAT ACTUEL\n" + buildContext(),
+          messages: CHAT.slice(-12)
+        })
+      });
+      const data = await res.json();
+      const out = (data.content || []).filter(c => c.type === "text").map(c => c.text).join("\n");
+      thinking.remove();
+      if (out) { chatAppend("claude", out); CHAT.push({ role: "assistant", content: out }); }
+      else chatAppend("claude", "Réponse vide. " + (data.error ? data.error.message : ""));
+    } catch (e) {
+      thinking.remove();
+      chatAppend("claude", "Chat indisponible : " + e.message +
+        ". Les garde-fous continuent de fonctionner normalement.");
+    }
+  }
+
+  function getApiKey() {
+    try {
+      if (typeof window.state === "object" && window.state && window.state.apiAnthropic)
+        return window.state.apiAnthropic;
+      const el = document.getElementById("apiAnthropic");
+      if (el && el.value) return el.value;
+    } catch (e) { /* réglages non chargés */ }
+    return null;
+  }
+
+  const QUICK = {
+    etat: "Où j'en suis exactement ? Résume mon état et ma distance aux seuils.",
+    trade: "Le trade que je m'apprête à passer est-il raisonnable au vu de mon état ?",
+    jour: "Fais le bilan de ma journée.",
+    regles: "Quels garde-fous sont actifs en ce moment et pourquoi ?"
+  };
+
+  /* ==================================================================
+     NAVIGATION
+     ================================================================== */
+  function setupNav() {
+    document.querySelectorAll(".mainnav-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const target = btn.dataset.view;
+        document.querySelectorAll(".mainnav-btn").forEach(b =>
+          b.classList.toggle("active", b === btn));
+        document.querySelectorAll(".view").forEach(v =>
+          v.classList.toggle("active", v.id === "view-" + target));
+        if (target === "propfirm") renderAll();
+        try { localStorage.setItem("propfirm_lastview", target); } catch (e) { /* quota */ }
+      });
+    });
+    let last = null;
+    try { last = localStorage.getItem("propfirm_lastview"); } catch (e) { /* quota */ }
+    if (last === "propfirm") {
+      const b = document.querySelector('.mainnav-btn[data-view="propfirm"]');
+      if (b) b.click();
+    }
+  }
+
+  /* ==================================================================
+     INITIALISATION
+     ================================================================== */
+  function init() {
+    restore();
+    PF.rollDay(S, { "ftmo-1": ACC }, new Date());
+    chatDayCheck();
+    setupNav();
+
+    ["pfSL", "pfTP"].forEach(id => {
+      const el = $(id);
+      if (el) el.addEventListener("input", () => { renderTicket(); renderGauges(); });
+    });
+
+    $("pfBuy").addEventListener("click", () => placeOrder("BUY"));
+    $("pfSell").addEventListener("click", () => placeOrder("SELL"));
+    $("pfSimTP").addEventListener("click", () => closePosition("TP"));
+    $("pfSimSL").addEventListener("click", () => closePosition("SL"));
+    $("pfCloseAll").addEventListener("click", () => {
+      if (!ACC.openPosition) return;
+      if (confirm("Fermer la position au prix courant ?")) closePosition("SL");
+    });
+    $("pfModeToggle").addEventListener("click", toggleMode);
+
+    $("pfBridgeUrl").addEventListener("change", e => {
+      BRIDGE.url = e.target.value.trim(); persist(); pingBridge();
+    });
+    $("pfBridgeTest").addEventListener("click", pingBridge);
+
+    $("pfExport").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(JOURNAL, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "propfirm-journal-" + PF.dayKey(new Date()) + ".json";
+      a.click(); URL.revokeObjectURL(a.href);
+    });
+    $("pfReset").addEventListener("click", () => {
+      if (!confirm("Réinitialiser le compte et le journal ? Cette action est définitive.")) return;
+      S = PF.createState();
+      ACC = PF.createAccount("ftmo-1", { label: "FTMO $200 000" });
+      JOURNAL = []; persist(); renderAll();
+    });
+
+    $("pfChatSend").addEventListener("click", () => {
+      const v = $("pfChatInput").value; $("pfChatInput").value = ""; chatSend(v);
+    });
+    $("pfChatInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") { const v = e.target.value; e.target.value = ""; chatSend(v); }
+    });
+    document.querySelectorAll(".chat-quick button").forEach(b => {
+      b.addEventListener("click", () => chatSend(QUICK[b.dataset.q] || b.textContent));
+    });
+
+    renderAll();
+    if (BRIDGE.url) pingBridge();
+    setInterval(() => {
+      if (PF.rollDay(S, { "ftmo-1": ACC }, new Date())) { persist(); renderAll(); }
+      else if (ACC.openPosition) renderPosition();
+    }, 30000);
+    setInterval(() => { if (BRIDGE.url) pingBridge(); }, 60000);
+  }
+
+  window.PropFirmUI = { init: init, render: renderAll, state: () => ({ S, ACC, JOURNAL }) };
+})();
+
+
+/* ====================================================================
    INIT
    ==================================================================== */
 function init() {
@@ -6621,6 +8401,12 @@ function init() {
     if (ui.btnOpenClaude) ui.btnOpenClaude.addEventListener("click", () => openInClaudeApp());
   });
   setupAutoTimers();
+  // PropFirm — module indépendant, ne doit jamais faire échouer l'init du signal
+  try {
+    if (window.PropFirmUI) window.PropFirmUI.init();
+  } catch (e) {
+    console.error("[PropFirm] initialisation impossible", e);
+  }
   // Précharge les données pour avoir un verdict instantané au premier clic
   refreshDataOnly();
 }
