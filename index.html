@@ -2782,16 +2782,18 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.16.0";
+const APP_VERSION = "7.16.2";
 // v7.14.4 — fee confirmé 125.30 USDC (était 125.45), doc PROP_FIRM précisée : 1 fee par cycle
 //            (step 2/3/4 après SL = même challenge = gratuit), résultats semaine 13-17/07 :
 //            7/7 cycles gagnés, +173.60$ net, WR global passé de 80% à 85.2% (au-dessus du
 //            seuil de rentabilité), système devenu RENTABLE (EV nette +2.88$/cycle)
-// v7.16.0 — ONGLET PROPFIRM / FTMO : navigation principale (HydraTrade | PropFirm),
-//            moteur de garde-fous (sizing 0,25 %, échelle de dé-risquage, coupe-circuit
-//            3 SL glissants, cliquet à profits, option D pour le 3e trade), jauges de
-//            distance aux seuils, mode PAPER/LIVE, journal, bridge cTrader, chat Claude
-//            en lecture seule. Fuseau Europe/Prague en IANA. 167 tests unitaires.
+// v7.16.2 — CORRECTIF RACINE : fmtBytes() n'avait jamais été défini. Dès qu'une
+//            capture était en mémoire, renderCapture() levait une ReferenceError
+//            et init() s'arrêtait là — historique, recalibration, badge de session,
+//            graphe, timers et préchargement ne démarraient jamais. Chaque étape
+//            d'init() est désormais isolée par step().
+// v7.16.1 — La navigation PropFirm se branche via son propre boot().
+// v7.16.0 — ONGLET PROPFIRM / FTMO : garde-fous, jauges, PAPER/LIVE, bridge, chat.
 // v7.14.0 — POST-MORTEM STRATÉGIQUE (semaine 06-09/07 à 25% WR) : (1) gate RANGE bloquant
 //            (ADX<20 ou CHOP>61.8 = signal tendance SUSPENDU, pas juste pénalisé), (2) veto
 //            d'extension (prix > 1.5×ATR de EMA20 + RSI extrême = ATTENDRE pullback), (3) signal
@@ -3221,6 +3223,18 @@ function fmtCaptureTime(ts) {
     day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
   });
 }
+/* Formate une taille en octets. Appelée par renderCapture() et par le
+   diagnostic — elle manquait depuis l'origine, ce qui interrompait init()
+   dès qu'une capture était présente en mémoire. */
+function fmtBytes(bytes) {
+  const n = Number(bytes);
+  if (!isFinite(n) || n <= 0) return "0 o";
+  const u = ["o", "Ko", "Mo", "Go"];
+  const i = Math.min(u.length - 1, Math.floor(Math.log(n) / Math.log(1024)));
+  const v = n / Math.pow(1024, i);
+  return (i === 0 ? Math.round(v) : v.toFixed(v < 10 ? 1 : 0)) + " " + u[i];
+}
+
 function renderCapture() {
   if (!state.capture) {
     ui.capturePrompt.classList.remove("hide");
@@ -7012,7 +7026,7 @@ function setTimeframe(tf) {
 }
 
 /* ====================================================================
-   PROPFIRM — moteur de garde-fous
+   PROPFIRM — moteur
    ==================================================================== */
 /* ======================================================================
    PROPFIRM ENGINE v1.0 — Moteur de garde-fous FTMO
@@ -7677,7 +7691,7 @@ function setTimeframe(tf) {
 
 
 /* ====================================================================
-   PROPFIRM — couche UI
+   PROPFIRM — UI (auto-démarrage indépendant de init())
    ==================================================================== */
 /* ======================================================================
    PROPFIRM UI v1.0
@@ -8246,15 +8260,24 @@ function setTimeframe(tf) {
   /* ==================================================================
      NAVIGATION
      ================================================================== */
+  let navBound = false;
   function setupNav() {
-    document.querySelectorAll(".mainnav-btn").forEach(btn => {
+    if (navBound) return;                    // idempotent
+    const btns = document.querySelectorAll(".mainnav-btn");
+    if (!btns.length) return;                // DOM pas encore prêt
+    navBound = true;
+    btns.forEach(btn => {
       btn.addEventListener("click", () => {
         const target = btn.dataset.view;
         document.querySelectorAll(".mainnav-btn").forEach(b =>
           b.classList.toggle("active", b === btn));
         document.querySelectorAll(".view").forEach(v =>
           v.classList.toggle("active", v.id === "view-" + target));
-        if (target === "propfirm") renderAll();
+        // Le rendu ne doit JAMAIS empêcher la bascule d'onglet
+        if (target === "propfirm") {
+          try { ensureReady(); renderAll(); }
+          catch (e) { showFailure(e); }
+        }
         try { localStorage.setItem("propfirm_lastview", target); } catch (e) { /* quota */ }
       });
     });
@@ -8269,11 +8292,32 @@ function setTimeframe(tf) {
   /* ==================================================================
      INITIALISATION
      ================================================================== */
-  function init() {
+  let ready = false;
+  /** Prépare l'état du moteur. Appelable plusieurs fois sans effet de bord. */
+  function ensureReady() {
+    if (ready) return;
     restore();
     PF.rollDay(S, { "ftmo-1": ACC }, new Date());
     chatDayCheck();
-    setupNav();
+    ready = true;
+  }
+
+  /** Affiche l'échec dans la vue plutôt que de laisser un écran muet. */
+  function showFailure(err) {
+    console.error("[PropFirm]", err);
+    const host = document.getElementById("pfBlocks");
+    if (!host) return;
+    host.innerHTML = '<div class="block-item"><div><div class="b-msg">' +
+      'Le module PropFirm n\'a pas pu démarrer.</div>' +
+      '<div class="b-detail">' + esc(err && err.message ? err.message : String(err)) +
+      ' — ouvrez la console du navigateur pour le détail.</div></div></div>';
+  }
+
+  let inited = false;
+  function init() {
+    if (inited) return;
+    inited = true;
+    ensureReady();
 
     ["pfSL", "pfTP"].forEach(id => {
       const el = $(id);
@@ -8319,7 +8363,7 @@ function setTimeframe(tf) {
       b.addEventListener("click", () => chatSend(QUICK[b.dataset.q] || b.textContent));
     });
 
-    renderAll();
+    try { renderAll(); } catch (e) { showFailure(e); }
     if (BRIDGE.url) pingBridge();
     setInterval(() => {
       if (PF.rollDay(S, { "ftmo-1": ACC }, new Date())) { persist(); renderAll(); }
@@ -8328,31 +8372,83 @@ function setTimeframe(tf) {
     setInterval(() => { if (BRIDGE.url) pingBridge(); }, 60000);
   }
 
-  window.PropFirmUI = { init: init, render: renderAll, state: () => ({ S, ACC, JOURNAL }) };
+  /* ------------------------------------------------------------------
+     AUTO-DÉMARRAGE
+     La navigation est branchée immédiatement, sans attendre l'init() de
+     l'app : une erreur ailleurs ne doit jamais rendre les onglets muets.
+     ------------------------------------------------------------------ */
+  function boot() {
+    try { setupNav(); } catch (e) { console.error("[PropFirm] navigation", e); }
+    try { init(); } catch (e) { showFailure(e); }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+
+  /** Diagnostic exécutable depuis la console du navigateur. */
+  function diagnose() {
+    const r = {
+      moteur: !!window.PropFirmEngine,
+      navBoutons: document.querySelectorAll(".mainnav-btn").length,
+      navBranchee: navBound,
+      vues: document.querySelectorAll(".view").length,
+      vuePropFirm: !!document.getElementById("view-propfirm"),
+      moduleInitialise: inited,
+      etatPret: ready,
+      version: (window.APP_VERSION || document.getElementById("appVersion")?.textContent || "?"),
+      equity: ACC ? ACC.equity : null,
+      mode: S ? S.mode : null
+    };
+    console.table(r);
+    const pb = [];
+    if (!r.moteur) pb.push("PropFirmEngine absent — le script est tronqué ou en cache.");
+    if (!r.navBoutons) pb.push("Aucun bouton .mainnav-btn — mauvais fichier en ligne.");
+    if (r.navBoutons && !r.navBranchee) pb.push("Boutons présents mais non branchés.");
+    if (!r.vuePropFirm) pb.push("La vue #view-propfirm est absente du HTML.");
+    if (String(r.version).indexOf("7.16") === -1) pb.push("Version " + r.version + " — ce n'est pas la v7.16.0 (cache ?).");
+    console.log(pb.length ? "PROBLÈMES :\n  · " + pb.join("\n  · ") : "Tout est en place.");
+    return r;
+  }
+
+  window.PropFirmUI = {
+    init: init, boot: boot, render: renderAll, diagnose: diagnose,
+    state: () => ({ S, ACC, JOURNAL })
+  };
 })();
 
 
 /* ====================================================================
    INIT
    ==================================================================== */
+/* Isole une étape d'initialisation : une erreur y est consignée mais
+   n'interrompt pas les suivantes. C'est ce qui a manqué le jour où
+   fmtBytes a fait échouer renderCapture(). */
+function step(name, fn) {
+  try { return fn(); }
+  catch (e) { console.error("[init:" + name + "]", e); return undefined; }
+}
+
 function init() {
-  loadSettings();
+  step("settings", () => loadSettings());
   // Version pill : version complète (ex. v7.3.0), source unique = APP_VERSION
   if (ui.appVersion) {
     ui.appVersion.textContent = "v" + APP_VERSION;
     ui.appVersion.title = "XAUUSD Signal v" + APP_VERSION;
   }
-  state.capture = loadCapture();
-  renderCapture();
-  const _th = loadTradeHistory();
-  state.tradeHistory = _th.trades;
-  state.tradeMeta = _th.meta;
-  recalibrate();
-  renderHistory();
-  updateSessionBadge();
-  updateCycleUI();
+  step("capture", () => { state.capture = loadCapture(); renderCapture(); });
+  step("history", () => {
+    const _th = loadTradeHistory();
+    state.tradeHistory = _th.trades;
+    state.tradeMeta = _th.meta;
+    recalibrate();
+    renderHistory();
+  });
+  step("session", () => updateSessionBadge());
+  step("cycle", () => updateCycleUI());
   // Pré-injecter le SVG chandeliers pour qu'il soit prêt à s'afficher dès le 1er signal
-  setupSignalChart();
+  step("chart", () => setupSignalChart());
   // Commutateur de timeframe : bind + labels selon le TF persistant
   bindSafe("tf-switch", () => {
     if (!ui.tfSwitch) return;
@@ -8400,15 +8496,11 @@ function init() {
     if (ui.btnFable) ui.btnFable.addEventListener("click", () => analyzeWithFable());
     if (ui.btnOpenClaude) ui.btnOpenClaude.addEventListener("click", () => openInClaudeApp());
   });
-  setupAutoTimers();
-  // PropFirm — module indépendant, ne doit jamais faire échouer l'init du signal
-  try {
-    if (window.PropFirmUI) window.PropFirmUI.init();
-  } catch (e) {
-    console.error("[PropFirm] initialisation impossible", e);
-  }
+  step("timers", () => setupAutoTimers());
+  // PropFirm : déjà démarré par son propre boot(). Sécurité idempotente.
+  step("propfirm", () => { if (window.PropFirmUI) window.PropFirmUI.init(); });
   // Précharge les données pour avoir un verdict instantané au premier clic
-  refreshDataOnly();
+  step("preload", () => refreshDataOnly());
 }
 init();
 </script>
