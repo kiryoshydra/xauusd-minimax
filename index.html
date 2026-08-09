@@ -2117,6 +2117,75 @@
   .btn-danger{border-color:var(--bear-deep); color:var(--bear-soft)}
   .btn-danger:hover{border-color:var(--bear); background:rgba(196,107,92,.08); color:var(--bear-soft)}
 
+  /* ---------- Parcours de statut : Classique → Prime → Suprême ---------- */
+  .journey{margin-bottom:18px}
+  .journey-head{display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:16px;flex-wrap:wrap;gap:10px}
+  .journey-goal{font-size:12px;color:var(--text-3)}
+  .journey-goal strong{color:var(--gold-soft);font-weight:500}
+
+  .journey-track{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;
+    gap:0;margin:0 0 22px}
+  .journey-rail{position:absolute;top:13px;left:12%;right:12%;height:2px;
+    background:var(--surface-3);border-radius:2px}
+  .journey-rail-fill{position:absolute;top:13px;left:12%;height:2px;border-radius:2px;
+    background:linear-gradient(90deg,var(--gold-deep),var(--gold-soft));
+    transition:width .6s var(--ease)}
+
+  .journey-step{position:relative;display:flex;flex-direction:column;align-items:center;
+    gap:9px;text-align:center}
+  .journey-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;background:var(--bg-2);border:2px solid var(--surface-3);
+    font-size:11px;font-weight:600;color:var(--text-4);z-index:1;
+    transition:all .3s var(--ease)}
+  .journey-step.done .journey-dot{background:rgba(201,169,97,.16);border-color:var(--gold);
+    color:var(--gold-soft)}
+  .journey-step.current .journey-dot{border-color:var(--gold);color:var(--gold-soft);
+    box-shadow:0 0 0 4px rgba(201,169,97,.1)}
+  .journey-step .j-name{font-size:12.5px;font-weight:500;color:var(--text-3)}
+  .journey-step.done .j-name,.journey-step.current .j-name{color:var(--text)}
+  .journey-step .j-cap{font-family:'JetBrains Mono',monospace;font-size:11px;
+    color:var(--text-4);font-variant-numeric:tabular-nums}
+  .journey-step .j-split{font-size:10px;color:var(--text-4);letter-spacing:.04em}
+
+  .journey-detail{display:grid;gap:1px;background:var(--border-soft);
+    border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden}
+  .journey-req{background:var(--surface);padding:13px 15px;display:grid;
+    grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+  .journey-req .r-mark{width:15px;text-align:center;font-weight:600;font-size:12px}
+  .journey-req.ok .r-mark{color:var(--bull-soft)}
+  .journey-req.pending .r-mark{color:var(--text-4)}
+  .journey-req.blocked .r-mark{color:var(--bear-soft)}
+  .journey-req .r-lab{font-size:12.5px;color:var(--text-2)}
+  .journey-req .r-sub{font-size:11px;color:var(--text-4);margin-top:3px;line-height:1.45}
+  .journey-req .r-val{font-family:'JetBrains Mono',monospace;font-size:12px;
+    color:var(--text-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .journey-req.blocked .r-val{color:var(--bear-soft)}
+
+  .cycle-pips{display:flex;gap:5px;margin-top:8px}
+  .cycle-pip{width:26px;height:5px;border-radius:3px;background:var(--surface-3)}
+  .cycle-pip.on{background:linear-gradient(90deg,var(--gold-deep),var(--gold-soft))}
+
+  .journey-warn{margin-top:13px;padding:12px 15px;border-radius:var(--r-sm);
+    background:rgba(201,169,97,.06);border:1px solid var(--gold-deep);
+    font-size:11.5px;color:var(--text-2);line-height:1.55}
+  .journey-warn strong{color:var(--gold-soft);font-weight:500}
+
+  .journey-forecast{margin-top:14px;display:grid;gap:1px;background:var(--border-soft);
+    border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden}
+  .forecast-row{background:var(--surface);padding:11px 15px;display:grid;
+    grid-template-columns:auto 1fr auto;gap:12px;align-items:center;font-size:12px}
+  .forecast-row .f-wr{font-family:'JetBrains Mono',monospace;color:var(--text-3);
+    font-variant-numeric:tabular-nums;min-width:52px}
+  .forecast-row .f-bar{height:5px;border-radius:3px;background:var(--surface-3);
+    position:relative;overflow:hidden}
+  .forecast-row .f-bar span{position:absolute;inset:0 auto 0 0;border-radius:3px;
+    background:linear-gradient(90deg,var(--gold-deep),var(--gold-soft))}
+  .forecast-row .f-time{font-family:'JetBrains Mono',monospace;color:var(--text-2);
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  .forecast-row.impossible .f-time{color:var(--bear-soft)}
+  .forecast-row.impossible .f-bar span{background:var(--bear-deep)}
+
 </style>
 </head>
 <body>
@@ -2152,7 +2221,6 @@
     </div>
   </header>
 
-  <!-- ============== NAVIGATION PRINCIPALE ============== -->
   <nav class="mainnav" role="tablist" aria-label="Sections">
     <button type="button" class="mainnav-btn active" data-view="hydratrade" role="tab">
       HydraTrade
@@ -2481,6 +2549,52 @@
       <div class="pf-hint" id="pfProgressHint">Jours de trading : 0 / 4 minimum.</div>
     </section>
 
+    <!-- ---------- Parcours de statut ---------- -->
+    <section class="card mb-12">
+      <div class="journey">
+        <div class="journey-head">
+          <h2 class="pf-section-title" style="margin:0">Parcours vers $1 000 000</h2>
+          <div class="journey-goal">Statut actuel : <strong id="jStatus">Classique</strong>
+            · <span id="jSplit">80 %</span> des profits</div>
+        </div>
+
+        <div class="journey-track" id="jTrack">
+          <div class="journey-rail"></div>
+          <div class="journey-rail-fill" id="jRailFill" style="width:0%"></div>
+          <div class="journey-step current" data-step="classic">
+            <div class="journey-dot">1</div>
+            <div class="j-name">Classique</div>
+            <div class="j-cap">$400k max</div>
+            <div class="j-split">80 %</div>
+          </div>
+          <div class="journey-step" data-step="prime">
+            <div class="journey-dot">2</div>
+            <div class="j-name">Prime</div>
+            <div class="j-cap">$600k max</div>
+            <div class="j-split">90 %</div>
+          </div>
+          <div class="journey-step" data-step="supreme">
+            <div class="journey-dot">3</div>
+            <div class="j-name">Suprême</div>
+            <div class="j-cap">$1M max</div>
+            <div class="j-split">90 %</div>
+          </div>
+        </div>
+
+        <div class="journey-detail" id="jRequirements"></div>
+        <div id="jWarning"></div>
+
+        <h3 class="pf-section-title" style="font-size:15px;margin:22px 0 11px">
+          Délai jusqu'à Prime selon le win rate</h3>
+        <div class="journey-forecast" id="jForecast"></div>
+        <div class="pf-hint">
+          Chaque cycle exige une Récompense d'au moins 4 % du capital, soit $8 000
+          sur un compte de $200 000. Le calendrier suppose un win rate stable et un
+          cycle de payout de 14 jours minimum.
+        </div>
+      </div>
+    </section>
+
     <!-- ---------- Jauges ---------- -->
     <section class="card mb-12">
       <h2 class="pf-section-title">Distance aux seuils</h2>
@@ -2782,17 +2896,20 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.17.0";
+const APP_VERSION = "7.20.0";
 // v7.14.4 — fee confirmé 125.30 USDC (était 125.45), doc PROP_FIRM précisée : 1 fee par cycle
 //            (step 2/3/4 après SL = même challenge = gratuit), résultats semaine 13-17/07 :
 //            7/7 cycles gagnés, +173.60$ net, WR global passé de 80% à 85.2% (au-dessus du
 //            seuil de rentabilité), système devenu RENTABLE (EV nette +2.88$/cycle)
-// v7.17.0 — RÈGLES FTMO VÉRIFIÉES sur ftmo.com/fr/trading-objectives. Trois écarts
-//            corrigés : (1) la Perte Maximale Journalière se calcule sur le SOLDE à
-//            00:00 CE(S)T, pas sur l'equity de la veille, et se mesure sur l'EQUITY
-//            positions ouvertes comprises ; (2) un Jour de Trading se compte au jour
-//            d'OUVERTURE ; (3) l'Objectif de Profit se valide sur le SOLDE, toutes
-//            positions fermées. Blocages désormais évalués sur le pire cas.
+// v7.20.0 — FAQ FTMO DÉPOUILLÉE. Trading algorithmique et EA EXPLICITEMENT autorisés.
+//            Frais remboursés au 1er retrait (2-Step uniquement). Retrait possible dès
+//            le 14e jour après la première transaction. Compte Swing : aucune restriction
+//            news/overnight/week-end. Pendant l'Évaluation : aucune restriction, quel que
+//            soit le type de compte. Interdiction de se connecter depuis les États-Unis,
+//            VPN compris. Registre : 12 valeurs confirmées sur 19.
+// v7.19.0 — RÈGLES SUPRÊME OFFICIELLES : cycles NON consécutifs, compte Prime $400k actif.
+// v7.18.0 — PARCOURS DE STATUT : barre Classique → Prime → Suprême.
+// v7.17.0 — RÈGLES FTMO VÉRIFIÉES (perte journalière, jours de trading, objectif).
 // v7.16.2 — CORRECTIF RACINE : fmtBytes() n'avait jamais été défini.
 // v7.16.0 — ONGLET PROPFIRM / FTMO.
 // v7.14.0 — POST-MORTEM STRATÉGIQUE (semaine 06-09/07 à 25% WR) : (1) gate RANGE bloquant
@@ -7130,9 +7247,15 @@ function setTimeframe(tf) {
       floorRatio: 0.5
     },
 
-    // Compte Swing : la restriction news ne s'applique pas.
-    // Conservé comme filtre de volatilité optionnel, désactivé par défaut.
-    news: { enabled: false, bufferMinutes: 2 }
+    // Vérifié (FAQ FTMO) :
+    //  · le compte Swing n'a AUCUNE restriction news / overnight / week-end
+    //  · pendant l'Évaluation, AUCUNE restriction ne s'applique, même en Standard
+    // Le filtre news reste disponible comme filtre de VOLATILITÉ, jamais de conformité.
+    news: { enabled: false, bufferMinutes: 2 },
+
+    // Vérifié : se connecter à cTrader depuis les États-Unis est à éviter,
+    // VPN compris. Le bridge tourne 24/7 : la sortie VPN ne doit jamais être US.
+    geo: { forbidUS: true }
   };
 
   /* ====================================================================
@@ -7722,7 +7845,274 @@ function setTimeframe(tf) {
   }
 
   /* ====================================================================
-     12. DÉTECTION DE TILT
+     12. PARCOURS DE STATUT — Classique → Prime → Suprême
+     --------------------------------------------------------------------
+     PRIME : règles fournies par FTMO (support officiel).
+       1. Aucun FTMO Account échoué au cours des 4 derniers mois
+       2. Au moins 4 cycles de Récompenses sur des comptes issus de la
+          MÊME COMMANDE, chacun générant ≥ 4 % du capital simulé initial
+       · les cycles n'ont pas besoin d'être consécutifs
+       · le montant est évalué AVANT le Ratio de Récompense
+       · les montants reportés (rollover) ne comptent pas comme profit
+       · les contrats signés avant 2023 sont exclus
+
+     SUPRÊME : règles officielles FTMO (support).
+       1. Aucun FTMO Account échoué au cours des 4 derniers mois
+       2. Un FTMO Account PRIME de $400 000 ACTIF
+       3. Sur CE compte, au moins 3 cycles de Récompenses ≥ 4 % du capital
+       · les cycles n'ont PAS besoin d'être consécutifs
+       · les rollovers ne comptent pas
+
+       Correction : la vidéo promotionnelle annonçait « 3 mois CONSÉCUTIFS ».
+       C'est faux. Les règles officielles ne l'exigent pas.
+
+     QUATRE VOIES vers un compte Prime de $400 000 :
+       a. fusionner deux comptes Prime de $200 000
+       b. fusionner deux comptes standards de $200 000 → $400 000, puis
+          remplir les conditions Prime
+       c. fusionner un standard $200 000 avec un Prime $200 000
+          → le statut Prime est PERDU et doit être revalidé
+       d. acheter un Challenge de $400 000 (réservé aux traders Prime)
+     ==================================================================== */
+
+  const STATUS_RULES = {
+    CLASSIC: { label: "Classique", split: 0.80, maxCapital: 400000 },
+    PRIME: {
+      label: "Prime", split: 0.90, maxCapital: 600000,
+      minCycles: 4,
+      minPctPerCycle: 0.04,
+      sameOrderRequired: true,
+      noFailureMonths: 4,
+      verified: true,
+      source: "Support FTMO"
+    },
+    SUPREME: {
+      label: "Suprême", split: 0.90, maxCapital: 1000000,
+      minFundedCapital: 400000,
+      requiresPrimeAccount: true,   // le compte $400k doit être PRIME et ACTIF
+      minCycles: 3,
+      minPctPerCycle: 0.04,
+      consecutiveMonths: false,     // corrigé : la vidéo se trompait
+      noFailureMonths: 4,
+      verified: true,
+      source: "Support FTMO",
+      benefits: [
+        "Allocation maximale portée à $1 000 000",
+        "Aucune Perte Maximale Journalière",
+        "Paiement immédiat",
+        "Certificats et badges",
+        "Accès possible à l'équipe Quantlane (après évaluation)"
+      ]
+    }
+  };
+
+  /** Avantages du statut Prime, selon le programme d'origine. */
+  const PRIME_BENEFITS = {
+    common: [
+      "Allocation maximale portée à $600 000",
+      "1 FTMO Challenge gratuit de la même taille (via FTMO Points)",
+      "Accès au Challenge $400 000 avec 10 % de réduction",
+      "10 % de réduction sur tous les nouveaux achats"
+    ],
+    "2-STEP": [
+      "Ratio de Récompense porté de 80 % à 90 %",
+      "Bonus de rollover de 5 % sur le compte suivant (retirable après 30 jours)"
+    ],
+    "1-STEP": [
+      "Ratio de Récompense déjà à 90 % dès le départ",
+      "Rollover indisponible — le bonus ne s'applique pas"
+    ]
+  };
+
+  /** Voies possibles vers un compte Prime de $400 000. */
+  const SUPREME_PATHS = [
+    { key: "merge-2-prime", label: "Fusionner deux comptes Prime de $200 000",
+      keepsPrime: true, note: "Voie la plus directe si les deux sont déjà Prime." },
+    { key: "merge-2-standard", label: "Fusionner deux comptes standards de $200 000",
+      keepsPrime: false, note: "Il faut ensuite remplir les conditions Prime sur le compte fusionné." },
+    { key: "merge-mixed", label: "Fusionner un standard et un Prime de $200 000",
+      keepsPrime: false, note: "ATTENTION : le statut Prime est PERDU et doit être revalidé." },
+    { key: "buy-400k", label: "Acheter un Challenge de $400 000",
+      keepsPrime: true, note: "Réservé aux traders déjà Prime, avec 10 % de réduction." }
+  ];
+
+  /** Mois calendaire d'une date, au format YYYY-MM (fuseau du compte). */
+  function monthKey(date, timeZone) {
+    return dayKey(date, timeZone).slice(0, 7);
+  }
+
+  /**
+   * Évalue la progression vers Prime puis Suprême.
+   *
+   * @param {object} journey
+   *   journey.payouts  [{ orderId, date, amount, initialCapital, rollover }]
+   *   journey.failures [{ date, accountId }]      comptes échoués
+   *   journey.fundedCapital  total financé actuel
+   * @param {Date} now
+   */
+  function statusProgress(journey, now, cfg) {
+    const C = cfg || CONFIG;
+    const tz = C.account.timezone;
+    const at = now || new Date();
+    const payouts = (journey && journey.payouts) || [];
+    const failures = (journey && journey.failures) || [];
+    const fundedCapital = (journey && journey.fundedCapital) || 0;
+
+    /* --- Condition 1 : aucun échec sur les 4 derniers mois ---------- */
+    const cutoff = new Date(at);
+    cutoff.setMonth(cutoff.getMonth() - STATUS_RULES.PRIME.noFailureMonths);
+    const recentFailures = failures.filter(f => new Date(f.date) >= cutoff);
+    const noRecentFailure = recentFailures.length === 0;
+    const nextEligibleDate = recentFailures.length
+      ? (() => {
+          const last = recentFailures
+            .map(f => new Date(f.date))
+            .sort((a, b) => b - a)[0];
+          const d = new Date(last);
+          d.setMonth(d.getMonth() + STATUS_RULES.PRIME.noFailureMonths);
+          return d.toISOString();
+        })()
+      : null;
+
+    /* --- Condition 2 : 4 cycles ≥ 4 %, même commande ---------------- */
+    // Les rollovers ne comptent pas comme profit additionnel.
+    const eligible = payouts.filter(p => !p.rollover);
+    const byOrder = {};
+    eligible.forEach(p => {
+      const pct = p.initialCapital > 0 ? p.amount / p.initialCapital : 0;
+      const rec = Object.assign({}, p, { pct, qualifies: pct >= STATUS_RULES.PRIME.minPctPerCycle });
+      const k = p.orderId || "sans-commande";
+      (byOrder[k] = byOrder[k] || []).push(rec);
+    });
+
+    let bestOrder = null, bestCount = 0;
+    Object.keys(byOrder).forEach(k => {
+      const n = byOrder[k].filter(p => p.qualifies).length;
+      if (n > bestCount) { bestCount = n; bestOrder = k; }
+    });
+
+    const primeCycles = Math.min(bestCount, STATUS_RULES.PRIME.minCycles);
+    const cyclesOk = bestCount >= STATUS_RULES.PRIME.minCycles;
+    const primeReached = cyclesOk && noRecentFailure;
+
+    /* --- Suprême ----------------------------------------------------
+       Exige un compte PRIME de $400 000 ACTIF, et 3 cycles ≥ 4 % réalisés
+       SUR CE COMPTE. Les cycles n'ont pas besoin d'être consécutifs. */
+    const accounts = (journey && journey.accounts) || [];
+    const primeAccount = accounts.find(a =>
+      a.active !== false &&
+      a.prime === true &&
+      (a.capital || 0) >= STATUS_RULES.SUPREME.minFundedCapital) || null;
+
+    // À défaut d'inventaire de comptes, on retombe sur le capital financé
+    // déclaré — utile tant que l'utilisateur n'a pas saisi ses comptes.
+    const capitalOk = primeAccount
+      ? true
+      : (primeReached && fundedCapital >= STATUS_RULES.SUPREME.minFundedCapital);
+
+    const supremeCycles = eligible.filter(p => {
+      const pct = p.initialCapital > 0 ? p.amount / p.initialCapital : 0;
+      if (pct < STATUS_RULES.SUPREME.minPctPerCycle) return false;
+      // Si un compte Prime $400k est identifié, seuls SES cycles comptent.
+      if (primeAccount) return p.accountId === primeAccount.id;
+      return (p.initialCapital || 0) >= STATUS_RULES.SUPREME.minFundedCapital;
+    });
+    const cyclesSupremeCount = supremeCycles.length;
+    const cyclesSupremeOk = cyclesSupremeCount >= STATUS_RULES.SUPREME.minCycles;
+    const supremeReached = primeReached && capitalOk && cyclesSupremeOk && noRecentFailure;
+
+    /* --- Statut courant --------------------------------------------- */
+    const current = supremeReached ? "SUPREME" : primeReached ? "PRIME" : "CLASSIC";
+
+    /* --- Progression globale ---------------------------------------- */
+    // Prime pèse la première moitié du parcours, Suprême la seconde.
+    const primePct = STATUS_RULES.PRIME.minCycles > 0
+      ? Math.min(1, bestCount / STATUS_RULES.PRIME.minCycles) : 0;
+    const effectiveCapital = primeAccount ? primeAccount.capital : fundedCapital;
+    const supremePct = (
+      (capitalOk ? 0.5
+        : Math.min(0.5, effectiveCapital / STATUS_RULES.SUPREME.minFundedCapital * 0.5)) +
+      Math.min(0.5, cyclesSupremeCount / STATUS_RULES.SUPREME.minCycles * 0.5)
+    );
+    const overallPct = primeReached
+      ? round2(50 + supremePct * 50)
+      : round2(primePct * 50);
+
+    return {
+      current: current,
+      label: STATUS_RULES[current].label,
+      split: STATUS_RULES[current].split,
+      maxCapital: STATUS_RULES[current].maxCapital,
+      overallPct: overallPct,
+
+      prime: {
+        reached: primeReached,
+        verified: STATUS_RULES.PRIME.verified,
+        cycles: bestCount,
+        cyclesRequired: STATUS_RULES.PRIME.minCycles,
+        cyclesPct: round2(primePct * 100),
+        orderId: bestOrder,
+        noRecentFailure: noRecentFailure,
+        nextEligibleDate: nextEligibleDate,
+        detail: (byOrder[bestOrder] || []).sort((a, b) => new Date(a.date) - new Date(b.date)),
+        remaining: Math.max(0, STATUS_RULES.PRIME.minCycles - bestCount)
+      },
+
+      supreme: {
+        reached: supremeReached,
+        verified: STATUS_RULES.SUPREME.verified,
+        source: STATUS_RULES.SUPREME.source,
+        benefits: STATUS_RULES.SUPREME.benefits,
+        // Compte Prime $400 000 actif
+        primeAccount: primeAccount,
+        fundedCapital: effectiveCapital,
+        capitalRequired: STATUS_RULES.SUPREME.minFundedCapital,
+        capitalOk: capitalOk,
+        // Cycles réalisés SUR ce compte
+        cycles: cyclesSupremeCount,
+        cyclesRequired: STATUS_RULES.SUPREME.minCycles,
+        cyclesOk: cyclesSupremeOk,
+        detail: supremeCycles.sort((a, b) => new Date(a.date) - new Date(b.date)),
+        remaining: Math.max(0, STATUS_RULES.SUPREME.minCycles - cyclesSupremeCount),
+        // Le même verrou de 4 mois que pour Prime
+        noRecentFailure: noRecentFailure,
+        paths: SUPREME_PATHS
+      },
+
+      benefits: {
+        prime: PRIME_BENEFITS.common.concat(PRIME_BENEFITS[C.account.program] || []),
+        supreme: STATUS_RULES.SUPREME.benefits
+      }
+    };
+  }
+
+  /**
+   * Projette le nombre de mois nécessaires pour atteindre chaque palier,
+   * à partir d'un P&L mensuel et d'un capital donné.
+   * Renvoie null si le rythme ne permet pas d'atteindre 4 % par cycle.
+   */
+  function statusForecast(monthlyPnL, capital, cfg) {
+    const target = capital * STATUS_RULES.PRIME.minPctPerCycle;
+    if (!(monthlyPnL > 0)) return { reachable: false, reason: "P&L mensuel nul ou négatif." };
+    const monthsPerCycle = target / monthlyPnL;
+    if (monthsPerCycle > 12) return { reachable: false, reason: "Plus de 12 mois par cycle." };
+    // Vérifié : la demande de retrait est possible à partir du 14e jour suivant
+    // la première transaction sur le compte. 14 j ≈ 0,467 mois.
+    const floorMonths = 14 / 30;
+    const perCycle = Math.max(monthsPerCycle, floorMonths);
+    return {
+      reachable: true,
+      monthlyPnL: round2(monthlyPnL),
+      targetPerCycle: round2(target),
+      monthsPerCycle: round2(perCycle),
+      monthsToPrime: round2(perCycle * STATUS_RULES.PRIME.minCycles),
+      monthsToSupreme: round2(perCycle * STATUS_RULES.PRIME.minCycles + 3),
+      limitedBy: monthsPerCycle < floorMonths ? "cycle de payout" : "performance"
+    };
+  }
+
+  /* ====================================================================
+     13. DÉTECTION DE TILT
      ==================================================================== */
 
   function tiltCheck(state, now, cfg) {
@@ -7761,6 +8151,10 @@ function setTimeframe(tf) {
     distanceToWalls: distanceToWalls,
     // enregistrement
     registerOpen: registerOpen, registerClose: registerClose,
+    // parcours de statut
+    STATUS_RULES: STATUS_RULES, PRIME_BENEFITS: PRIME_BENEFITS,
+    SUPREME_PATHS: SUPREME_PATHS, monthKey: monthKey,
+    statusProgress: statusProgress, statusForecast: statusForecast,
     // divers
     phaseProgress: phaseProgress, tiltCheck: tiltCheck
   };
@@ -7781,6 +8175,7 @@ function setTimeframe(tf) {
   const LS_KEY = "propfirm_state_v1";
   const LS_JOURNAL = "propfirm_journal_v1";
   const LS_BRIDGE = "propfirm_bridge_v1";
+  const LS_JOURNEY = "propfirm_journey_v1";
   const CONFIRM_WORD = "LIVE";
 
   const $ = id => document.getElementById(id);
@@ -7797,6 +8192,7 @@ function setTimeframe(tf) {
   let ACC = null;      // compte actif
   let JOURNAL = [];    // trades enregistrés
   let BRIDGE = { url: "", online: false, lastPing: null };
+  let JOURNEY = null;  // parcours de statut : payouts, échecs, capital financé
   let CHAT = [];       // mémoire du jour
   let CHAT_DAY = null;
   let lastEval = null;
@@ -7806,6 +8202,7 @@ function setTimeframe(tf) {
       localStorage.setItem(LS_KEY, JSON.stringify({ state: S, account: ACC }));
       localStorage.setItem(LS_JOURNAL, JSON.stringify(JOURNAL.slice(0, 200)));
       localStorage.setItem(LS_BRIDGE, JSON.stringify({ url: BRIDGE.url }));
+      localStorage.setItem(LS_JOURNEY, JSON.stringify(JOURNEY));
     } catch (e) { console.warn("[PropFirm] persistance impossible", e); }
   }
 
@@ -7820,8 +8217,13 @@ function setTimeframe(tf) {
       if (j) JOURNAL = JSON.parse(j) || [];
       const b = localStorage.getItem(LS_BRIDGE);
       if (b) BRIDGE.url = (JSON.parse(b) || {}).url || "";
+      const jy = localStorage.getItem(LS_JOURNEY);
+      if (jy) JOURNEY = JSON.parse(jy);
     } catch (e) { console.warn("[PropFirm] restauration impossible", e); }
 
+    if (!JOURNEY) {
+      JOURNEY = { payouts: [], failures: [], accounts: [], fundedCapital: 0 };
+    }
     if (!S || !ACC) {
       S = PF.createState();
       ACC = PF.createAccount("ftmo-1", { label: "FTMO $200 000" });
@@ -8064,8 +8466,117 @@ function setTimeframe(tf) {
     $("pfBridgeUrl").value = BRIDGE.url;
   }
 
+  /* ------------------------------------------------------------------
+     PARCOURS DE STATUT
+     ------------------------------------------------------------------ */
+  function renderJourney() {
+    const capital = JOURNEY.fundedCapital || (ACC.phase === "FUNDED" ? ACC.initialBalance : 0);
+    const j = PF.statusProgress(
+      { payouts: JOURNEY.payouts, failures: JOURNEY.failures,
+        accounts: JOURNEY.accounts || [], fundedCapital: capital },
+      new Date());
+
+    $("jStatus").textContent = j.label;
+    $("jSplit").textContent = Math.round(j.split * 100) + " %";
+    $("jRailFill").style.width = Math.min(100, j.overallPct) + "%";
+
+    document.querySelectorAll(".journey-step").forEach(el => {
+      const k = el.dataset.step;
+      el.classList.remove("done", "current");
+      // classList.add("") lève une SyntaxError : on ne pose une classe que
+      // lorsqu'elle existe réellement.
+      let cls = null;
+      if (k === "classic") cls = j.prime.reached ? "done" : "current";
+      else if (k === "prime") cls = j.supreme.reached ? "done" : j.prime.reached ? "current" : null;
+      else if (k === "supreme") cls = j.supreme.reached ? "done" : null;
+      if (cls) el.classList.add(cls);
+    });
+
+    /* Conditions */
+    const rows = [];
+    const pips = n => {
+      let h = '<div class="cycle-pips">';
+      for (let i = 0; i < 4; i++) h += '<div class="cycle-pip' + (i < n ? " on" : "") + '"></div>';
+      return h + "</div>";
+    };
+
+    rows.push({
+      state: j.prime.noRecentFailure ? "ok" : "blocked",
+      label: "Aucun compte échoué depuis 4 mois",
+      sub: j.prime.nextEligibleDate
+        ? "Rééligible le " + new Date(j.prime.nextEligibleDate).toLocaleDateString("fr-FR")
+        : "Condition remplie",
+      val: j.prime.noRecentFailure ? "OK" : "bloqué"
+    });
+    rows.push({
+      state: j.prime.cycles >= 4 ? "ok" : "pending",
+      label: "4 Récompenses ≥ 4 % du capital",
+      sub: "Sur des comptes de la même commande. Les rollovers ne comptent pas." + pips(j.prime.cycles),
+      val: j.prime.cycles + " / 4"
+    });
+    const pips3 = n => {
+      let h = '<div class="cycle-pips">';
+      for (let i = 0; i < 3; i++) h += '<div class="cycle-pip' + (i < n ? " on" : "") + '"></div>';
+      return h + "</div>";
+    };
+    rows.push({
+      state: j.supreme.capitalOk ? "ok" : "pending",
+      label: "Compte PRIME de $400 000 actif",
+      sub: j.supreme.primeAccount
+        ? "Compte « " + esc(j.supreme.primeAccount.id) + " » identifié"
+        : "Quatre voies : fusionner deux Prime $200k · fusionner deux standards " +
+          "puis qualifier · fusion mixte (Prime perdu) · acheter un Challenge $400k",
+      val: "$" + Math.round(j.supreme.fundedCapital).toLocaleString("fr-FR") + " / $400 000"
+    });
+    rows.push({
+      state: j.supreme.cyclesOk ? "ok" : "pending",
+      label: "3 Récompenses ≥ 4 % sur ce compte",
+      sub: "Les cycles n'ont pas besoin d'être consécutifs." + pips3(j.supreme.cycles),
+      val: j.supreme.cycles + " / 3"
+    });
+
+    $("jRequirements").innerHTML = rows.map(r =>
+      '<div class="journey-req ' + r.state + '">' +
+        '<span class="r-mark">' + (r.state === "ok" ? "✓" : r.state === "blocked" ? "✗" : "○") + '</span>' +
+        '<div><div class="r-lab">' + r.label + '</div>' +
+        '<div class="r-sub">' + r.sub + '</div></div>' +
+        '<span class="r-val">' + esc(r.val) + '</span>' +
+      '</div>').join("");
+
+    // Avantages débloqués à chaque palier
+    const benefitList = arr => '<ul style="margin:6px 0 0;padding-left:16px">' +
+      arr.map(b => '<li style="margin:3px 0">' + esc(b) + '</li>').join("") + '</ul>';
+    $("jWarning").innerHTML =
+      '<div class="journey-warn"><strong>Au statut Prime</strong>' +
+      benefitList(j.benefits.prime) + '</div>' +
+      '<div class="journey-warn"><strong>Au statut Suprême</strong>' +
+      benefitList(j.benefits.supreme) + '</div>';
+
+    /* Projection */
+    const scenarios = [
+      { wr: "87,5 %", pnl: 21488 }, { wr: "75 %", pnl: 14198 },
+      { wr: "65 %", pnl: 8609 },   { wr: "60 %", pnl: 6040 },
+      { wr: "55 %", pnl: 3703 },   { wr: "44,2 %", pnl: -528 }
+    ];
+    const maxMonths = 12;
+    $("jForecast").innerHTML = scenarios.map(sc => {
+      const f = PF.statusForecast(sc.pnl, ACC.initialBalance);
+      const impossible = !f.reachable;
+      const months = impossible ? maxMonths : Math.min(maxMonths, f.monthsToPrime);
+      const width = impossible ? 100 : Math.max(4, (months / maxMonths) * 100);
+      const txt = impossible ? "jamais"
+        : f.monthsToPrime < 1
+          ? Math.round(f.monthsToPrime * 30) + " j"
+          : f.monthsToPrime.toFixed(1).replace(".", ",") + " mois";
+      return '<div class="forecast-row' + (impossible ? " impossible" : "") + '">' +
+        '<span class="f-wr">' + sc.wr + '</span>' +
+        '<span class="f-bar"><span style="width:' + width + '%"></span></span>' +
+        '<span class="f-time">' + txt + '</span></div>';
+    }).join("");
+  }
+
   function renderAll() {
-    renderFigures(); renderPhase(); renderGauges();
+    renderFigures(); renderPhase(); renderJourney(); renderGauges();
     renderTicket(); renderPosition(); renderJournal();
     renderMode(); renderBridge();
   }
@@ -8135,6 +8646,30 @@ function setTimeframe(tf) {
     if (S.global.circuitBreakerUntil && new Date(S.global.circuitBreakerUntil) > now) {
       chatSystem("Coupe-circuit déclenché : 3 stop loss consécutifs. Blocage de 48 heures.");
     }
+  }
+
+  /** Enregistre une Récompense (payout) dans le parcours de statut. */
+  function recordPayout(opts) {
+    if (!JOURNEY.accounts) JOURNEY.accounts = [];
+    JOURNEY.payouts.push({
+      orderId: opts.orderId || "CMD-1",
+      accountId: opts.accountId || ACC.id,
+      date: opts.date || new Date().toISOString(),
+      amount: opts.amount,
+      initialCapital: opts.initialCapital || ACC.initialBalance,
+      rollover: !!opts.rollover
+    });
+    if (opts.fundedCapital != null) JOURNEY.fundedCapital = opts.fundedCapital;
+    persist(); renderAll();
+  }
+
+  /** Enregistre l'échec d'un compte — bloque Prime pendant 4 mois. */
+  function recordFailure(opts) {
+    JOURNEY.failures.push({
+      date: (opts && opts.date) || new Date().toISOString(),
+      accountId: (opts && opts.accountId) || ACC.id
+    });
+    persist(); renderAll();
   }
 
   function uuid() {
@@ -8489,7 +9024,9 @@ function setTimeframe(tf) {
 
   window.PropFirmUI = {
     init: init, boot: boot, render: renderAll, diagnose: diagnose,
-    state: () => ({ S, ACC, JOURNAL })
+    recordPayout: recordPayout, recordFailure: recordFailure,
+    journey: () => JOURNEY,
+    state: () => ({ S, ACC, JOURNAL, JOURNEY })
   };
 })();
 
