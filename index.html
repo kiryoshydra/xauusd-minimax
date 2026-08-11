@@ -1139,6 +1139,25 @@
   .hist::-webkit-scrollbar-track{background:transparent}
   .hist::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
   .hist::-webkit-scrollbar-thumb:hover{background:var(--text-4)}
+  .stale-badge{
+    display:inline-flex; align-items:center; gap:7px;
+    padding:6px 12px; border-radius:999px;
+    background:rgba(196,107,92,.1); border:1px solid var(--bear-deep);
+    color:var(--bear-soft); font-size:11.5px; font-weight:500;
+    letter-spacing:.02em; white-space:nowrap;
+  }
+  .stale-badge[hidden]{display:none}
+  .stale-badge svg{width:13px; height:13px; flex:0 0 auto}
+
+  .histi .src{
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:600;
+    letter-spacing:.06em; padding:2px 6px; border-radius:4px;
+    background:var(--surface-3); color:var(--text-4); flex:0 0 auto;
+  }
+  .histi .src.fable{background:rgba(201,169,97,.14); color:var(--gold-soft)}
+  .histi .src.local{background:rgba(122,162,196,.12); color:var(--text-3)}
+  .histi .src.unknown{opacity:.5}
+
   .histi{
     display:flex;
     justify-content:space-between;
@@ -2300,6 +2319,12 @@
         <span class="pulse"></span>
         <span id="sessionText">…</span>
       </div>
+      <div id="staleBadge" class="stale-badge" hidden role="status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="staleText">Données périmées</span>
+      </div>
       <button id="btnCapture" class="icon-btn" title="Ajouter une capture Hydratrade" aria-label="Capture Hydratrade">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
       </button>
@@ -3015,22 +3040,28 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.21.3";
-// v7.14.4 — fee confirmé 125.30 USDC (était 125.45), doc PROP_FIRM précisée : 1 fee par cycle
+const APP_VERSION = "7.21.4";
+// v7.14.4 — fee confirmé 125.81 USDC (était 125.45), doc PROP_FIRM précisée : 1 fee par cycle
 //            (step 2/3/4 après SL = même challenge = gratuit), résultats semaine 13-17/07 :
 //            7/7 cycles gagnés, +173.60$ net, WR global passé de 80% à 85.2% (au-dessus du
 //            seuil de rentabilité), système devenu RENTABLE (EV nette +2.88$/cycle)
-// v7.21.3 — ROBUSTESSE ASYNCHRONE : un callback qui se résout après le départ de la
-//            page ne peut plus lever (réponse du bridge, ping, chat). Chaque bloc de
-//            rendu est isolé. Trouvé par 40 000 actions aléatoires sous invariants.
+// v7.21.4 — RETOURS MINIMAX INTÉGRÉS. Bug corrigé : le changelog v7.14.4 annonçait
+//            un fee de 125.30 USDC alors que le code utilise 125.81 depuis la v7.14.5.
+//            Huit améliorations : pastille « données périmées » après deux cycles
+//            manqués, source du signal (TECH / F5) dans l'historique, BUY_SCORE_GATE
+//            renommé BUY_STRONG_SCORE (ce n'est pas un seuil bloquant), diagnostic
+//            portant sur le flux réellement utilisé, drapeau _debug dans la synthèse,
+//            prev → prevClose, MAX_HISTORY appliqué en lecture, et distinction entre
+//            volume absent et volume constant.
+// v7.21.3 — ROBUSTESSE ASYNCHRONE : callbacks résistants au démontage du DOM.
 // v7.21.2 — MOBILE : six débordements mesurés à 360 px et corrigés.
-// v7.21.1 — DURCISSEMENT : virgule décimale, pastille d'onglet, quotas, aria-selected.
-// v7.21.0 — REPORT DU SIGNAL depuis HydraTrade, trois sources de distances.
-// v7.20.0 — FAQ FTMO : trading algorithmique autorisé, retrait dès le 14e jour.
-// v7.19.0 — RÈGLES SUPRÊME OFFICIELLES : cycles NON consécutifs.
-// v7.18.0 — PARCOURS DE STATUT : barre Classique → Prime → Suprême.
+// v7.21.1 — DURCISSEMENT : virgule décimale, pastille d'onglet, quotas.
+// v7.21.0 — REPORT DU SIGNAL depuis HydraTrade.
+// v7.20.0 — FAQ FTMO : trading algorithmique autorisé.
+// v7.19.0 — RÈGLES SUPRÊME OFFICIELLES.
+// v7.18.0 — PARCOURS DE STATUT.
 // v7.17.0 — RÈGLES FTMO VÉRIFIÉES.
-// v7.16.2 — CORRECTIF RACINE : fmtBytes() n'avait jamais été défini.
+// v7.16.2 — CORRECTIF RACINE : fmtBytes().
 // v7.16.0 — ONGLET PROPFIRM / FTMO.
 // v7.14.0 — POST-MORTEM STRATÉGIQUE (semaine 06-09/07 à 25% WR) : (1) gate RANGE bloquant
 //            (ADX<20 ou CHOP>61.8 = signal tendance SUSPENDU, pas juste pénalisé), (2) veto
@@ -3149,7 +3180,10 @@ const REQ_TIMEOUT_MS = 8000;
 const REFRESH_MS = 4 * 60 * 1000;
 const MAX_HISTORY = 50;
 const COOLDOWN_MS = 0;                     // 0 = pas de cooldown, Analyser toujours dispo
-const BUY_SCORE_GATE = 55;                  // BUY exige score >= 55
+// Seuil à partir duquel la confiance d'un signal BUY passe de MOYEN à FORT.
+// Ce n'est PAS un seuil bloquant : un score de +10 produit déjà un BUY,
+// simplement avec une confiance MOYEN.
+const BUY_STRONG_SCORE = 55;
 const TF_ALIGN_WEIGHT = 20;                 // bonus/malus alignement TF supérieur
 
 /* ---------- TIMEFRAMES ----------
@@ -3276,6 +3310,7 @@ const ui = {
   history: $("history"),
   btnAnalyze: $("btnAnalyze"), btnAuto: $("btnAuto"), autoState: $("autoState"),
   sessionBadge: $("sessionBadge"), sessionText: $("sessionText"),
+  staleBadge: $("staleBadge"), staleText: $("staleText"),
   cycle: $("cycle"), cycleTimer: $("cycleTimer"),
   modal: $("modal"),
   apiTwelve: $("apiTwelve"),
@@ -3375,7 +3410,11 @@ function saveSettings() {
   toast("Réglages enregistrés", "ok");
 }
 function loadHistory() {
-  return LS.get("xa_hist", []);
+  // La limite s'applique aussi à la LECTURE : un import JSON ou un ancien
+  // localStorage peut contenir plus d'entrées que MAX_HISTORY.
+  const h = LS.get("xa_hist", []);
+  if (Array.isArray(h) && h.length > MAX_HISTORY) h.length = MAX_HISTORY;
+  return Array.isArray(h) ? h : [];
 }
 function pushHistory(entry) {
   const h = loadHistory();
@@ -3394,12 +3433,22 @@ function renderHistory() {
     const ts = d.toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
     const dirClass = e.signal === "BUY" ? "buy" : "sell";
     const confClass = (e.confidence || "faible").toLowerCase();
+    // Distinguer d'où vient le signal : analyse technique locale ou Fable 5.
+    // Les entrées antérieures à la v7.21.4 n'ont pas ce champ.
+    const raw = (e.source || "").toLowerCase();
+    const isFable = raw.indexOf("fable") > -1 || raw.indexOf("minimax") > -1;
+    const srcCls = isFable ? "fable" : raw ? "local" : "unknown";
+    const srcLab = isFable ? "F5" : raw ? "TECH" : "—";
+    const srcTip = isFable ? "Signal Fable 5"
+                 : raw ? "Analyse technique locale"
+                       : "Source non enregistrée (signal antérieur à la v7.21.4)";
     return `<div class="histi">
       <span class="ts">${ts}</span>
       <span class="dir ${dirClass}">${e.signal === "BUY" ? "▲ BUY" : "▼ SELL"}</span>
       <span class="conf ${confClass}">${(e.confidence || "—").toUpperCase()}</span>
       <span class="price">${e.price ? e.price.toFixed(2) : "—"}</span>
       <span class="score">${e.score > 0 ? "+" : ""}${e.score ?? "—"}</span>
+      <span class="src ${srcCls}" title="${escapeHtml(srcTip)}">${srcLab}</span>
     </div>`;
   }).join("");
 }
@@ -3938,15 +3987,29 @@ function ichimoku(candles) {
    indicateurs pondérés par le volume (VWAP/MFI/OBV) deviennent alors du
    bruit : on les neutralise. Fiable = >70% des bougies ont un volume > 0
    ET les valeurs ne sont pas constantes. */
-function hasReliableVolume(candles) {
-  if (!Array.isArray(candles) || !candles.length) return false;
+/**
+ * Qualité du volume, en deux dimensions distinctes :
+ *   volumeKnown       — le flux fournit-il des volumes non nuls ?
+ *   volumeInformative — ces volumes varient-ils (sinon ils n'apprennent rien) ?
+ * Un volume constant non nul est CONNU mais NON INFORMATIF : ce n'est pas la
+ * même chose qu'une donnée absente, et l'interface doit les distinguer.
+ */
+function analyseVolumeQuality(candles) {
+  if (!Array.isArray(candles) || !candles.length)
+    return { volumeKnown: false, volumeInformative: false, reliable: false };
   let nz = 0;
   const distinct = new Set();
   for (const c of candles) {
     const v = c.v || 0;
     if (v > 0) { nz++; distinct.add(v); }
   }
-  return nz / candles.length > 0.7 && distinct.size > 1;
+  const volumeKnown = nz / candles.length > 0.7;
+  const volumeInformative = distinct.size > 1;
+  return { volumeKnown, volumeInformative, reliable: volumeKnown && volumeInformative };
+}
+
+function hasReliableVolume(candles) {
+  return analyseVolumeQuality(candles).reliable;
 }
 function vwap(candles) {
   // VWAP cumulé sur la journée de la dernière bougie
@@ -5035,10 +5098,12 @@ function recalibrate() {
 
 async function analyze(candles15, candles1h, dxy) {
   // CORRECTIF 3 : volume exploitable ? (sinon VWAP/MFI/OBV neutralisés)
-  const volumeReliable = hasReliableVolume(candles15);
+  const volumeQuality = analyseVolumeQuality(candles15);
+  const volumeReliable = volumeQuality.reliable;
   const closes = candles15.map(c => c.c);
   const last = closes[closes.length - 1];
-  const prev = closes[closes.length - 2] ?? last;
+  // prevClose : le CLOSE précédent, pas la bougie précédente entière.
+  const prevClose = closes[closes.length - 2] ?? last;
 
   // Indicateurs 15m
   const e9 = ema(closes, 9);
@@ -5070,7 +5135,7 @@ async function analyze(candles15, candles1h, dxy) {
   const get = (arr, j = i) => arr && arr[j] != null ? arr[j] : null;
   const cur = {
     price: last,
-    prev: prev,
+    prevClose: prevClose,
     open: candles15[i] ? candles15[i].o : null,  // v7.14.2 : open de la dernière bougie close (confirmation)
     ema9: get(e9), ema21: get(e21), ema50: get(e50), ema200: get(e200),
     rsi: get(r),
@@ -5257,7 +5322,7 @@ async function analyze(candles15, candles1h, dxy) {
 
   // CORRECTIF 3 : renormalisation quand VWAP(±3)/MFI(±4)/OBV(±4) sont
   // neutralisés — l'amplitude atteignable passe de ±50 à ±39, on rescale
-  // pour que le gate BUY_SCORE_GATE et les seuils de confiance gardent
+  // pour que le seuil BUY_STRONG_SCORE et les seuils de confiance gardent
   // exactement la même sémantique.
   if (!volumeReliable) techScore = Math.round(techScore * 50 / 39);
 
@@ -5370,7 +5435,7 @@ async function analyze(candles15, candles1h, dxy) {
     components,
     votes,
     techScore, trend1h, trendScore, dxyScore, sessDayScore, volScore,
-    globalScore, alignment, provisionalDir, volumeReliable,
+    globalScore, alignment, provisionalDir, volumeReliable, volumeQuality,
     smc: { h15: smc15, h1: smc1h, orderBlocks, fvgs },
     macro: { us10y, events: upcomingEvents },
     regime: (cur.adx != null && cur.adx < 20) || (chop != null && chop > 61.8) ? "RANGE" : "TREND",
@@ -5471,6 +5536,10 @@ function generateReasoning(analysis, signal) {
 }
 
 function generateSynthesis(analysis, dxy) {
+  // Passer à true pour inspecter les valeurs brutes dans la console quand la
+  // synthèse ne correspond pas à ce qu'on attend.
+  const _debug = false;
+  if (_debug) console.log("[synthèse] analyse brute :", JSON.parse(JSON.stringify(analysis)));
   const c = analysis.current;
   const dir = analysis.globalScore > 0 ? "BUY" : "SELL";
   const align = analysis.trend1h.aligned === true ? "alignée"
@@ -5611,7 +5680,7 @@ function applySafetyNets(aiResult, analysis) {
   // Garde 2: BUY exige confluence forte
   if (signal === "BUY") {
     const aligns = analysis.trend1h.aligned === true;
-    const strong = analysis.globalScore >= BUY_SCORE_GATE;
+    const strong = analysis.globalScore >= BUY_STRONG_SCORE;
     if (!aligns || !strong) {
       if (confidence === "FORT") confidence = "MOYEN";
       if (!strong) {
@@ -6458,7 +6527,15 @@ function renderScore(analysis) {
   }
   compHtml += analysis.components.map(c => {
     if (c.na) {
-      return `<div class="sc"><span class="name">${escapeHtml(c.name)}</span><span class="val zero" style="opacity:.65;font-style:italic">vol. n/d</span></div>`;
+      // Volume absent et volume constant sont deux situations différentes :
+      // la première est une donnée manquante, la seconde une donnée inutile.
+      const q = analysis.volumeQuality || {};
+      const lab = q.volumeKnown && !q.volumeInformative ? "vol. constant" : "vol. n/d";
+      const tip = q.volumeKnown && !q.volumeInformative
+        ? "Le flux renvoie un volume identique sur toutes les bougies : inexploitable."
+        : "Le flux ne fournit pas de volume exploitable sur cette période.";
+      return `<div class="sc" title="${escapeHtml(tip)}"><span class="name">${escapeHtml(c.name)}</span>` +
+             `<span class="val zero" style="opacity:.65;font-style:italic">${lab}</span></div>`;
     }
     const cls = c.val > 0 ? "pos" : c.val < 0 ? "neg" : "zero";
     return `<div class="sc"><span class="name">${escapeHtml(c.name)}</span><span class="val ${cls}">${c.val > 0 ? "+" : ""}${c.val}</span></div>`;
@@ -6789,23 +6866,61 @@ async function runDiagnostic() {
     detail: state.capture ? `${state.capture.name || "image"} (${fmtBytes(state.capture.size || 0)})` : "Aucune"
   });
 
-  // Test 3 : connexion API (test rapide Yahoo)
-  let yahooOk = false;
-  try {
-    const url = "https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1m&range=1d";
-    const data = await fetchViaProxies(url, true);
-    yahooOk = !!(data && data.chart && data.chart.result);
-  } catch (e) { yahooOk = false; }
-  tests.push({ label: "Yahoo Finance (via proxy)", status: yahooOk ? "ok" : "err", detail: yahooOk ? "OK" : "Injoignable" });
+  // Test 3 : le flux RÉELLEMENT utilisé.
+  // L'ordre de fetchCandles15 est : Twelve Data (si clé) → Binance → Yahoo.
+  // Tester Yahoo seul donnait un verdict trompeur dans les deux sens :
+  // « Yahoo injoignable » alors que Twelve Data fonctionne, ou l'inverse.
+  const t = TF();
+  let primaryOk = false, primaryName = "", primaryDetail = "";
+  if (state.twelveKey) {
+    primaryName = "Twelve Data (flux principal)";
+    try {
+      const c = await fetchTwelve(TD_SYMBOL, t.td, Math.min(t.limit, 10));
+      primaryOk = Array.isArray(c) && c.length > 0;
+      primaryDetail = primaryOk ? `OK — ${c.length} bougies ${t.key}` : "Réponse vide";
+    } catch (e) { primaryDetail = "Échec : " + e.message; }
+  } else {
+    primaryName = "Binance PAXG (flux principal)";
+    try {
+      const c = await fetchBinance(t.binance, 10);
+      primaryOk = Array.isArray(c) && c.length > 0;
+      primaryDetail = primaryOk ? `OK — ${c.length} bougies ${t.key}` : "Réponse vide";
+    } catch (e) { primaryDetail = "Échec : " + e.message; }
+  }
+  tests.push({ label: primaryName, status: primaryOk ? "ok" : "err", detail: primaryDetail });
 
-  // Test 4 : clé TwelveData
+  // Test 4 : le repli, testé indépendamment du flux principal
+  let fallbackOk = false, fallbackDetail = "";
+  const fallbackName = state.twelveKey ? "Binance PAXG (repli)" : "Yahoo GC=F (repli)";
+  try {
+    if (state.twelveKey) {
+      const c = await fetchBinance(t.binance, 10);
+      fallbackOk = Array.isArray(c) && c.length > 0;
+      fallbackDetail = fallbackOk ? "OK" : "Réponse vide";
+    } else {
+      const data = await fetchViaProxies(
+        "https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1m&range=1d", true);
+      fallbackOk = !!(data && data.chart && data.chart.result);
+      fallbackDetail = fallbackOk ? "OK" : "Réponse inexploitable";
+    }
+  } catch (e) { fallbackDetail = "Injoignable : " + e.message; }
+  // Un repli en panne n'est un avertissement que si le flux principal marche.
+  tests.push({
+    label: fallbackName,
+    status: fallbackOk ? "ok" : (primaryOk ? "warn" : "err"),
+    detail: fallbackDetail + (!fallbackOk && primaryOk ? " — sans effet, le flux principal répond" : "")
+  });
+
+  // Test 5 : clé Twelve Data
   tests.push({
     label: "Clé Twelve Data",
     status: state.twelveKey ? "ok" : "warn",
-    detail: state.twelveKey ? `Configurée (${state.twelveKey.slice(0, 6)}…)` : "Non configurée (fallback Yahoo)"
+    detail: state.twelveKey
+      ? `Configurée (${state.twelveKey.slice(0, 6)}…)`
+      : "Non configurée — repli sur Binance puis Yahoo"
   });
 
-  // Test 5 : historique
+  // Test 6 : historique
   const histCount = loadHistory().length;
   tests.push({
     label: "Historique",
@@ -6987,6 +7102,8 @@ async function analyzeNow(opts = {}) {
       confidence: final.confidence,
       price: final.price,
       score: final.score,
+      source: "technique",
+      tf: state.tf,
       flags: final.flags.length
     });
     renderHistory();
@@ -7039,6 +7156,8 @@ function updateCycleUI() {
    TIMERS / SCHEDULING
    ==================================================================== */
 function setupAutoTimers() {
+  // La pastille doit vieillir toute seule, même sans nouveau fetch.
+  setInterval(renderStaleBadge, 30000);
   if (state.autoTimer) { clearInterval(state.autoTimer); state.autoTimer = null; }
   if (state.scheduleTimer) { clearInterval(state.scheduleTimer); state.scheduleTimer = null; }
   if (state.autoRefresh) {
@@ -7118,7 +7237,32 @@ async function refreshDataOnly() {
     state.lastDataFetch = Date.now();
     renderChart(c15.candles);
     renderDXY(dxy);
-  } catch (e) { console.warn("refresh:", e); }
+  } catch (e) {
+    console.warn("refresh:", e);
+    // Un échec silencieux laissait l'ancien prix à l'écran sans signe distinctif.
+    state.lastRefreshError = Date.now();
+  }
+  renderStaleBadge();
+}
+
+/**
+ * Signale que les données affichées ne sont plus fraîches.
+ * Seuil : deux cycles de rafraîchissement manqués.
+ */
+const STALE_AFTER_MS = 2 * REFRESH_MS;
+function renderStaleBadge() {
+  if (!ui.staleBadge) return;
+  const last = state.lastDataFetch;
+  if (!last) { ui.staleBadge.hidden = true; return; }
+  const age = Date.now() - last;
+  if (age <= STALE_AFTER_MS) { ui.staleBadge.hidden = true; return; }
+  const min = Math.round(age / 60000);
+  ui.staleText.textContent = min < 60
+    ? "Données de " + min + " min"
+    : "Données de " + (age / 3600000).toFixed(1) + " h";
+  ui.staleBadge.title = "Le dernier rafraîchissement remonte à " + ui.staleText.textContent +
+    ". L'analyse affichée peut ne plus refléter le marché.";
+  ui.staleBadge.hidden = false;
 }
 
 /* ====================================================================
