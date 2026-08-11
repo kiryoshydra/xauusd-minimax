@@ -3111,19 +3111,38 @@
 // =====================================================================
 // Exposée sur window : le module PropFirm compare cette valeur à celle
 // affichée dans la pastille pour détecter un cache obsolète.
-window.APP_VERSION = "7.23.0";
-// v7.14.4 — fee confirmé 125.81 USDC (était 125.45), doc PROP_FIRM précisée : 1 fee par cycle
-//            (step 2/3/4 après SL = même challenge = gratuit), résultats semaine 13-17/07 :
-//            7/7 cycles gagnés, +173.60$ net, WR global passé de 80% à 85.2% (au-dessus du
-//            seuil de rentabilité), système devenu RENTABLE (EV nette +2.88$/cycle)
-// v7.23.0 — RETOURS MINIMAX INTÉGRÉS. Bug corrigé : le changelog v7.14.4 annonçait
-//            un fee de 125.30 USDC alors que le code utilise 125.81 depuis la v7.14.5.
-//            Huit améliorations : pastille « données périmées » après deux cycles
-//            manqués, source du signal (TECH / F5) dans l'historique, BUY_SCORE_GATE
-//            renommé BUY_STRONG_SCORE (ce n'est pas un seuil bloquant), diagnostic
-//            portant sur le flux réellement utilisé, drapeau _debug dans la synthèse,
-//            prev → prevClose, MAX_HISTORY appliqué en lecture, et distinction entre
-//            volume absent et volume constant.
+window.APP_VERSION = "7.23.1";
+// v7.23.1 — CHANGELOG CORRIGÉ. Le générateur réécrivait la même entrée à chaque
+//            build : les versions 7.21.5, 7.22.0 et 7.23.0 partageaient un texte identique,
+//            hérité de la 7.21.4. Il empile désormais une entrée distincte par version,
+//            et refuse de construire si la version courante n'y figure pas.
+//            Verrou de ré-entrance sur autoCleanupStorage() : deux clics rapides sur
+//            « Nettoyer maintenant » faisaient rapporter « rien à nettoyer » au second,
+//            alors que le premier venait de libérer de l'espace. Un toast signale désormais
+//            un nettoyage de fond ayant libéré plus de 100 Ko, une seule fois par session.
+// v7.23.0 — AUTO-CLEANUP DU LOCALSTORAGE. computeStorageStats() mesure l'occupation par
+//            clé (UTF-16, clés inconnues comprises) ; autoCleanupStorage() supprime les
+//            captures de plus de 30 jours et tronque xa_hist à 20 et le journal PropFirm
+//            à 50 ; purgeKeepCalibration() préserve calibration, réglages et état FTMO.
+//            Section « Stockage » dans les Réglages avec encart et deux boutons.
+//            Garde-fous : xa_mfk préservé, journal intact si une position est ouverte,
+//            capture sans horodatage conservée. Déclenché au démarrage puis après chaque
+//            écriture, au plus une fois par heure.
+// v7.22.0 — SUGGESTIONS DE REVUE. morningFiredKey persisté sous xa_mfk et centralisé dans
+//            morningKey() — il était construit en double avec getMonth() 0-indexé non
+//            documenté. Badge tilt visible dans le bandeau, plus seulement dans le chat.
+//            Diagnostic préventif lancé en silence au démarrage. La bascule LIVE exige un
+//            ACK du bridge (réconcilié, en mode LIVE) et non plus un simple ping ancien.
+// v7.21.5 — DIAGNOSTIC DE VERSION. La regex /7.1[6-9]./ se périmait à chaque release et
+//            produisait un faux avertissement ; window.APP_VERSION n'était par ailleurs pas
+//            exposé. diagnose() compare désormais la version du code à celle affichée,
+//            ce qui détecte un vrai cache obsolète. Résidu « minimax » nettoyé.
+// v7.21.4 — RETOURS DE REVUE. Le changelog v7.14.4 annonçait un fee de 125.30 USDC alors
+//            que le code utilise 125.81 depuis la v7.14.5. Huit améliorations : pastille
+//            « données périmées », source du signal (TECH / F5) dans l'historique,
+//            BUY_SCORE_GATE renommé BUY_STRONG_SCORE, diagnostic portant sur le flux
+//            réellement utilisé, drapeau _debug, prev → prevClose, MAX_HISTORY appliqué
+//            en lecture, distinction entre volume absent et volume constant.
 // v7.21.3 — ROBUSTESSE ASYNCHRONE : callbacks résistants au démontage du DOM.
 // v7.21.2 — MOBILE : six débordements mesurés à 360 px et corrigés.
 // v7.21.1 — DURCISSEMENT : virgule décimale, pastille d'onglet, quotas.
@@ -3134,6 +3153,10 @@ window.APP_VERSION = "7.23.0";
 // v7.17.0 — RÈGLES FTMO VÉRIFIÉES.
 // v7.16.2 — CORRECTIF RACINE : fmtBytes().
 // v7.16.0 — ONGLET PROPFIRM / FTMO.
+// v7.14.4 — fee confirmé 125.81 USDC (était 125.45), doc PROP_FIRM précisée : 1 fee par cycle
+//            (step 2/3/4 après SL = même challenge = gratuit), résultats semaine 13-17/07 :
+//            7/7 cycles gagnés, +173.60$ net, WR global passé de 80% à 85.2% (au-dessus du
+//            seuil de rentabilité), système devenu RENTABLE (EV nette +2.88$/cycle)
 // v7.14.0 — POST-MORTEM STRATÉGIQUE (semaine 06-09/07 à 25% WR) : (1) gate RANGE bloquant
 //            (ADX<20 ou CHOP>61.8 = signal tendance SUSPENDU, pas juste pénalisé), (2) veto
 //            d'extension (prix > 1.5×ATR de EMA20 + RSI extrême = ATTENDRE pullback), (3) signal
@@ -7109,12 +7132,23 @@ const CLEANUP = {
   captureMaxAgeDays: 30,
   histKeep: 20,          // en deçà de MAX_HISTORY (50), volontairement
   journalKeep: 50,       // en deçà du plafond du module PropFirm (200)
+  // 1 h : évite que le calcul de taille — peu coûteux mais pas gratuit —
+  // tourne à chaque signal. Au démarrage, opts.force le déclenche sans
+  // attendre, ce qui couvre le cas d'un long repos suivi d'une rafale.
   minIntervalMs: 60 * 60 * 1000,
   quotaBytes: 5 * 1024 * 1024
 };
 
 let lastCleanupAt = 0;
 let lastCleanupReport = null;
+// Deux clics rapides sur « Nettoyer maintenant » lançaient deux passages :
+// sans perte de données (les opérations sont idempotentes), mais le second
+// rapportait « rien à nettoyer » alors que le premier venait de libérer
+// de l'espace. Le verrou garantit un rapport fidèle.
+let cleanupRunning = false;
+// Un seul toast de nettoyage automatique par session : informer une fois
+// suffit, répéter devient du bruit.
+let autoCleanupToastShown = false;
 
 /** Taille approchée d'une chaîne en octets (UTF-16 : 2 octets par unité). */
 function lsEntrySize(raw) {
@@ -7193,10 +7227,15 @@ function autoCleanupStorage(opts) {
   const actions = [];
   let freed = 0;
 
+  if (cleanupRunning) {
+    return { actions, freed, skipped: "nettoyage déjà en cours" };
+  }
   if (!o.force && Date.now() - lastCleanupAt < CLEANUP.minIntervalMs) {
     return { actions, freed, skipped: "intervalle minimum non écoulé" };
   }
+  cleanupRunning = true;
   lastCleanupAt = Date.now();
+  try {
 
   const log = msg => { if (!o.silent) console.log("[cleanup] " + msg); };
 
@@ -7281,7 +7320,17 @@ function autoCleanupStorage(opts) {
 
   lastCleanupReport = { actions, freed, at: Date.now() };
   if (typeof updateStorageUI === "function") updateStorageUI();
+
+  // 3.4 — Un nettoyage de fond significatif mérite d'être signalé une fois.
+  if (o.silent && freed >= 100 * 1024 && !autoCleanupToastShown) {
+    autoCleanupToastShown = true;
+    try { if (typeof toast === "function") toast("Stockage optimisé — " + fmtKB(freed) + " libérés", "info", 4000); }
+    catch (e) { /* toast indisponible */ }
+  }
   return { actions, freed, skipped: null };
+  } finally {
+    cleanupRunning = false;
+  }
 }
 
 /**
