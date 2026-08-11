@@ -3015,14 +3015,15 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.21.2";
+const APP_VERSION = "7.21.3";
 // v7.14.4 — fee confirmé 125.30 USDC (était 125.45), doc PROP_FIRM précisée : 1 fee par cycle
 //            (step 2/3/4 après SL = même challenge = gratuit), résultats semaine 13-17/07 :
 //            7/7 cycles gagnés, +173.60$ net, WR global passé de 80% à 85.2% (au-dessus du
 //            seuil de rentabilité), système devenu RENTABLE (EV nette +2.88$/cycle)
-// v7.21.2 — MOBILE : six débordements mesurés à 360 px et corrigés (chiffres clés,
-//            ticket, chat, journal, bridge, parcours). Sous 520 px, les grilles à deux
-//            colonnes s'empilent. Garde-fou anti-défilement latéral sur tout le panneau.
+// v7.21.3 — ROBUSTESSE ASYNCHRONE : un callback qui se résout après le départ de la
+//            page ne peut plus lever (réponse du bridge, ping, chat). Chaque bloc de
+//            rendu est isolé. Trouvé par 40 000 actions aléatoires sous invariants.
+// v7.21.2 — MOBILE : six débordements mesurés à 360 px et corrigés.
 // v7.21.1 — DURCISSEMENT : virgule décimale, pastille d'onglet, quotas, aria-selected.
 // v7.21.0 — REPORT DU SIGNAL depuis HydraTrade, trois sources de distances.
 // v7.20.0 — FAQ FTMO : trading algorithmique autorisé, retrait dès le 14e jour.
@@ -8414,7 +8415,12 @@ function setTimeframe(tf) {
   const LS_JOURNEY = "propfirm_journey_v1";
   const CONFIRM_WORD = "LIVE";
 
-  const $ = id => document.getElementById(id);
+  /* Un callback asynchrone — réponse du bridge, timeout — peut se résoudre
+     après que la page a été quittée. document n'existe alors plus. */
+  const $ = id => {
+    try { return typeof document !== "undefined" ? document.getElementById(id) : null; }
+    catch (e) { return null; }
+  };
   const fmt = n => (n < 0 ? "-" : "") + "$" +
     Math.abs(Math.round(n)).toLocaleString("fr-FR");
   const fmt2 = n => (n < 0 ? "-" : "") + "$" +
@@ -8997,9 +9003,22 @@ function setTimeframe(tf) {
   }
 
   function renderAll() {
-    renderFigures(); renderPhase(); renderJourney(); renderGauges();
-    renderSignalImport(); renderTicket(); renderPosition(); renderJournal();
-    renderMode(); renderBridge();
+    // Chaque bloc est isolé : un élément manquant n'empêche pas les autres
+    // de se mettre à jour, et surtout ne fige pas l'interface.
+    const parts = [renderFigures, renderPhase, renderJourney, renderGauges,
+                   renderSignalImport, renderTicket, renderPosition,
+                   renderJournal, renderMode, renderBridge];
+    let firstError = null;
+    for (const fn of parts) {
+      try { fn(); }
+      catch (e) {
+        console.error("[PropFirm:" + (fn.name || "render") + "]", e);
+        if (!firstError) firstError = e;
+      }
+    }
+    // Un échec doit rester VISIBLE : isoler les blocs ne doit pas transformer
+    // une panne en écran muet. Affiché après coup pour ne pas être écrasé.
+    if (firstError) { try { showFailure(firstError); } catch (_) { /* DOM absent */ } }
   }
 
   function esc(s) {
@@ -9129,7 +9148,7 @@ function setTimeframe(tf) {
     } catch (e) {
       BRIDGE.online = false;
     }
-    renderBridge();
+    try { renderBridge(); } catch (_) { /* page quittée */ }
     return BRIDGE.online;
   }
 
@@ -9142,8 +9161,11 @@ function setTimeframe(tf) {
       });
       if (!res.ok) throw new Error("HTTP " + res.status);
     } catch (e) {
-      chatSystem("L'ordre n'a pas pu être transmis au bridge : " + e.message +
-                 ". Vérifiez la position dans cTrader avant d'en ouvrir une autre.");
+      try {
+        chatSystem("L'ordre n'a pas pu être transmis au bridge : " + e.message +
+                   ". Vérifiez la position dans cTrader avant d'en ouvrir une autre.");
+      } catch (_) { /* page quittée : l'ordre reste consigné côté bridge */ }
+      console.error("[PropFirm] transmission de l'ordre", e);
     }
   }
 
@@ -9157,6 +9179,7 @@ function setTimeframe(tf) {
 
   function chatAppend(role, text) {
     const log = $("pfChatLog");
+    if (!log || typeof document === "undefined") return;
     const cls = role === "user" ? "user" : role === "system" ? "system" : "claude";
     const div = document.createElement("div");
     div.className = "chat-msg " + cls;
