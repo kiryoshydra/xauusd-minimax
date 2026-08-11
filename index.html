@@ -2186,6 +2186,97 @@
   .forecast-row.impossible .f-time{color:var(--bear-soft)}
   .forecast-row.impossible .f-bar span{background:var(--bear-deep)}
 
+  /* ---------- Report du signal HydraTrade ---------- */
+  .signal-import{margin-bottom:16px;padding:14px 16px;border-radius:var(--r-sm);
+    background:var(--bg-2);border:1px solid var(--border-soft);
+    transition:border-color .25s var(--ease)}
+  .signal-import.ready{border-color:var(--gold-deep);
+    background:linear-gradient(180deg,rgba(201,169,97,.05),var(--bg-2))}
+  .signal-import.stale{border-color:var(--bear-deep)}
+
+  .si-head{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:11px}
+  .si-dir{padding:4px 12px;border-radius:999px;font-size:11.5px;font-weight:600;
+    letter-spacing:.06em;font-family:'JetBrains Mono',monospace}
+  .si-dir.buy{background:rgba(95,164,126,.14);color:var(--bull-soft);border:1px solid var(--bull-deep)}
+  .si-dir.sell{background:rgba(196,107,92,.14);color:var(--bear-soft);border:1px solid var(--bear-deep)}
+  .si-dir.none{background:var(--surface-3);color:var(--text-4);border:1px solid var(--border)}
+  .si-meta{font-size:11.5px;color:var(--text-3);font-family:'JetBrains Mono',monospace;
+    font-variant-numeric:tabular-nums}
+  .si-age{margin-left:auto;font-size:11px;color:var(--text-4);
+    font-family:'JetBrains Mono',monospace}
+  .si-age.stale{color:var(--bear-soft)}
+
+  .si-sources{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px}
+  .si-src{padding:6px 12px;border-radius:999px;cursor:pointer;
+    background:var(--surface-2);border:1px solid var(--border);
+    font-size:11.5px;color:var(--text-3);transition:all .2s var(--ease);
+    display:flex;align-items:center;gap:7px}
+  .si-src:hover:not(:disabled){border-color:var(--border-strong);color:var(--text-2)}
+  .si-src.active{background:rgba(201,169,97,.1);border-color:var(--gold-deep);color:var(--gold-soft)}
+  .si-src:disabled{opacity:.34;cursor:not-allowed}
+  .si-src .src-val{font-family:'JetBrains Mono',monospace;font-size:10.5px;opacity:.72}
+
+  .si-action{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .btn-import{flex:1;min-width:180px;padding:11px 18px;border-radius:var(--r-sm);cursor:pointer;
+    background:linear-gradient(180deg,rgba(201,169,97,.16),rgba(201,169,97,.08));
+    border:1px solid var(--gold-deep);color:var(--gold-soft);
+    font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+    transition:all .2s var(--ease)}
+  .btn-import:hover:not(:disabled){background:rgba(201,169,97,.22);border-color:var(--gold)}
+  .btn-import:disabled{opacity:.34;cursor:not-allowed}
+  .si-note{font-size:11px;color:var(--text-4);line-height:1.5;margin-top:9px}
+  .si-note.warn{color:var(--bear-soft)}
+
+  /* ---------- Écrans étroits ----------
+     Mesuré à 360 px : pf-figures débordait de 106 px, le ticket de 37 px
+     et la zone de saisie du chat de 30 px. Les grilles fixes à deux
+     colonnes ne tiennent pas en dessous de ~480 px. */
+  @media (max-width: 520px){
+    .pf-figures{grid-template-columns:1fr}
+    .ticket-row{grid-template-columns:1fr}
+    .computed{grid-template-columns:1fr 1fr}
+    .side-buttons{grid-template-columns:1fr}
+    .btn-side{min-height:54px}
+
+    .pf-header{flex-direction:column;align-items:flex-start;gap:12px}
+    .pf-account .name{font-size:22px}
+
+    /* Le parcours reste sur trois colonnes mais se resserre */
+    .journey-track{gap:0}
+    .journey-step .j-name{font-size:11.5px}
+    .journey-step .j-cap,.journey-step .j-split{font-size:10px}
+    .journey-rail,.journey-rail-fill{left:16%;right:16%}
+    .journey-req{grid-template-columns:auto 1fr;row-gap:6px}
+    .journey-req .r-val{grid-column:2;text-align:left}
+
+    .forecast-row{grid-template-columns:auto 1fr auto;gap:8px;font-size:11.5px}
+    .forecast-row .f-wr{min-width:44px}
+
+    /* Le chat : l'input et le bouton s'empilent */
+    .chat{height:360px}
+    .chat-input{flex-wrap:wrap}
+    .chat-input input{flex:1 1 100%;min-width:0}
+    .chat-input .btn-ghost{flex:1 1 100%}
+    .chat-msg{max-width:94%}
+
+    .signal-import .si-action{flex-direction:column;align-items:stretch}
+    .btn-import{min-width:0}
+    .si-head{gap:8px}
+    .si-age{margin-left:0;flex-basis:100%}
+
+    .journey-detail .r-sub{font-size:10.5px}
+    .bridge-status{flex-wrap:wrap}
+    .bridge-status .bs-sub{margin-left:0;flex-basis:100%}
+    .journal-row{grid-template-columns:auto 1fr;row-gap:4px}
+    .journal-row .j-pnl{grid-column:2;text-align:left}
+  }
+
+  /* Sécurité : aucun élément du panneau ne peut forcer un défilement latéral */
+  #view-propfirm, #view-propfirm .card{max-width:100%}
+  #view-propfirm input, #view-propfirm button{max-width:100%}
+  .computed,.pf-figures,.ticket-row,.side-buttons,.journey-track{min-width:0}
+  .computed>*,.pf-figures>*,.ticket-row>*,.side-buttons>*{min-width:0}
+
 </style>
 </head>
 <body>
@@ -2222,15 +2313,17 @@
   </header>
 
   <nav class="mainnav" role="tablist" aria-label="Sections">
-    <button type="button" class="mainnav-btn active" data-view="hydratrade" role="tab">
+    <button type="button" class="mainnav-btn active" data-view="hydratrade" role="tab"
+            aria-selected="true" aria-controls="view-hydratrade">
       HydraTrade
     </button>
-    <button type="button" class="mainnav-btn" data-view="propfirm" role="tab">
-      PropFirm<span class="nav-dot off" id="pfNavDot"></span>
+    <button type="button" class="mainnav-btn" data-view="propfirm" role="tab"
+            aria-selected="false" aria-controls="view-propfirm">
+      PropFirm<span class="nav-dot off" id="pfNavDot" aria-hidden="true"></span>
     </button>
   </nav>
 
-  <div id="view-hydratrade" class="view active">
+  <div id="view-hydratrade" class="view active" role="tabpanel">
 
   <!-- ============== VERDICT ============== -->
   <section id="verdict" class="verdict idle mb-12" aria-live="polite">
@@ -2608,6 +2701,32 @@
     <!-- ---------- Ticket ---------- -->
     <section class="card mb-12">
       <h2 class="pf-section-title">Passer un ordre</h2>
+
+      <div class="signal-import" id="pfSignalImport">
+        <div class="si-head">
+          <span class="si-dir none" id="siDir">AUCUN SIGNAL</span>
+          <span class="si-meta" id="siMeta">—</span>
+          <span class="si-age" id="siAge"></span>
+        </div>
+        <div class="si-sources" id="siSources">
+          <button type="button" class="si-src active" data-src="CONFIG">
+            Config Hydratrade <span class="src-val" id="srcCONFIG">—</span>
+          </button>
+          <button type="button" class="si-src" data-src="ATR">
+            ATR <span class="src-val" id="srcATR">—</span>
+          </button>
+          <button type="button" class="si-src" data-src="HISTO">
+            Historique CSV <span class="src-val" id="srcHISTO">—</span>
+          </button>
+        </div>
+        <div class="si-action">
+          <button type="button" class="btn-import" id="siImport">
+            Reporter le signal dans le ticket
+          </button>
+        </div>
+        <div class="si-note" id="siNote"></div>
+      </div>
+
       <div class="ticket">
         <div class="ticket-row">
           <div class="ticket-field">
@@ -2896,20 +3015,20 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.20.0";
+const APP_VERSION = "7.21.2";
 // v7.14.4 — fee confirmé 125.30 USDC (était 125.45), doc PROP_FIRM précisée : 1 fee par cycle
 //            (step 2/3/4 après SL = même challenge = gratuit), résultats semaine 13-17/07 :
 //            7/7 cycles gagnés, +173.60$ net, WR global passé de 80% à 85.2% (au-dessus du
 //            seuil de rentabilité), système devenu RENTABLE (EV nette +2.88$/cycle)
-// v7.20.0 — FAQ FTMO DÉPOUILLÉE. Trading algorithmique et EA EXPLICITEMENT autorisés.
-//            Frais remboursés au 1er retrait (2-Step uniquement). Retrait possible dès
-//            le 14e jour après la première transaction. Compte Swing : aucune restriction
-//            news/overnight/week-end. Pendant l'Évaluation : aucune restriction, quel que
-//            soit le type de compte. Interdiction de se connecter depuis les États-Unis,
-//            VPN compris. Registre : 12 valeurs confirmées sur 19.
-// v7.19.0 — RÈGLES SUPRÊME OFFICIELLES : cycles NON consécutifs, compte Prime $400k actif.
+// v7.21.2 — MOBILE : six débordements mesurés à 360 px et corrigés (chiffres clés,
+//            ticket, chat, journal, bridge, parcours). Sous 520 px, les grilles à deux
+//            colonnes s'empilent. Garde-fou anti-défilement latéral sur tout le panneau.
+// v7.21.1 — DURCISSEMENT : virgule décimale, pastille d'onglet, quotas, aria-selected.
+// v7.21.0 — REPORT DU SIGNAL depuis HydraTrade, trois sources de distances.
+// v7.20.0 — FAQ FTMO : trading algorithmique autorisé, retrait dès le 14e jour.
+// v7.19.0 — RÈGLES SUPRÊME OFFICIELLES : cycles NON consécutifs.
 // v7.18.0 — PARCOURS DE STATUT : barre Classique → Prime → Suprême.
-// v7.17.0 — RÈGLES FTMO VÉRIFIÉES (perte journalière, jours de trading, objectif).
+// v7.17.0 — RÈGLES FTMO VÉRIFIÉES.
 // v7.16.2 — CORRECTIF RACINE : fmtBytes() n'avait jamais été défini.
 // v7.16.0 — ONGLET PROPFIRM / FTMO.
 // v7.14.0 — POST-MORTEM STRATÉGIQUE (semaine 06-09/07 à 25% WR) : (1) gate RANGE bloquant
@@ -3079,7 +3198,7 @@ const DEFAULT_DAY_SCORES = {
   3: { score: +5,  label: "Mercredi — 100% WR" },
   4: { score: +3,  label: "Jeudi — correct" }
 };
-const PROP_FIRM = {
+window.PROP_FIRM = {
   tp: 150, sl: 118.75, account: 25000, defaultLot: 0.07,
   openHour: 5, closeHour: 18, hardCloseHour: 22, fridayCloseHour: 21,
   // Règle « A Caccia di Trader » : cycle de 4 tentatives max à lots croissants
@@ -3103,7 +3222,8 @@ const PROP_FIRM = {
 };
 
 /* ---------- STATE ---------- */
-const state = {
+// Exposé sur window : le module PropFirm lit le signal courant en lecture seule.
+window.state = {
   tf: "15m",                   // timeframe de trading actif ("5m" | "15m")
   tradeHistory: [],             // trades importés depuis les CSV Hydratrade
   tradeMeta: { importedAt: null, files: [] },
@@ -8112,7 +8232,121 @@ function setTimeframe(tf) {
   }
 
   /* ====================================================================
-     13. DÉTECTION DE TILT
+     13. REPORT DEPUIS LE SIGNAL HYDRATRADE
+     --------------------------------------------------------------------
+     HydraTrade produit un SENS et un PRIX, pas des niveaux. Les distances
+     viennent d'ailleurs, et trois sources sont possibles :
+
+       CONFIG   les paramètres Hydratrade (TP $150 / SL $118,75 sur 0,07 lot)
+                → distances fixes de 21,4286 et 16,9643. Ratio constant.
+       ATR      proportionnel à la volatilité mesurée. S'adapte au régime,
+                mais fait varier le R:R d'un trade à l'autre.
+       HISTO    moyenne des distances réellement utilisées dans le CSV.
+
+     Aucune n'est « la bonne » : CONFIG reproduit ce que fait Hydratrade,
+     ATR s'ajuste au marché du jour. Le choix appartient à l'utilisateur.
+     ==================================================================== */
+
+  const LEVEL_SOURCES = {
+    CONFIG: { key: "CONFIG", label: "Config Hydratrade", hint: "distances fixes, R:R constant" },
+    ATR:    { key: "ATR",    label: "ATR",               hint: "s'adapte à la volatilité" },
+    HISTO:  { key: "HISTO",  label: "Historique CSV",    hint: "moyenne de tes trades réels" }
+  };
+
+  /**
+   * Calcule les distances SL/TP à reporter dans le ticket.
+   *
+   * @param {object} input
+   *   input.source        "CONFIG" | "ATR" | "HISTO"
+   *   input.propFirm      { tp, sl, defaultLot }   config Hydratrade
+   *   input.atr           valeur ATR courante (source ATR)
+   *   input.atrSLMult     multiplicateur du stop (défaut 1,5)
+   *   input.history       [{ slDist, tpDist }]     (source HISTO)
+   * @returns {{ok, slDistance, tpDistance, rr, source, label, reason}}
+   */
+  function deriveLevels(input, cfg) {
+    const C = cfg || CONFIG;
+    const V = C.contract.valuePerLotPerDollar;
+    const src = (input && input.source) || "CONFIG";
+    const out = { ok: false, slDistance: null, tpDistance: null, rr: null,
+                  source: src, label: (LEVEL_SOURCES[src] || {}).label || src, reason: null };
+
+    if (src === "CONFIG") {
+      const pf = input.propFirm;
+      if (!pf || !(pf.defaultLot > 0)) { out.reason = "Config Hydratrade indisponible."; return out; }
+      // Les montants sont exprimés en $ pour le lot de référence : on
+      // remonte à une distance de prix.
+      out.slDistance = round2(pf.sl / (pf.defaultLot * V));
+      out.tpDistance = round2(pf.tp / (pf.defaultLot * V));
+    } else if (src === "ATR") {
+      const atr = input.atr;
+      if (!(atr > 0)) { out.reason = "ATR indisponible — lance une analyse."; return out; }
+      const mult = input.atrSLMult || 1.5;
+      // On conserve le R:R de la config pour ne pas changer deux choses à la fois
+      const pf = input.propFirm;
+      const baseRR = pf && pf.sl > 0 ? pf.tp / pf.sl : 1.2632;
+      out.slDistance = Math.round(atr * mult * 100) / 100;
+      out.tpDistance = Math.round(atr * mult * baseRR * 100) / 100;
+    } else if (src === "HISTO") {
+      const h = (input.history || []).filter(t => t.slDist > 0 && t.tpDist > 0);
+      if (!h.length) { out.reason = "Aucun trade importé — utilise un CSV Hydratrade."; return out; }
+      const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+      out.slDistance = Math.round(avg(h.map(t => t.slDist)) * 100) / 100;
+      out.tpDistance = Math.round(avg(h.map(t => t.tpDist)) * 100) / 100;
+    } else {
+      out.reason = "Source inconnue : " + src; return out;
+    }
+
+    // Les bornes du moteur s'appliquent aussi au report : mieux vaut refuser
+    // ici, avec un motif clair, que produire un ticket que le ticket rejettera.
+    if (!(out.slDistance > 0) || !(out.tpDistance > 0)) {
+      out.reason = "Distances non calculables."; out.slDistance = out.tpDistance = null; return out;
+    }
+    if (out.slDistance < C.risk.slMin) {
+      out.reason = `Stop de ${out.slDistance} sous le minimum de ${C.risk.slMin}.`; return out;
+    }
+    if (out.slDistance > C.risk.slMax) {
+      out.reason = `Stop de ${out.slDistance} au-dessus du maximum de ${C.risk.slMax}.`; return out;
+    }
+
+    out.rr = round2(out.tpDistance / out.slDistance);
+    out.ok = true;
+    return out;
+  }
+
+  /**
+   * Traduit un signal HydraTrade en proposition d'ordre.
+   * Ne décide rien : evaluateTrade garde le dernier mot.
+   */
+  function signalToTicket(signal, levelInput, cfg) {
+    const out = { ok: false, side: null, price: null, confidence: null,
+                  ageMinutes: null, stale: false, levels: null, reason: null };
+    if (!signal || !signal.signal) { out.reason = "Aucun signal — lance une analyse."; return out; }
+
+    const dir = String(signal.signal).toUpperCase();
+    if (dir === "BUY") out.side = "BUY";
+    else if (dir === "SELL") out.side = "SELL";
+    else { out.reason = `Signal « ${dir} » : aucune direction exploitable.`; return out; }
+
+    out.price = signal.price || null;
+    out.confidence = signal.confidence != null ? signal.confidence : null;
+
+    if (signal.ts) {
+      out.ageMinutes = Math.round((Date.now() - signal.ts) / 60000);
+      // Un signal ancien ne reflète plus le marché : on le signale sans bloquer.
+      out.stale = out.ageMinutes > 30;
+    }
+
+    const levels = deriveLevels(levelInput, cfg);
+    out.levels = levels;
+    if (!levels.ok) { out.reason = levels.reason; return out; }
+
+    out.ok = true;
+    return out;
+  }
+
+  /* ====================================================================
+     14. DÉTECTION DE TILT
      ==================================================================== */
 
   function tiltCheck(state, now, cfg) {
@@ -8151,6 +8385,8 @@ function setTimeframe(tf) {
     distanceToWalls: distanceToWalls,
     // enregistrement
     registerOpen: registerOpen, registerClose: registerClose,
+    // report du signal
+    LEVEL_SOURCES: LEVEL_SOURCES, deriveLevels: deriveLevels, signalToTicket: signalToTicket,
     // parcours de statut
     STATUS_RULES: STATUS_RULES, PRIME_BENEFITS: PRIME_BENEFITS,
     SUPREME_PATHS: SUPREME_PATHS, monthKey: monthKey,
@@ -8196,13 +8432,22 @@ function setTimeframe(tf) {
   let CHAT = [];       // mémoire du jour
   let CHAT_DAY = null;
   let lastEval = null;
+  let levelSource = "CONFIG";       // CONFIG | ATR | HISTO
+  let lastImportedSide = null;      // sens du dernier signal reporté
 
   function persist() {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify({ state: S, account: ACC }));
       localStorage.setItem(LS_JOURNAL, JSON.stringify(JOURNAL.slice(0, 200)));
       localStorage.setItem(LS_BRIDGE, JSON.stringify({ url: BRIDGE.url }));
-      localStorage.setItem(LS_JOURNEY, JSON.stringify(JOURNEY));
+      // Bornes de sécurité : le stockage local a un quota
+      const j = {
+        payouts: (JOURNEY.payouts || []).slice(-100),
+        failures: (JOURNEY.failures || []).slice(-50),
+        accounts: (JOURNEY.accounts || []).slice(-20),
+        fundedCapital: JOURNEY.fundedCapital || 0
+      };
+      localStorage.setItem(LS_JOURNEY, JSON.stringify(j));
     } catch (e) { console.warn("[PropFirm] persistance impossible", e); }
   }
 
@@ -8314,11 +8559,35 @@ function setTimeframe(tf) {
     });
   }
 
+  /**
+   * Lit un champ numérique en tolérant la virgule décimale.
+   * Chrome localise l'affichage (« 16,96 ») tout en stockant « 16.96 »,
+   * mais un COLLAGE ou un autre navigateur peut livrer une virgule brute.
+   */
+  function readNumber(id) {
+    const el = $(id);
+    if (!el) return NaN;
+    let raw = el.value;
+    // valueAsNumber est fiable quand le navigateur a validé la saisie
+    if (el.type === "number" && isFinite(el.valueAsNumber)) return el.valueAsNumber;
+    if (typeof raw !== "string") return NaN;
+    raw = raw.trim().replace(/\s|\u202F|\u00A0/g, "").replace(",", ".");
+    const n = parseFloat(raw);
+    return isFinite(n) ? n : NaN;
+  }
+
   function currentInputs() {
-    return {
-      sl: parseFloat($("pfSL").value),
-      tp: parseFloat($("pfTP").value)
-    };
+    return { sl: readNumber("pfSL"), tp: readNumber("pfTP") };
+  }
+
+  /** Normalise le champ après saisie : la virgule devient un point. */
+  function normaliseField(id) {
+    const el = $(id);
+    if (!el) return;
+    if (typeof el.value === "string" && el.value.indexOf(",") > -1) {
+      const n = parseFloat(el.value.replace(",", "."));
+      if (isFinite(n)) el.value = String(n);
+    }
   }
 
   function evaluate() {
@@ -8341,6 +8610,42 @@ function setTimeframe(tf) {
     return lastEval;
   }
 
+  /* ------------------------------------------------------------------
+     LECTURE DU SIGNAL HYDRATRADE
+     Uniquement en lecture : ce module ne touche jamais à l'état de l'app.
+     ------------------------------------------------------------------ */
+  function hostSignal() {
+    try { return (window.state && window.state.lastResult) || null; }
+    catch (e) { return null; }
+  }
+  function hostPropFirm() {
+    try { return window.PROP_FIRM || null; } catch (e) { return null; }
+  }
+  function hostATR() {
+    try {
+      const a = window.state && window.state.lastAnalysis;
+      return a && a.current && a.current.atr > 0 ? a.current.atr : null;
+    } catch (e) { return null; }
+  }
+  function hostHistory() {
+    try {
+      const h = (window.state && window.state.tradeHistory) || [];
+      return h.map(t => ({
+        slDist: Math.abs((t.sl || 0) - (t.open_price || t.openPrice || 0)),
+        tpDist: Math.abs((t.tp || 0) - (t.open_price || t.openPrice || 0))
+      })).filter(x => x.slDist > 0 && x.tpDist > 0);
+    } catch (e) { return []; }
+  }
+
+  function levelInput(source) {
+    return {
+      source: source || levelSource,
+      propFirm: hostPropFirm(),
+      atr: hostATR(),
+      history: hostHistory()
+    };
+  }
+
   /** Lit le régime du moteur de signal existant, sans le modifier. */
   function readRegime() {
     try {
@@ -8358,6 +8663,96 @@ function setTimeframe(tf) {
       }
     } catch (e) { /* idem */ }
     return "inconnu — lancez une analyse";
+  }
+
+  function renderSignalImport() {
+    const sig = hostSignal();
+    const box = $("pfSignalImport");
+    if (!box) return;
+
+    // Aperçu des distances pour chaque source
+    ["CONFIG", "ATR", "HISTO"].forEach(src => {
+      const el = $("src" + src);
+      const btn = document.querySelector('.si-src[data-src="' + src + '"]');
+      if (!el || !btn) return;
+      const lv = PF.deriveLevels(levelInput(src));
+      if (lv.ok) {
+        el.textContent = lv.slDistance.toFixed(2) + " / " + lv.tpDistance.toFixed(2);
+        btn.disabled = false;
+        btn.title = (PF.LEVEL_SOURCES[src] || {}).hint || "";
+      } else {
+        el.textContent = "—";
+        btn.disabled = true;
+        btn.title = lv.reason || "Indisponible";
+      }
+      btn.classList.toggle("active", src === levelSource);
+    });
+
+    const t = PF.signalToTicket(sig, levelInput());
+    const dirEl = $("siDir"), metaEl = $("siMeta"), ageEl = $("siAge"),
+          noteEl = $("siNote"), btnEl = $("siImport");
+
+    box.classList.remove("ready", "stale");
+
+    if (!sig || !t.side) {
+      dirEl.className = "si-dir none";
+      dirEl.textContent = "AUCUN SIGNAL";
+      metaEl.textContent = "Lance une analyse dans l'onglet HydraTrade.";
+      ageEl.textContent = "";
+      noteEl.className = "si-note";
+      noteEl.textContent = t.reason || "";
+      btnEl.disabled = true;
+      return;
+    }
+
+    dirEl.className = "si-dir " + (t.side === "BUY" ? "buy" : "sell");
+    dirEl.textContent = t.side === "BUY" ? "ACHAT" : "VENTE";
+    metaEl.textContent = [
+      t.price ? "prix " + t.price.toFixed(2) : null,
+      t.confidence != null ? "confiance " + t.confidence + " %" : null,
+      sig.source || null
+    ].filter(Boolean).join("  ·  ");
+
+    if (t.ageMinutes != null) {
+      ageEl.textContent = t.ageMinutes < 60
+        ? "il y a " + t.ageMinutes + " min"
+        : "il y a " + (t.ageMinutes / 60).toFixed(1) + " h";
+      ageEl.classList.toggle("stale", t.stale);
+    } else ageEl.textContent = "";
+
+    btnEl.disabled = !t.ok;
+    if (!t.ok) {
+      noteEl.className = "si-note warn";
+      noteEl.textContent = t.reason || "Report impossible.";
+      return;
+    }
+
+    box.classList.add(t.stale ? "stale" : "ready");
+    noteEl.className = "si-note" + (t.stale ? " warn" : "");
+    noteEl.textContent = t.stale
+      ? "Ce signal a plus de 30 minutes — il ne reflète peut-être plus le marché. " +
+        "Relance une analyse avant de l'utiliser."
+      : "Reporte le sens et les distances. Le lot reste calculé par les garde-fous, " +
+        "et l'ordre n'est jamais envoyé automatiquement.";
+  }
+
+  function applySignalImport() {
+    const t = PF.signalToTicket(hostSignal(), levelInput());
+    if (!t.ok) return;
+    $("pfSL").value = t.levels.slDistance.toFixed(2);
+    $("pfTP").value = t.levels.tpDistance.toFixed(2);
+    lastImportedSide = t.side;
+    renderTicket();
+    renderGauges();
+    // Le bouton correspondant au sens est mis en avant, mais JAMAIS cliqué :
+    // la décision d'envoyer reste un geste volontaire.
+    const target = $(t.side === "BUY" ? "pfBuy" : "pfSell");
+    if (target && !target.disabled) {
+      target.style.transition = "box-shadow .3s";
+      target.style.boxShadow = "0 0 0 2px rgba(201,169,97,.4)";
+      setTimeout(() => { target.style.boxShadow = ""; }, 2200);
+      try { target.focus({ preventScroll: true }); } catch (e) { target.focus(); }
+    }
   }
 
   function renderTicket() {
@@ -8453,6 +8848,32 @@ function setTimeframe(tf) {
     const btn = $("pfModeToggle");
     btn.className = "pf-mode" + (S.mode === "LIVE" ? " live" : "");
     $("pfModeLabel").textContent = S.mode;
+    renderNavDot();
+  }
+
+  /**
+   * Pastille de l'onglet PropFirm : signale d'un coup d'œil, depuis
+   * n'importe quelle vue, ce qui demande attention.
+   */
+  function renderNavDot() {
+    const dot = $("pfNavDot");
+    if (!dot) return;
+    const cb = S.global.circuitBreakerUntil &&
+               new Date(S.global.circuitBreakerUntil) > new Date();
+    const stopped = ACC.equity < PF.CONFIG.risk.hardStopEquity;
+    let cls = "nav-dot off", title = "Mode PAPER — aucun ordre transmis";
+    if (cb || stopped) {
+      cls = "nav-dot warn";
+      title = cb ? "Coupe-circuit actif" : "Arrêt : equity sous le seuil";
+    } else if (ACC.openPosition) {
+      cls = "nav-dot";
+      title = "Position ouverte";
+    } else if (S.mode === "LIVE") {
+      cls = "nav-dot";
+      title = "Mode LIVE — les ordres partent chez cTrader";
+    }
+    dot.className = cls;
+    dot.title = title;
   }
 
   function renderBridge() {
@@ -8577,7 +8998,7 @@ function setTimeframe(tf) {
 
   function renderAll() {
     renderFigures(); renderPhase(); renderJourney(); renderGauges();
-    renderTicket(); renderPosition(); renderJournal();
+    renderSignalImport(); renderTicket(); renderPosition(); renderJournal();
     renderMode(); renderBridge();
   }
 
@@ -8879,8 +9300,11 @@ function setTimeframe(tf) {
     btns.forEach(btn => {
       btn.addEventListener("click", () => {
         const target = btn.dataset.view;
-        document.querySelectorAll(".mainnav-btn").forEach(b =>
-          b.classList.toggle("active", b === btn));
+        document.querySelectorAll(".mainnav-btn").forEach(b => {
+          const on = b === btn;
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-selected", on ? "true" : "false");
+        });
         document.querySelectorAll(".view").forEach(v =>
           v.classList.toggle("active", v.id === "view-" + target));
         // Le rendu ne doit JAMAIS empêcher la bascule d'onglet
@@ -8931,8 +9355,30 @@ function setTimeframe(tf) {
 
     ["pfSL", "pfTP"].forEach(id => {
       const el = $(id);
-      if (el) el.addEventListener("input", () => { renderTicket(); renderGauges(); });
+      if (!el) return;
+      el.addEventListener("input", () => { renderTicket(); renderGauges(); });
+      // Un collage peut apporter une virgule : on normalise puis on réévalue
+      el.addEventListener("paste", () => setTimeout(() => {
+        normaliseField(id); renderTicket(); renderGauges();
+      }, 0));
+      el.addEventListener("blur", () => {
+        normaliseField(id); renderTicket(); renderGauges();
+      });
     });
+
+    document.querySelectorAll(".si-src").forEach(b => {
+      b.addEventListener("click", () => {
+        if (b.disabled) return;
+        levelSource = b.dataset.src;
+        try { localStorage.setItem("propfirm_levelsrc", levelSource); } catch (e) { /* quota */ }
+        renderSignalImport();
+      });
+    });
+    $("siImport").addEventListener("click", applySignalImport);
+    try {
+      const saved = localStorage.getItem("propfirm_levelsrc");
+      if (saved && PF.LEVEL_SOURCES[saved]) levelSource = saved;
+    } catch (e) { /* quota */ }
 
     $("pfBuy").addEventListener("click", () => placeOrder("BUY"));
     $("pfSell").addEventListener("click", () => placeOrder("SELL"));
@@ -8979,6 +9425,14 @@ function setTimeframe(tf) {
       if (PF.rollDay(S, { "ftmo-1": ACC }, new Date())) { persist(); renderAll(); }
       else if (ACC.openPosition) renderPosition();
     }, 30000);
+    // Le signal peut changer pendant qu'on est sur l'onglet
+    let lastSigTs = null;
+    setInterval(() => {
+      const sig = hostSignal();
+      const ts = sig ? sig.ts : null;
+      // Un seul rendu : soit le signal a changé, soit son âge a évolué
+      if (ts !== lastSigTs || (sig && sig.ts)) { lastSigTs = ts; renderSignalImport(); }
+    }, 20000);
     setInterval(() => { if (BRIDGE.url) pingBridge(); }, 60000);
   }
 
@@ -9024,6 +9478,8 @@ function setTimeframe(tf) {
 
   window.PropFirmUI = {
     init: init, boot: boot, render: renderAll, diagnose: diagnose,
+    importSignal: applySignalImport,
+    setLevelSource: src => { levelSource = src; renderSignalImport(); },
     recordPayout: recordPayout, recordFailure: recordFailure,
     journey: () => JOURNEY,
     state: () => ({ S, ACC, JOURNAL, JOURNEY })
