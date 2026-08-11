@@ -1139,6 +1139,54 @@
   .hist::-webkit-scrollbar-track{background:transparent}
   .hist::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
   .hist::-webkit-scrollbar-thumb:hover{background:var(--text-4)}
+  .storage-stats{
+    padding:11px 13px; border-radius:8px;
+    background:var(--bg-2); border:1px solid var(--border-soft);
+    font-size:12px; color:var(--text-2);
+  }
+  .storage-stats.warn{border-color:var(--gold-deep)}
+  .storage-stats.err{border-color:var(--bear-deep)}
+  .storage-stats .storage-line{margin-bottom:8px}
+  .storage-stats .storage-line strong{
+    font-family:'JetBrains Mono',monospace; color:var(--text);
+  }
+  .storage-bar{height:5px; border-radius:3px; background:var(--surface-3); overflow:hidden}
+  .storage-bar span{
+    display:block; height:100%; border-radius:3px;
+    background:linear-gradient(90deg,var(--bull-deep),var(--bull));
+    transition:width .4s var(--ease);
+  }
+  .storage-stats.warn .storage-bar span{background:linear-gradient(90deg,var(--gold-deep),var(--gold))}
+  .storage-stats.err .storage-bar span{background:linear-gradient(90deg,var(--bear-deep),var(--bear))}
+  .storage-detail{
+    display:flex; flex-wrap:wrap; gap:5px 12px; margin-top:9px;
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-4);
+  }
+  .storage-warn{
+    margin-top:9px; padding-top:8px; border-top:1px solid var(--border-soft);
+    font-size:11px; color:var(--gold-soft); line-height:1.5;
+  }
+  .btn-sm{
+    padding:8px 14px; border-radius:8px; cursor:pointer;
+    background:var(--surface-2); border:1px solid var(--border);
+    color:var(--text-2); font-size:12px; font-weight:500;
+    transition:all .2s var(--ease);
+  }
+  .btn-sm:hover{border-color:var(--gold-deep); color:var(--gold-soft)}
+
+  .tilt-badge{
+    display:inline-flex; align-items:center; gap:7px;
+    padding:6px 12px; border-radius:999px;
+    background:rgba(196,107,92,.14); border:1px solid var(--bear);
+    color:var(--bear-soft); font-size:11.5px; font-weight:600;
+    letter-spacing:.03em; white-space:nowrap;
+    animation:tiltPulse 2.4s ease-in-out infinite;
+  }
+  .tilt-badge[hidden]{display:none}
+  .tilt-badge svg{width:13px; height:13px; flex:0 0 auto}
+  @keyframes tiltPulse{0%,100%{opacity:1}50%{opacity:.55}}
+  @media(prefers-reduced-motion:reduce){.tilt-badge{animation:none}}
+
   .stale-badge{
     display:inline-flex; align-items:center; gap:7px;
     padding:6px 12px; border-radius:999px;
@@ -2319,6 +2367,13 @@
         <span class="pulse"></span>
         <span id="sessionText">…</span>
       </div>
+      <div id="tiltBadge" class="tilt-badge" hidden role="status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true">
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span id="tiltText">Tilt détecté</span>
+      </div>
       <div id="staleBadge" class="stale-badge" hidden role="status">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/>
@@ -2950,6 +3005,20 @@
       <strong>Prop firm :</strong> 1 trade/cycle (3 h) · TP ≈ 150 $ · SL ≈ 118 $ · 4 steps max · 0 position après 18 h · fermeture avant 22 h (21 h ven) · pas de week-end.
     </div>
 
+    <div class="field">
+      <label>Stockage</label>
+      <div id="storageStats" class="storage-stats">—</div>
+      <div class="row gap-8 mt-8" style="flex-wrap:wrap">
+        <button id="btnCleanNow" class="btn-sm" type="button">Nettoyer maintenant</button>
+        <button id="btnPurgeKeep" class="btn-sm" type="button">Purger sauf calibration</button>
+      </div>
+      <div class="small muted mt-8">
+        Le nettoyage supprime les captures de plus de 30 jours et rogne
+        l'historique. La calibration, les réglages et l'état du compte FTMO
+        ne sont jamais touchés.
+      </div>
+    </div>
+
     <div class="field danger-field">
       <button id="btnReset" class="danger-btn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
@@ -3040,12 +3109,14 @@
 // MAJOR = refonte / breaking change · MINOR = nouvelle feature · PATCH = fix
 // Le pill "vN" dans le header est auto-dérivé du major
 // =====================================================================
-const APP_VERSION = "7.21.4";
+// Exposée sur window : le module PropFirm compare cette valeur à celle
+// affichée dans la pastille pour détecter un cache obsolète.
+window.APP_VERSION = "7.23.0";
 // v7.14.4 — fee confirmé 125.81 USDC (était 125.45), doc PROP_FIRM précisée : 1 fee par cycle
 //            (step 2/3/4 après SL = même challenge = gratuit), résultats semaine 13-17/07 :
 //            7/7 cycles gagnés, +173.60$ net, WR global passé de 80% à 85.2% (au-dessus du
 //            seuil de rentabilité), système devenu RENTABLE (EV nette +2.88$/cycle)
-// v7.21.4 — RETOURS MINIMAX INTÉGRÉS. Bug corrigé : le changelog v7.14.4 annonçait
+// v7.23.0 — RETOURS MINIMAX INTÉGRÉS. Bug corrigé : le changelog v7.14.4 annonçait
 //            un fee de 125.30 USDC alors que le code utilise 125.81 depuis la v7.14.5.
 //            Huit améliorations : pastille « données périmées » après deux cycles
 //            manqués, source du signal (TECH / F5) dans l'historique, BUY_SCORE_GATE
@@ -3288,7 +3359,11 @@ window.state = {
   paused: false,                // onglet caché : timers suspendus (visibilitychange)
   uiTimers: [],                 // ids des intervals cosmétiques (pause/reprise)
   lastDataFetch: 0,             // dernier fetch de données réussi (resync à la reprise)
-  morningFiredKey: "",          // garde anti-double de l'analyse matinale (clé jour)
+  // Garde anti-double de l'analyse matinale.
+  // Format : "YYYY-M-D" — mois 0-indexé (janvier = 0), sans padding.
+  // Construite par morningKey(). Persistée sous "xa_mfk" : sans cela, un
+  // rechargement de page après 08:45 relançait une seconde analyse matinale.
+  morningFiredKey: "",
   capture: null                 // {dataUrl, name, ts}  — capture Hydratrade unique
 };
 
@@ -3311,6 +3386,9 @@ const ui = {
   btnAnalyze: $("btnAnalyze"), btnAuto: $("btnAuto"), autoState: $("autoState"),
   sessionBadge: $("sessionBadge"), sessionText: $("sessionText"),
   staleBadge: $("staleBadge"), staleText: $("staleText"),
+  storageStats: $("storageStats"),
+  btnCleanNow: $("btnCleanNow"), btnPurgeKeep: $("btnPurgeKeep"),
+  tiltBadge: $("tiltBadge"), tiltText: $("tiltText"),
   cycle: $("cycle"), cycleTimer: $("cycleTimer"),
   modal: $("modal"),
   apiTwelve: $("apiTwelve"),
@@ -3353,6 +3431,9 @@ const LS = {
   del(k) { try { localStorage.removeItem(k); } catch {} }
 };
 function loadSettings() {
+  // Restaurée avant tout timer : sans elle, un rechargement après 08:45
+  // déclenchait une analyse matinale en double.
+  state.morningFiredKey = loadMorningKey();
   state.tf = LS.get("xa_tf", "15m");
   if (!TIMEFRAMES[state.tf]) state.tf = "15m";
   state.twelveKey = LS.get("xa_tk", "");
@@ -3421,6 +3502,7 @@ function pushHistory(entry) {
   h.unshift(entry);
   if (h.length > MAX_HISTORY) h.length = MAX_HISTORY;
   LS.set("xa_hist", h);
+  if (typeof scheduleCleanup === "function") scheduleCleanup();
 }
 function renderHistory() {
   const h = loadHistory();
@@ -3436,7 +3518,8 @@ function renderHistory() {
     // Distinguer d'où vient le signal : analyse technique locale ou Fable 5.
     // Les entrées antérieures à la v7.21.4 n'ont pas ce champ.
     const raw = (e.source || "").toLowerCase();
-    const isFable = raw.indexOf("fable") > -1 || raw.indexOf("minimax") > -1;
+    // Les sources réellement écrites sont « Fable 5 » et « technique ».
+    const isFable = raw.indexOf("fable") > -1;
     const srcCls = isFable ? "fable" : raw ? "local" : "unknown";
     const srcLab = isFable ? "F5" : raw ? "TECH" : "—";
     const srcTip = isFable ? "Signal Fable 5"
@@ -3460,6 +3543,9 @@ function loadCapture() {
 function saveCapture() {
   if (state.capture) LS.set("xa_cap", state.capture);
   else LS.del("xa_cap");
+  // Une capture pèse plusieurs centaines de Ko : c'est le moment de vérifier
+  // qu'une ancienne ne traîne pas.
+  if (typeof scheduleCleanup === "function") scheduleCleanup();
 }
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -4561,6 +4647,7 @@ function saveTradeHistory(trades, meta) {
   const capped = trades.slice(-MAX_TRADES_STORED);
   LS.set("xa_trades", capped);
   LS.set("xa_trades_meta", meta);
+  if (typeof scheduleCleanup === "function") scheduleCleanup();
   return capped;
 }
 function mergeTradeHistory(existing, incoming) {
@@ -6843,9 +6930,37 @@ async function importData(file) {
 /* ====================================================================
    DIAGNOSTIC & HELP
    ==================================================================== */
-async function runDiagnostic() {
+/** Affiche le dernier diagnostic connu, avec son horodatage. */
+function renderDiagnostic() {
+  if (!ui.diagnosticResults || !lastDiagnostic) return;
+  const age = Math.round((Date.now() - lastDiagnostic.at) / 60000);
+  const stamp = age < 1 ? "à l'instant" : "il y a " + age + " min";
+  ui.diagnosticResults.innerHTML = lastDiagnostic.tests.map(t => `
+    <div class="diag-item ${t.status}">
+      <span class="label">${t.label}</span>
+      <span class="status">${t.status === "ok" ? "✓ " : t.status === "warn" ? "⚠ " : "✗ "}${t.detail}</span>
+    </div>
+  `).join("") +
+  `<div class="diag-item" style="opacity:.55;border:0"><span class="label">Analyse ${stamp}</span>` +
+  `<span class="status"></span></div>`;
+}
+
+/**
+ * Résultat du dernier diagnostic, pour pré-remplir le panneau d'aide.
+ * Évite d'attendre plusieurs secondes quand on l'ouvre en pleine panne.
+ */
+let lastDiagnostic = null;
+
+/**
+ * @param {boolean} silent  true = exécution de fond : aucun rendu intermédiaire,
+ *                          aucun toast. Le résultat est mémorisé pour l'ouverture
+ *                          suivante du panneau.
+ */
+async function runDiagnostic(silent) {
   if (!ui.diagnosticResults) return;
-  ui.diagnosticResults.innerHTML = '<div class="diag-item"><span class="label">Analyse en cours…</span><span class="status">…</span></div>';
+  if (!silent) {
+    ui.diagnosticResults.innerHTML = '<div class="diag-item"><span class="label">Analyse en cours…</span><span class="status">…</span></div>';
+  }
 
   const tests = [];
 
@@ -6952,25 +7067,290 @@ async function runDiagnostic() {
     detail: new Date().toLocaleString("fr-FR", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" })
   });
 
-  // Affichage
-  ui.diagnosticResults.innerHTML = tests.map(t => `
-    <div class="diag-item ${t.status}">
-      <span class="label">${t.label}</span>
-      <span class="status">${t.status === "ok" ? "✓ " : t.status === "warn" ? "⚠ " : "✗ "}${t.detail}</span>
-    </div>
-  `).join("");
+  lastDiagnostic = { tests, at: Date.now() };
+  renderDiagnostic();
 
-  // Toast récap
   const errs = tests.filter(t => t.status === "err").length;
   const warns = tests.filter(t => t.status === "warn").length;
-  if (errs > 0) toast(`Diagnostic : ${errs} erreur(s), ${warns} avertissement(s)`, "err");
-  else if (warns > 0) toast(`Diagnostic OK — ${warns} avertissement(s)`, "info");
-  else toast("Diagnostic : tout est OK ✓", "ok");
+  // En mode silencieux, un toast surgirait sans que l'utilisateur ait rien demandé.
+  if (!silent) {
+    if (errs > 0) toast(`Diagnostic : ${errs} erreur(s), ${warns} avertissement(s)`, "err");
+    else if (warns > 0) toast(`Diagnostic OK — ${warns} avertissement(s)`, "info");
+    else toast("Diagnostic : tout est OK ✓", "ok");
+  }
+  return lastDiagnostic;
 }
+/* ======================================================================
+   STOCKAGE — inventaire et nettoyage automatique
+   ----------------------------------------------------------------------
+   Le localStorage est plafonné à ~5 Mo par origine. Une capture Hydratrade
+   en dataURL pèse couramment 500 Ko. Sans entretien, l'app finit par ne
+   plus pouvoir écrire — et l'échec est silencieux.
+
+   Principe : ne jamais supprimer ce qui ne se reconstruit pas. La
+   calibration, les réglages et l'état du compte FTMO sont intouchables ;
+   seules les données régénérables ou périmées sont rognées.
+   ====================================================================== */
+
+/** Clés dont la perte serait irréversible ou coûteuse. */
+const LS_PRESERVE = [
+  "xa_tf", "xa_tk", "xa_ak", "xa_fee", "xa_feeref", "xa_hol", "xa_nl",
+  "xa_ar", "xa_am", "xa_aac", "xa_cd", "xa_mfk",
+  "xa_trades", "xa_trades_meta",
+  "propfirm_journey_v1", "propfirm_bridge_v1",
+  // État du compte FTMO : equity, position ouverte, compteurs de garde-fous.
+  "propfirm_state_v1", "propfirm_lastview", "propfirm_levelsrc"
+];
+
+/** Clés que le nettoyage peut réduire ou supprimer. */
+const LS_CLEANABLE = ["xa_cap", "xa_hist", "propfirm_journal_v1"];
+
+const CLEANUP = {
+  captureMaxAgeDays: 30,
+  histKeep: 20,          // en deçà de MAX_HISTORY (50), volontairement
+  journalKeep: 50,       // en deçà du plafond du module PropFirm (200)
+  minIntervalMs: 60 * 60 * 1000,
+  quotaBytes: 5 * 1024 * 1024
+};
+
+let lastCleanupAt = 0;
+let lastCleanupReport = null;
+
+/** Taille approchée d'une chaîne en octets (UTF-16 : 2 octets par unité). */
+function lsEntrySize(raw) {
+  return raw ? raw.length * 2 : 0;
+}
+
+function fmtKB(bytes) {
+  if (bytes < 1024) return bytes + " o";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " Ko";
+  return (bytes / (1024 * 1024)).toFixed(2) + " Mo";
+}
+
+/**
+ * Inventaire du stockage : taille par clé, part du quota, alertes.
+ * Ne modifie rien.
+ */
+function computeStorageStats() {
+  const perKey = [];
+  let total = 0;
+  const known = LS_PRESERVE.concat(LS_CLEANABLE);
+
+  let allKeys = [];
+  try { allKeys = Object.keys(localStorage); } catch (e) { allKeys = known; }
+  // Les clés inconnues comptent dans le total : elles occupent le quota.
+  const keys = known.concat(allKeys.filter(k => known.indexOf(k) === -1));
+
+  keys.forEach(key => {
+    let raw = null;
+    try { raw = localStorage.getItem(key); } catch (e) { raw = null; }
+    if (raw == null) return;
+    const size = lsEntrySize(raw);
+    total += size;
+    const entry = { key, size, preserved: LS_PRESERVE.indexOf(key) > -1 };
+
+    // Détail utile selon la nature de la clé
+    try {
+      if (key === "xa_hist" || key === "propfirm_journal_v1") {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) entry.count = arr.length;
+      } else if (key === "xa_cap") {
+        const cap = JSON.parse(raw);
+        if (cap && cap.ts) entry.ageDays = Math.floor((Date.now() - cap.ts) / 86400000);
+      } else if (key === "xa_trades") {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) entry.count = arr.length;
+      }
+    } catch (e) { /* contenu illisible : la taille suffit */ }
+
+    perKey.push(entry);
+  });
+
+  perKey.sort((a, b) => b.size - a.size);
+  const quotaPercent = Math.min(100, Math.round(total / CLEANUP.quotaBytes * 100));
+
+  const warnings = [];
+  if (quotaPercent >= 80)
+    warnings.push("Stockage à " + quotaPercent + " % du quota estimé — un nettoyage est conseillé.");
+  const cap = perKey.find(e => e.key === "xa_cap");
+  if (cap && cap.size > 400 * 1024)
+    warnings.push("La capture occupe " + fmtKB(cap.size) + " à elle seule.");
+
+  return { total, perKey, quotaPercent, warnings, keyCount: perKey.length };
+}
+
+/**
+ * Nettoyage automatique. Idempotent : le second appel ne trouve plus rien
+ * à faire et le signale.
+ *
+ * @param {object} opts
+ *   opts.force   ignore l'intervalle minimum entre deux passages
+ *   opts.silent  n'écrit rien dans la console
+ * @returns {{actions:Array, freed:number, skipped:string|null}}
+ */
+function autoCleanupStorage(opts) {
+  const o = opts || {};
+  const actions = [];
+  let freed = 0;
+
+  if (!o.force && Date.now() - lastCleanupAt < CLEANUP.minIntervalMs) {
+    return { actions, freed, skipped: "intervalle minimum non écoulé" };
+  }
+  lastCleanupAt = Date.now();
+
+  const log = msg => { if (!o.silent) console.log("[cleanup] " + msg); };
+
+  /* --- Capture périmée -------------------------------------------- */
+  try {
+    const raw = localStorage.getItem("xa_cap");
+    if (raw) {
+      const size = lsEntrySize(raw);
+      let cap = null;
+      try { cap = JSON.parse(raw); } catch (e) { cap = null; }
+      const ts = cap && cap.ts ? cap.ts : null;
+      const ageDays = ts ? (Date.now() - ts) / 86400000 : null;
+      // Sans horodatage, on ne peut pas juger de l'âge : on conserve.
+      if (ageDays != null && ageDays > CLEANUP.captureMaxAgeDays) {
+        LS.del("xa_cap");
+        if (typeof state === "object" && state) state.capture = null;
+        if (typeof renderCapture === "function") renderCapture();
+        freed += size;
+        actions.push({ key: "xa_cap", type: "delete", freed: size, ageDays: Math.floor(ageDays) });
+        log("xa_cap : " + fmtKB(size) + " supprimée (" + Math.floor(ageDays) + " j)");
+      }
+    }
+  } catch (e) { log("xa_cap : inaccessible (" + e.message + ")"); }
+
+  /* --- Historique des signaux -------------------------------------- */
+  try {
+    const raw = localStorage.getItem("xa_hist");
+    if (raw) {
+      const before = lsEntrySize(raw);
+      let arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length > CLEANUP.histKeep) {
+        const n = arr.length;
+        // Les entrées sans horodatage partent en queue : on ne peut pas
+        // affirmer qu'elles sont récentes, donc elles cèdent la place.
+        arr = arr.slice().sort((a, b) => (b && b.ts ? b.ts : -Infinity) - (a && a.ts ? a.ts : -Infinity))
+                 .slice(0, CLEANUP.histKeep);
+        LS.set("xa_hist", arr);
+        const after = lsEntrySize(localStorage.getItem("xa_hist"));
+        freed += before - after;
+        actions.push({ key: "xa_hist", type: "truncate", from: n, to: arr.length, freed: before - after });
+        log("xa_hist : " + n + " entrées → " + arr.length);
+      }
+    }
+  } catch (e) { log("xa_hist : inaccessible (" + e.message + ")"); }
+
+  /* --- Journal PropFirm -------------------------------------------- */
+  try {
+    // Une position ouverte suppose un suivi en cours : on ne touche à rien.
+    let hasOpen = false;
+    try {
+      const st = JSON.parse(localStorage.getItem("propfirm_state_v1") || "null");
+      hasOpen = !!(st && st.account && st.account.openPosition);
+    } catch (e) { hasOpen = false; }
+
+    if (hasOpen) {
+      log("propfirm_journal_v1 : position ouverte, journal conservé");
+    } else {
+      const raw = localStorage.getItem("propfirm_journal_v1");
+      if (raw) {
+        const before = lsEntrySize(raw);
+        let arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length > CLEANUP.journalKeep) {
+          const n = arr.length;
+          // Le journal PropFirm est daté par openedAt (ISO), pas par ts.
+          arr = arr.slice().sort((a, b) => {
+            const ta = a && a.openedAt ? Date.parse(a.openedAt) : -Infinity;
+            const tb = b && b.openedAt ? Date.parse(b.openedAt) : -Infinity;
+            return (isNaN(tb) ? -Infinity : tb) - (isNaN(ta) ? -Infinity : ta);
+          }).slice(0, CLEANUP.journalKeep);
+          localStorage.setItem("propfirm_journal_v1", JSON.stringify(arr));
+          const after = lsEntrySize(localStorage.getItem("propfirm_journal_v1"));
+          freed += before - after;
+          actions.push({ key: "propfirm_journal_v1", type: "truncate", from: n, to: arr.length, freed: before - after });
+          log("propfirm_journal_v1 : " + n + " entrées → " + arr.length);
+        }
+      }
+    }
+  } catch (e) { log("propfirm_journal_v1 : inaccessible (" + e.message + ")"); }
+
+  if (!actions.length) log("rien à faire (no-op)");
+  else log("terminé — " + fmtKB(freed) + " libérés");
+
+  lastCleanupReport = { actions, freed, at: Date.now() };
+  if (typeof updateStorageUI === "function") updateStorageUI();
+  return { actions, freed, skipped: null };
+}
+
+/**
+ * Purge les données régénérables en préservant intégralement la
+ * calibration, les réglages et l'état du compte FTMO.
+ */
+function purgeKeepCalibration() {
+  const removed = [];
+  let freed = 0;
+
+  LS_CLEANABLE.forEach(key => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw == null) return;
+      freed += lsEntrySize(raw);
+      if (key === "xa_cap") {
+        LS.del("xa_cap");
+        if (typeof state === "object" && state) state.capture = null;
+      } else if (key === "xa_hist") {
+        LS.set("xa_hist", []);
+      } else {
+        localStorage.setItem(key, JSON.stringify([]));
+      }
+      removed.push(key);
+    } catch (e) { console.warn("[purge] " + key + " :", e.message); }
+  });
+
+  try { if (typeof renderCapture === "function") renderCapture(); } catch (e) { /* DOM */ }
+  try { if (typeof renderHistory === "function") renderHistory(); } catch (e) { /* DOM */ }
+  try { if (window.PropFirmUI && window.PropFirmUI.render) window.PropFirmUI.render(); } catch (e) { /* module */ }
+
+  console.log("[purge] " + removed.length + " clé(s) vidée(s), " + fmtKB(freed) + " libérés");
+  if (typeof updateStorageUI === "function") updateStorageUI();
+  return { removed, freed };
+}
+
+/** Met à jour l'encart « Stockage » des réglages. */
+function updateStorageUI() {
+  if (!ui.storageStats) return;
+  const s = computeStorageStats();
+  const cls = s.quotaPercent >= 80 ? "err" : s.quotaPercent >= 60 ? "warn" : "";
+  ui.storageStats.className = "storage-stats " + cls;
+  ui.storageStats.innerHTML =
+    '<div class="storage-line"><strong>' + fmtKB(s.total) + '</strong> utilisés · ' +
+    s.quotaPercent + ' % du quota estimé · ' + s.keyCount + ' clés</div>' +
+    '<div class="storage-bar"><span style="width:' + Math.max(2, s.quotaPercent) + '%"></span></div>' +
+    (s.perKey.length
+      ? '<div class="storage-detail">' + s.perKey.slice(0, 4).map(e =>
+          '<span>' + e.key + ' ' + fmtKB(e.size) +
+          (e.count != null ? ' (' + e.count + ')' : '') +
+          (e.ageDays != null ? ' (' + e.ageDays + ' j)' : '') + '</span>').join("") + '</div>'
+      : '') +
+    (s.warnings.length ? '<div class="storage-warn">' + s.warnings.map(escapeHtml).join("<br>") + '</div>' : '');
+}
+
+/**
+ * Déclencheur à appeler après toute écriture importante. Respecte
+ * l'intervalle minimum pour ne pas tourner à chaque signal.
+ */
+function scheduleCleanup() {
+  try { autoCleanupStorage({ silent: true }); }
+  catch (e) { console.warn("[cleanup] échec :", e.message); }
+}
+
+
 function resetAllData() {
   if (!confirm("⚠️ Tout effacer :\n\n• Réglages (clé API, notifs, auto-modes)\n• Capture Hydratrade\n• Historique des signaux\n• Préférences UI\n\nCette action est IRRÉVERSIBLE. Continuer ?")) return;
   // Liste des clés à nettoyer
-  ["xa_tk", "xa_ak", "xa_fee", "xa_feeref", "xa_hol", "xa_nl", "xa_ar", "xa_am", "xa_aac", "xa_cap", "xa_hist", "xa_cd", "xa_tf", "xa_trades", "xa_trades_meta"].forEach(k => LS.del(k));
+  ["xa_tk", "xa_ak", "xa_fee", "xa_feeref", "xa_hol", "xa_nl", "xa_ar", "xa_am", "xa_aac", "xa_cap", "xa_hist", "xa_mfk", "xa_cd", "xa_tf", "xa_trades", "xa_trades_meta"].forEach(k => LS.del(k));
   state.twelveKey = "";
   state.anthropicKey = "";
   state.cycleFee = PROP_FIRM.cycleFeeDefault;
@@ -7155,6 +7535,22 @@ function updateCycleUI() {
 /* ====================================================================
    TIMERS / SCHEDULING
    ==================================================================== */
+/**
+ * Clé de journée pour la garde matinale : "YYYY-M-D", mois 0-indexé.
+ * Centralisée pour que les deux points d'appel (timer et rattrapage) ne
+ * puissent pas diverger.
+ */
+function morningKey(d) {
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+function loadMorningKey() {
+  try { return LS.get("xa_mfk", "") || ""; } catch (e) { return ""; }
+}
+function saveMorningKey(k) {
+  state.morningFiredKey = k;
+  try { LS.set("xa_mfk", k); } catch (e) { /* quota */ }
+}
+
 function setupAutoTimers() {
   // La pastille doit vieillir toute seule, même sans nouveau fetch.
   setInterval(renderStaleBadge, 30000);
@@ -7174,10 +7570,10 @@ function setupAutoTimers() {
   if (state.autoMorning) {
     state.scheduleTimer = setInterval(() => {
       const d = nowBerlin();
-      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      const key = morningKey(d);
       // v7.14.0 : signal matinal décalé de 05:00 à 08:45 (pré-Londres, liquidité réelle)
       if (d.getHours() === 8 && d.getMinutes() >= 45 && d.getMinutes() < 47 && d.getDay() >= 1 && d.getDay() <= 5 && state.morningFiredKey !== key) {
-        state.morningFiredKey = key;
+        saveMorningKey(key);
         analyzeNow();
       }
     }, 30000);
@@ -7222,9 +7618,9 @@ function resumeAllTimers() {
   // Rattrapage de l'analyse matinale 05h00-05h02 (jour ouvré) manquée en arrière-plan
   if (state.autoMorning && !state.analyzing) {
     const d = nowBerlin();
-    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    const key = morningKey(d);
     if (d.getDay() >= 1 && d.getDay() <= 5 && (d.getHours() > 8 || (d.getHours() === 8 && d.getMinutes() >= 45)) && state.morningFiredKey !== key) {
-      state.morningFiredKey = key;
+      saveMorningKey(key);
       analyzeNow();
     }
   }
@@ -7288,12 +7684,37 @@ ui.btnAuto.addEventListener("click", () => {
   setupAutoTimers();
   toast("Auto-rafraîchissement " + (state.autoRefresh ? "activé" : "désactivé"), "info");
 });
-ui.btnSettings.addEventListener("click", () => ui.modal.classList.remove("hidden"));
+ui.btnSettings.addEventListener("click", () => {
+  ui.modal.classList.remove("hidden");
+  // L'encart doit refléter l'état au moment de l'ouverture, pas au chargement.
+  try { updateStorageUI(); } catch (e) { console.warn("stockage :", e.message); }
+});
 ui.btnClose.addEventListener("click", () => ui.modal.classList.add("hidden"));
 ui.btnHelp.addEventListener("click", () => ui.helpModal.classList.remove("hidden"));
 if (ui.btnCloseHelp) ui.btnCloseHelp.addEventListener("click", () => ui.helpModal.classList.add("hidden"));
 if (ui.helpModal) ui.helpModal.addEventListener("click", e => { if (e.target === ui.helpModal) ui.helpModal.classList.add("hidden"); });
-if (ui.btnRunDiagnostic) ui.btnRunDiagnostic.addEventListener("click", runDiagnostic);
+if (ui.btnRunDiagnostic) ui.btnRunDiagnostic.addEventListener("click", () => runDiagnostic(false));
+
+if (ui.btnCleanNow) ui.btnCleanNow.addEventListener("click", () => {
+  const before = computeStorageStats().total;
+  const r = autoCleanupStorage({ force: true });
+  const after = computeStorageStats().total;
+  updateStorageUI();
+  if (!r.actions.length) toast("Stockage déjà optimisé — rien à nettoyer", "info");
+  else toast("Nettoyage : " + fmtKB(Math.max(0, before - after)) + " libérés · " +
+             r.actions.map(a => a.key).join(", "), "ok", 4500);
+});
+
+if (ui.btnPurgeKeep) ui.btnPurgeKeep.addEventListener("click", () => {
+  if (!confirm("Purger la capture, l'historique des signaux et le journal PropFirm ?\n\n" +
+               "Vos réglages, votre calibration (trades importés) et l'état du compte " +
+               "FTMO seront conservés.")) return;
+  const before = computeStorageStats().total;
+  const r = purgeKeepCalibration();
+  const after = computeStorageStats().total;
+  updateStorageUI();
+  toast("Purge : " + fmtKB(Math.max(0, before - after)) + " libérés · calibration préservée", "ok", 4500);
+});
 if (ui.btnReset) ui.btnReset.addEventListener("click", resetAllData);
 ui.modal.addEventListener("click", e => { if (e.target === ui.modal) ui.modal.classList.add("hidden"); });
 ui.btnSave.addEventListener("click", () => { saveSettings(); ui.modal.classList.add("hidden"); });
@@ -9005,6 +9426,22 @@ function setTimeframe(tf) {
    * Pastille de l'onglet PropFirm : signale d'un coup d'œil, depuis
    * n'importe quelle vue, ce qui demande attention.
    */
+  /**
+   * Le tilt était détecté par le moteur mais n'apparaissait que dans le chat.
+   * Or c'est précisément au moment du tilt qu'on ne lit pas le chat.
+   * Le badge vit dans le bandeau principal, visible depuis les deux onglets.
+   */
+  function renderTiltBadge() {
+    const badge = $("tiltBadge");
+    if (!badge) return;
+    const t = PF.tiltCheck(S, new Date());
+    if (!t.tilt) { badge.hidden = true; return; }
+    const txt = $("tiltText");
+    if (txt) txt.textContent = "Tilt — " + t.gapMinutes + " min";
+    badge.title = t.message + " Prends le temps de respirer avant le prochain trade.";
+    badge.hidden = false;
+  }
+
   function renderNavDot() {
     const dot = $("pfNavDot");
     if (!dot) return;
@@ -9151,7 +9588,7 @@ function setTimeframe(tf) {
     // de se mettre à jour, et surtout ne fige pas l'interface.
     const parts = [renderFigures, renderPhase, renderJourney, renderGauges,
                    renderSignalImport, renderTicket, renderPosition,
-                   renderJournal, renderMode, renderBridge];
+                   renderJournal, renderMode, renderBridge, renderTiltBadge];
     let firstError = null;
     for (const fn of parts) {
       try { fn(); }
@@ -9264,17 +9701,79 @@ function setTimeframe(tf) {
     });
   }
 
-  function toggleMode() {
+  async function toggleMode() {
     if (S.mode === "LIVE") { S.mode = "PAPER"; persist(); renderAll(); return; }
     const answer = prompt(
       "Passage en mode LIVE — les ordres partiront réellement chez cTrader.\n\n" +
       "Tapez " + CONFIRM_WORD + " pour confirmer.");
     if (answer !== CONFIRM_WORD) return;
-    if (!BRIDGE.online) {
-      alert("Le bridge n'est pas joignable. Testez la connexion avant de passer en LIVE.");
+
+    // BRIDGE.online peut dater de la dernière minute : on revérifie MAINTENANT.
+    // Basculer en LIVE sur une information périmée, c'est croire que les ordres
+    // partent alors qu'ils tombent dans le vide.
+    const label = $("pfModeLabel");
+    if (label) label.textContent = "…";
+    let ack = null;
+    try { ack = await bridgeHandshake(); }
+    catch (e) { ack = { ok: false, reason: e.message }; }
+    if (label) label.textContent = S.mode;
+
+    if (!ack.ok) {
+      alert("Passage en LIVE refusé.\n\n" + ack.reason +
+            "\n\nLe mode PAPER reste actif.");
+      renderAll();
       return;
     }
+    if (ack.warning) {
+      if (!confirm("Le bridge répond, mais :\n\n" + ack.warning +
+                   "\n\nPasser quand même en LIVE ?")) { renderAll(); return; }
+    }
     S.mode = "LIVE"; persist(); renderAll();
+  }
+
+  /**
+   * Vérifie, au moment précis de la bascule, que le bridge est joignable ET
+   * en état d'exécuter des ordres. Un ping qui répond ne suffit pas : le
+   * bridge peut tourner sans être réconcilié avec cTrader.
+   */
+  async function bridgeHandshake() {
+    if (!BRIDGE.url) return { ok: false, reason: "Aucune adresse de bridge configurée." };
+    let res, data;
+    try {
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 6000);
+      res = await fetch(BRIDGE.url.replace(/\/$/, "") + "/health", { signal: ctl.signal });
+      clearTimeout(timer);
+    } catch (e) {
+      BRIDGE.online = false;
+      return { ok: false, reason: "Bridge injoignable : " + e.message };
+    }
+    if (!res.ok) {
+      BRIDGE.online = false;
+      return { ok: false, reason: "Le bridge a répondu HTTP " + res.status + "." };
+    }
+    try { data = await res.json(); }
+    catch (e) { return { ok: false, reason: "Réponse du bridge illisible." }; }
+
+    BRIDGE.online = true;
+    BRIDGE.lastPing = Date.now();
+
+    if (data.reconciled === false)
+      return { ok: false, reason: "Le bridge n'est pas réconcilié avec cTrader." };
+    if (data.mode && data.mode !== "LIVE")
+      return { ok: false, reason: "Le bridge tourne en mode " + data.mode +
+               ". Passe-le en LIVE dans son .env avant de basculer ici." };
+
+    const warnings = [];
+    if (data.ctrader && data.ctrader.configured === false)
+      warnings.push("· cTrader n'est pas configuré : les ordres ne partiront pas.");
+    else if (data.ctrader && data.ctrader.connected === false)
+      warnings.push("· cTrader est configuré mais déconnecté.");
+    if (data.verification && data.verification.canGoLive === false)
+      warnings.push("· " + data.verification.blocking +
+                    " valeur(s) du contrat FTMO non confirmée(s).");
+
+    return { ok: true, warning: warnings.length ? warnings.join("\n") : null, health: data };
   }
 
   /* ==================================================================
@@ -9555,7 +10054,9 @@ function setTimeframe(tf) {
       if (!ACC.openPosition) return;
       if (confirm("Fermer la position au prix courant ?")) closePosition("SL");
     });
-    $("pfModeToggle").addEventListener("click", toggleMode);
+    $("pfModeToggle").addEventListener("click", () => {
+      toggleMode().catch(e => console.error("[PropFirm] bascule de mode", e));
+    });
 
     $("pfBridgeUrl").addEventListener("change", e => {
       BRIDGE.url = e.target.value.trim(); persist(); pingBridge();
@@ -9591,6 +10092,8 @@ function setTimeframe(tf) {
     setInterval(() => {
       if (PF.rollDay(S, { "ftmo-1": ACC }, new Date())) { persist(); renderAll(); }
       else if (ACC.openPosition) renderPosition();
+      // Le tilt s'estompe avec le temps : le badge doit disparaître seul.
+      try { renderTiltBadge(); } catch (e) { /* DOM absent */ }
     }, 30000);
     // Le signal peut changer pendant qu'on est sur l'onglet
     let lastSigTs = null;
@@ -9618,6 +10121,19 @@ function setTimeframe(tf) {
     boot();
   }
 
+  /** Version déclarée par l'application, normalisée sans le « v » initial. */
+  function appVersion() {
+    try {
+      if (typeof window.APP_VERSION === "string") return window.APP_VERSION.replace(/^v/, "");
+    } catch (e) { /* non exposée */ }
+    return domVersion() || "?";
+  }
+  /** Version affichée dans la pastille, pour détecter un cache obsolète. */
+  function domVersion() {
+    const el = $("appVersion");
+    return el && el.textContent ? el.textContent.trim().replace(/^v/, "") : null;
+  }
+
   /** Diagnostic exécutable depuis la console du navigateur. */
   function diagnose() {
     const r = {
@@ -9628,7 +10144,11 @@ function setTimeframe(tf) {
       vuePropFirm: !!document.getElementById("view-propfirm"),
       moduleInitialise: inited,
       etatPret: ready,
-      version: (window.APP_VERSION || document.getElementById("appVersion")?.textContent || "?"),
+      // La version vient de la constante de l'application ; le DOM n'est qu'un
+      // repli. Une comparaison à un motif figé se périme à chaque release :
+      // on confronte plutôt ce que dit le code à ce qu'affiche la page.
+      version: appVersion(),
+      versionAffichee: domVersion(),
       equity: ACC ? ACC.equity : null,
       mode: S ? S.mode : null
     };
@@ -9638,7 +10158,12 @@ function setTimeframe(tf) {
     if (!r.navBoutons) pb.push("Aucun bouton .mainnav-btn — mauvais fichier en ligne.");
     if (r.navBoutons && !r.navBranchee) pb.push("Boutons présents mais non branchés.");
     if (!r.vuePropFirm) pb.push("La vue #view-propfirm est absente du HTML.");
-    if (!/7\.1[6-9]\./.test(String(r.version))) pb.push("Version " + r.version + " — ce n'est pas la v7.16.0 (cache ?).");
+    if (r.version === "?") {
+      pb.push("Version introuvable — le script n'a peut-être pas fini de charger.");
+    } else if (r.versionAffichee && r.versionAffichee !== r.version) {
+      pb.push("Le code annonce " + r.version + " mais la page affiche " +
+              r.versionAffichee + " — rechargez sans cache (Cmd+Shift+R).");
+    }
     console.log(pb.length ? "PROBLÈMES :\n  · " + pb.join("\n  · ") : "Tout est en place.");
     return r;
   }
@@ -9734,7 +10259,19 @@ function init() {
   step("timers", () => setupAutoTimers());
   step("propfirm", () => { if (window.PropFirmUI) window.PropFirmUI.init(); });
   // Précharge les données pour avoir un verdict instantané au premier clic
+  step("storage", () => {
+    // Passage silencieux au démarrage : l'app doit pouvoir écrire dès le
+    // premier signal, même après des semaines d'accumulation.
+    autoCleanupStorage({ force: true, silent: false });
+    updateStorageUI();
+  });
   step("preload", () => refreshDataOnly());
+  // Diagnostic préventif : lancé après le chargement pour ne pas retarder
+  // l'affichage, et silencieux pour ne pas interrompre l'utilisateur.
+  // Son résultat pré-remplit le panneau d'aide.
+  setTimeout(() => {
+    runDiagnostic(true).catch(e => console.warn("diagnostic de fond :", e));
+  }, 4000);
 }
 init();
 </script>
