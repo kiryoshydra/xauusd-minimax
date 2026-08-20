@@ -7604,6 +7604,7 @@ function setupAutoTimers() {
   // La pastille doit vieillir toute seule, même sans nouveau fetch.
   setInterval(renderStaleBadge, 30000);
   if (state.autoTimer) { clearInterval(state.autoTimer); state.autoTimer = null; }
+  if (state.confidenceScanTimer) { clearInterval(state.confidenceScanTimer); state.confidenceScanTimer = null; }
   if (state.scheduleTimer) { clearInterval(state.scheduleTimer); state.scheduleTimer = null; }
   if (state.autoRefresh) {
     state.refreshCountdown = REFRESH_MS / 1000;
@@ -7615,6 +7616,14 @@ function setupAutoTimers() {
         refreshDataOnly();
       }
     }, 1000);
+    
+    // v7.24.0 : Auto-Scan CONFIANCE FORT toutes les 15 minutes
+    state.confidenceScanTimer = setInterval(() => {
+      scanForConfidenceFort();
+    }, 15 * 60 * 1000);
+    
+    // Scan immédiat au démarrage
+    scanForConfidenceFort();
   }
   if (state.autoMorning) {
     state.scheduleTimer = setInterval(() => {
@@ -7731,7 +7740,13 @@ ui.btnAuto.addEventListener("click", () => {
   if (ui.autoState) ui.autoState.textContent = state.autoRefresh ? "on" : "off";
   ui.autoRefresh.checked = state.autoRefresh;
   setupAutoTimers();
-  toast("Auto-rafraîchissement " + (state.autoRefresh ? "activé" : "désactivé"), "info");
+  
+  // v7.24.0 : Demander permission pour push notifications quand activé
+  if (state.autoRefresh && "Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+  
+  toast("Auto-rafraîchissement + Scan CONFIANCE FORT " + (state.autoRefresh ? "activé" : "désactivé"), "info");
 });
 ui.btnSettings.addEventListener("click", () => {
   ui.modal.classList.remove("hidden");
@@ -10322,6 +10337,115 @@ function init() {
     runDiagnostic(true).catch(e => console.warn("diagnostic de fond :", e));
   }, 4000);
 }
+
+/* ====================================================================
+   AUTO-SCAN CONFIANCE FORT v7.24.0
+   Scanne automatiquement et notifie quand CONFIANCE FORT est détectée
+   ==================================================================== */
+function scanForConfidenceFort() {
+  if (!state.autoRefresh) return;
+  
+  // Chercher "CONFIANCE FORT" dans le DOM
+  const confidenceText = ui.vConfChip ? ui.vConfChip.textContent : "";
+  const hasConfidenceFort = confidenceText.includes("FORT");
+  
+  if (hasConfidenceFort) {
+    triggerConfidenceNotification();
+  }
+}
+
+function triggerConfidenceNotification() {
+  // 1. Popup visuelle
+  showConfidencePopup();
+  
+  // 2. Son
+  playNotificationSound();
+  
+  // 3. Push notification
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification("🎯 CONFIANCE FORT DÉTECTÉE !", {
+      body: "Un signal CONFIANCE FORT est disponible sur XAUUSD",
+      icon: "🟢",
+      tag: "confidence-fort",
+      requireInteraction: true
+    });
+  }
+}
+
+function showConfidencePopup() {
+  const popup = document.createElement("div");
+  popup.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #14171f 0%, #1a1d27 100%);
+    border: 2px solid #5fa47e;
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    z-index: 9999;
+    box-shadow: 0 0 40px rgba(95, 164, 126, 0.3);
+    animation: popupPulse 0.5s ease-out;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  `;
+  
+  popup.innerHTML = `
+    <div style="font-size: 56px; margin-bottom: 20px;">🎯</div>
+    <div style="color: #5fa47e; font-size: 28px; font-weight: 700; margin-bottom: 12px;">
+      CONFIANCE FORT !
+    </div>
+    <div style="color: #82bd9c; font-size: 15px;">
+      Signal viable détecté
+    </div>
+  `;
+  
+  // Ajouter l'animation CSS
+  if (!document.querySelector("style[data-popup-animation]")) {
+    const style = document.createElement("style");
+    style.setAttribute("data-popup-animation", "true");
+    style.textContent = `
+      @keyframes popupPulse {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.8);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  document.body.appendChild(popup);
+  
+  setTimeout(() => popup.remove(), 5000);
+}
+
+function playNotificationSound() {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = "sine";
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+  } catch (e) {
+    // Son non disponible, ignorer silencieusement
+  }
+}
+
 init();
 </script>
 </body>
