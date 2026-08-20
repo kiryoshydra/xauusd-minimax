@@ -3111,7 +3111,11 @@
 // =====================================================================
 // Exposée sur window : le module PropFirm compare cette valeur à celle
 // affichée dans la pastille pour détecter un cache obsolète.
-window.APP_VERSION = "7.23.1";
+window.APP_VERSION = "7.24.0";
+// v7.24.0 — AUTO-SCAN CONFIANCE FORT. Le bouton « Auto: » lance automatiquement un scan
+//            toutes les 15 minutes pour détecter quand CONFIANCE FORT apparaît dans le signal.
+//            Notifications en trois canaux : (1) popup visuelle avec animation, (2) son beep,
+//            (3) push notification browser. Permission demandée à l'activation du mode auto.
 // v7.23.1 — CHANGELOG CORRIGÉ. Le générateur réécrivait la même entrée à chaque
 //            build : les versions 7.21.5, 7.22.0 et 7.23.0 partageaient un texte identique,
 //            hérité de la 7.21.4. Il empile désormais une entrée distincte par version,
