@@ -3114,7 +3114,10 @@
 // =====================================================================
 // Exposée sur window : le module PropFirm compare cette valeur à celle
 // affichée dans la pastille pour détecter un cache obsolète.
-window.APP_VERSION = "7.25.1";
+window.APP_VERSION = "7.25.2";
+// v7.25.2 — AUTO-SCAN RECHARGE LES DONNÉES. Le scan Auto toutes les 15 minutes
+//            recharge maintenant les données du marché (prix XAUUSD, direction, indicateurs)
+//            avant de vérifier CONFIANCE FORT. Affichage complet mis à jour en temps réel.
 // v7.25.1 — TIMESTAMP AUTO-SCAN ACTIF. Le timestamp se met à jour en temps réel
 //            avec l'heure du dernier scan Auto (toutes les 15 min). Affiche
 //            "Dernier scan Auto: HH:MM (Berlin)" au lieu de "Signal émis...".
@@ -10362,10 +10365,18 @@ function init() {
    AUTO-SCAN CONFIANCE FORT v7.24.0
    Scanne automatiquement et notifie quand CONFIANCE FORT est détectée
    ==================================================================== */
-function scanForConfidenceFort() {
+async function scanForConfidenceFort() {
   if (!state.autoRefresh) return;
   
-  // v7.25.1 : Mettre à jour le timestamp avec l'heure du scan Auto
+  // v7.25.2 : Recharger les données fraîches AVANT de vérifier CONFIANCE FORT
+  try {
+    await refreshDataOnly();
+  } catch (e) {
+    console.warn("Auto-scan data refresh failed:", e.message);
+    return; // Si la recharge échoue, on saute ce scan
+  }
+  
+  // Mettre à jour le timestamp avec l'heure du scan Auto
   const scanTime = new Date();
   if (ui.vTs) {
     ui.vTs.textContent = "Dernier scan Auto: " + formatTimeBerlin(scanTime) + " (Berlin)";
