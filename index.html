@@ -784,11 +784,13 @@
   }
   .verdict .vts{
     text-align:center;
-    font-size:10.5px;
-    color:var(--text-3);
+    font-size:16px;
+    font-weight:600;
+    color:var(--text);
     margin-top:14px;
     letter-spacing:0.1em;
     text-transform:uppercase;
+    text-shadow:0 0 20px rgba(201,169,97,0.15);
   }
 
   /* ---------- Risk flags ---------- */
@@ -2419,6 +2421,7 @@
     </div>
     <div id="vRaison" class="vraison">Cliquez sur « Analyser » pour générer un signal.</div>
     <div id="vTs" class="vts">—</div>
+    <div id="vCountdown" class="vts" style="margin-top:8px;font-size:14px;color:var(--text-2);display:none">Prochain scan: <span id="countdownTime">—</span></div>
   </section>
 
   <!-- ============== ACTION BUTTONS ============== -->
@@ -3111,15 +3114,14 @@
 // =====================================================================
 // Exposée sur window : le module PropFirm compare cette valeur à celle
 // affichée dans la pastille pour détecter un cache obsolète.
-window.APP_VERSION = "7.24.0";
+window.APP_VERSION = "7.25.0";
+// v7.25.0 — TIMESTAMP PLUS VISIBLE + COUNTDOWN AUTO-SCAN. Timestamp "Signal émis..."
+//            augmenté en taille (16px) et luminosité (blanc). Nouvelles affichage du
+//            compte à rebours (MM:SS) avant le prochain scan CONFIANCE FORT quand Auto est ON.
 // v7.24.0 — AUTO-SCAN CONFIANCE FORT. Le bouton « Auto: » lance automatiquement un scan
 //            toutes les 15 minutes pour détecter quand CONFIANCE FORT apparaît dans le signal.
 //            Notifications en trois canaux : (1) popup visuelle avec animation, (2) son beep,
 //            (3) push notification browser. Permission demandée à l'activation du mode auto.
-// v7.23.1 — CHANGELOG CORRIGÉ. Le générateur réécrivait la même entrée à chaque
-//            build : les versions 7.21.5, 7.22.0 et 7.23.0 partageaient un texte identique,
-//            hérité de la 7.21.4. Il empile désormais une entrée distincte par version,
-//            et refuse de construire si la version courante n'y figure pas.
 //            Verrou de ré-entrance sur autoCleanupStorage() : deux clics rapides sur
 //            « Nettoyer maintenant » faisaient rapporter « rien à nettoyer » au second,
 //            alors que le premier venait de libérer de l'espace. Un toast signale désormais
@@ -3401,7 +3403,7 @@ const $ = id => document.getElementById(id);
 const ui = {
   verdict: $("verdict"), vDir: $("vDir"), vSignalChart: $("vSignalChart"), vPrice: $("vPrice"), vPriceVal: $("vPriceVal"),
   vPriceSub: $("vPriceSub"), vConf: $("vConf"), vConfChip: $("vConfChip"),
-  vSrcChip: $("vSrcChip"), vRaison: $("vRaison"), vTs: $("vTs"),
+  vSrcChip: $("vSrcChip"), vRaison: $("vRaison"), vTs: $("vTs"), vCountdown: $("vCountdown"), countdownTime: $("countdownTime"),
   vlabel: document.querySelector("#verdict .vlabel"),
   flags: $("flags"), synthBox: $("synthBox"), synthBadge: $("synthBadge"), synthMeta: $("synthMeta"),
   scoreFill: $("scoreFill"), scoreLabel: $("scoreLabel"), scoreComp: $("scoreComp"),
@@ -7609,6 +7611,7 @@ function setupAutoTimers() {
   setInterval(renderStaleBadge, 30000);
   if (state.autoTimer) { clearInterval(state.autoTimer); state.autoTimer = null; }
   if (state.confidenceScanTimer) { clearInterval(state.confidenceScanTimer); state.confidenceScanTimer = null; }
+  if (state.countdownTimer) { clearInterval(state.countdownTimer); state.countdownTimer = null; }
   if (state.scheduleTimer) { clearInterval(state.scheduleTimer); state.scheduleTimer = null; }
   if (state.autoRefresh) {
     state.refreshCountdown = REFRESH_MS / 1000;
@@ -7626,8 +7629,23 @@ function setupAutoTimers() {
       scanForConfidenceFort();
     }, 15 * 60 * 1000);
     
+    // v7.25.0 : Countdown timer - affiche le temps avant le prochain scan
+    state.scanCountdown = 15 * 60; // 15 minutes en secondes
+    if (ui.vCountdown) ui.vCountdown.style.display = "block";
+    updateCountdownDisplay();
+    state.countdownTimer = setInterval(() => {
+      state.scanCountdown -= 1;
+      if (state.scanCountdown <= 0) {
+        state.scanCountdown = 15 * 60; // Reset au prochain cycle
+      }
+      updateCountdownDisplay();
+    }, 1000);
+    
     // Scan immédiat au démarrage
     scanForConfidenceFort();
+  } else {
+    // Cacher le countdown quand Auto est OFF
+    if (ui.vCountdown) ui.vCountdown.style.display = "none";
   }
   if (state.autoMorning) {
     state.scheduleTimer = setInterval(() => {
@@ -10448,6 +10466,20 @@ function playNotificationSound() {
   } catch (e) {
     // Son non disponible, ignorer silencieusement
   }
+}
+
+/* ====================================================================
+   v7.25.0 : COUNTDOWN DISPLAY
+   Affiche le temps restant avant le prochain scan Auto-Scan CONFIANCE FORT
+   ==================================================================== */
+function updateCountdownDisplay() {
+  if (!ui.countdownTime || !state.scanCountdown) return;
+  
+  const minutes = Math.floor(state.scanCountdown / 60);
+  const seconds = state.scanCountdown % 60;
+  const formatted = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  
+  ui.countdownTime.textContent = formatted;
 }
 
 init();
