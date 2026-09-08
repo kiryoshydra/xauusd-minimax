@@ -3114,7 +3114,12 @@
 // =====================================================================
 // Exposée sur window : le module PropFirm compare cette valeur à celle
 // affichée dans la pastille pour détecter un cache obsolète.
-window.APP_VERSION = "7.25.2";
+window.APP_VERSION = "7.25.3";
+// v7.25.3 — AUTO-SCAN ANALYSE COMPLÈTE. Le scan Auto toutes les 15 minutes
+//            appelle maintenant analyzeNow() pour faire une ANALYSE COMPLÈTE, 
+//            exactement comme si l'utilisateur cliquait "Analyser maintenant".
+//            Cela recharge les données, calcule le signal (BUY/SELL, confiance),
+//            et met à jour TOUT le DOM : prix, direction, indicateurs, timestamp.
 // v7.25.2 — AUTO-SCAN RECHARGE LES DONNÉES. Le scan Auto toutes les 15 minutes
 //            recharge maintenant les données du marché (prix XAUUSD, direction, indicateurs)
 //            avant de vérifier CONFIANCE FORT. Affichage complet mis à jour en temps réel.
@@ -10367,13 +10372,16 @@ function init() {
    ==================================================================== */
 async function scanForConfidenceFort() {
   if (!state.autoRefresh) return;
+  if (state.analyzing) return; // Ne pas lancer deux analyses en même temps
   
-  // v7.25.2 : Recharger les données fraîches AVANT de vérifier CONFIANCE FORT
+  // v7.25.3 : Appeler analyzeNow() pour faire une ANALYSE COMPLÈTE
+  // (comme si l'utilisateur avait cliqué "Analyser maintenant")
+  // Cela va recharger les données, calculer le signal complet, et mettre à jour le DOM
   try {
-    await refreshDataOnly();
+    await analyzeNow({ fromAutoScan: true });
   } catch (e) {
-    console.warn("Auto-scan data refresh failed:", e.message);
-    return; // Si la recharge échoue, on saute ce scan
+    console.warn("Auto-scan analysis failed:", e.message);
+    return;
   }
   
   // Mettre à jour le timestamp avec l'heure du scan Auto
@@ -10382,11 +10390,13 @@ async function scanForConfidenceFort() {
     ui.vTs.textContent = "Dernier scan Auto: " + formatTimeBerlin(scanTime) + " (Berlin)";
   }
   
-  // Chercher "CONFIANCE FORT" dans le DOM
+  // Vérifier si CONFIANCE FORT a été trouvée et envoyer notifications supplémentaires si besoin
   const confidenceText = ui.vConfChip ? ui.vConfChip.textContent : "";
   const hasConfidenceFort = confidenceText.includes("FORT");
   
   if (hasConfidenceFort) {
+    // Les notifications de base sont déjà envoyées par analyzeNow()
+    // On peut ajouter une notification supplémentaire si on veut
     triggerConfidenceNotification();
   }
 }
