@@ -3114,7 +3114,7 @@
 // =====================================================================
 // Exposée sur window : le module PropFirm compare cette valeur à celle
 // affichée dans la pastille pour détecter un cache obsolète.
-window.APP_VERSION = "7.26.2";
+window.APP_VERSION = "7.26.3";
 // v7.26.1 — HORAIRES DYNAMIQUES. Les messages affichés sur l'interface utilisent
 //            maintenant PROP_FIRM.openHour et PROP_FIRM.closeHour au lieu de valeurs
 //            en dur (05:00, 18:00). Quand les horaires changent, l'affichage se met
@@ -7892,7 +7892,8 @@ ui.captureDel.addEventListener("click", e => {
 ui.btnReplaceCapture.addEventListener("click", () => openFilePicker(ui.captureInput));
 
 /* Cooldown tick */
-startUiTimers(); // CORRECTIF 2 : intervals cosmétiques centralisés (pause/reprise)
+// v7.26.3 : startUiTimers() déplacée APRÈS init() pour que le DOM soit chargé
+// startUiTimers(); // CORRECTIF 2 : intervals cosmétiques centralisés (pause/reprise)
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) pauseAllTimers();
   else resumeAllTimers();
@@ -10518,6 +10519,7 @@ function updateCountdownDisplay() {
 }
 
 init();
+startUiTimers(); // v7.26.3 : déplacé APRÈS init() pour que le DOM soit chargé
 </script>
 </body>
 </html>
