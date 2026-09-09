@@ -3114,7 +3114,7 @@
 // =====================================================================
 // Exposée sur window : le module PropFirm compare cette valeur à celle
 // affichée dans la pastille pour détecter un cache obsolète.
-window.APP_VERSION = "7.26.1";
+window.APP_VERSION = "7.26.2";
 // v7.26.1 — HORAIRES DYNAMIQUES. Les messages affichés sur l'interface utilisent
 //            maintenant PROP_FIRM.openHour et PROP_FIRM.closeHour au lieu de valeurs
 //            en dur (05:00, 18:00). Quand les horaires changent, l'affichage se met
@@ -3706,8 +3706,13 @@ function sessionInfo(d = nowBerlin()) {
   return { state: "active", label: `Active · ${remH}h${pad2(remM)} restantes`, color: "active", closesAt: close };
 }
 function updateSessionBadge() {
-  if (!ui.sessionBadge || !ui.sessionText) return; // garde (durcissement v7.8)
+  if (!ui.sessionBadge || !ui.sessionText) {
+    console.warn("[BADGE] sessionBadge or sessionText missing");
+    return;
+  }
   const s = sessionInfo();
+  // v7.26.2: DEBUG - vérifier que la fonction est appelée
+  console.log("[BADGE]", s.label);
   ui.sessionBadge.className = "session " + s.color;
   ui.sessionText.textContent = s.label;
 }
@@ -7676,6 +7681,7 @@ function setupAutoTimers() {
    analyse matinale 05h00 RATTRAPÉE si la fenêtre a été manquée. */
 function startUiTimers() {
   stopUiTimers();
+  console.log("[TIMERS] startUiTimers lancé");
   state.uiTimers.push(setInterval(updateCycleUI, 1000));
   state.uiTimers.push(setInterval(updateSessionBadge, 30000));
   state.uiTimers.push(setInterval(() => {
