@@ -3114,16 +3114,16 @@
 // =====================================================================
 // Exposée sur window : le module PropFirm compare cette valeur à celle
 // affichée dans la pastille pour détecter un cache obsolète.
-window.APP_VERSION = "7.26.0";
+window.APP_VERSION = "7.26.1";
+// v7.26.1 — HORAIRES DYNAMIQUES. Les messages affichés sur l'interface utilisent
+//            maintenant PROP_FIRM.openHour et PROP_FIRM.closeHour au lieu de valeurs
+//            en dur (05:00, 18:00). Quand les horaires changent, l'affichage se met
+//            à jour automatiquement sans modification de code.
 // v7.26.0 — HORAIRES HYDRATRADE MIS À JOUR. Les horaires de trading HydraTrade
-//            passent de 05:00-18:00 (Paris) à 02:00-20:00 (Paris). Le système
-//            rejette maintenant les signaux générés en dehors de cette plage.
-//            Mise à jour : openHour: 2, closeHour: 20 (hardCloseHour: 22, vendredi: 21).
+//            passent de 05:00-18:00 (Paris) à 02:00-20:00 (Paris). Mise à jour :
+//            openHour: 2, closeHour: 20 (hardCloseHour: 22, vendredi: 21).
 // v7.25.3 — AUTO-SCAN ANALYSE COMPLÈTE. Le scan Auto toutes les 15 minutes
-//            appelle maintenant analyzeNow() pour faire une ANALYSE COMPLÈTE, 
-//            exactement comme si l'utilisateur cliquait "Analyser maintenant".
-//            Cela recharge les données, calcule le signal (BUY/SELL, confiance),
-//            et met à jour TOUT le DOM : prix, direction, indicateurs, timestamp.
+//            appelle analyzeNow() pour faire une ANALYSE COMPLÈTE.
 // v7.25.2 — AUTO-SCAN RECHARGE LES DONNÉES. Le scan Auto toutes les 15 minutes
 //            recharge maintenant les données du marché (prix XAUUSD, direction, indicateurs)
 //            avant de vérifier CONFIANCE FORT. Affichage complet mis à jour en temps réel.
@@ -3693,10 +3693,10 @@ function sessionInfo(d = nowBerlin()) {
   const hardClose = (day === 5) ? PROP_FIRM.fridayCloseHour : PROP_FIRM.hardCloseHour;
   if (h >= hardClose) {
     const next = new Date(d); next.setDate(d.getDate() + 1); next.setHours(PROP_FIRM.openHour, 0, 0, 0);
-    return { state: "closed", label: "Fermée · prochaine ouverture lundi-vendredi 05:00", color: "closed", closesAt: next };
+    return { state: "closed", label: `Fermée · prochaine ouverture lundi-vendredi ${pad2(PROP_FIRM.openHour)}:00`, color: "closed", closesAt: next };
   }
   if (h >= PROP_FIRM.closeHour) {
-    return { state: "closed", label: "Plus de nouvelle position (après 18 h)", color: "closed", closesAt: null };
+    return { state: "closed", label: `Plus de nouvelle position (après ${PROP_FIRM.closeHour}h)`, color: "closed", closesAt: null };
   }
   // Active: calculer la fermeture
   const close = new Date(d); close.setHours(hardClose, 0, 0, 0);
