@@ -3114,7 +3114,11 @@
 // =====================================================================
 // Exposée sur window : le module PropFirm compare cette valeur à celle
 // affichée dans la pastille pour détecter un cache obsolète.
-window.APP_VERSION = "7.25.3";
+window.APP_VERSION = "7.26.0";
+// v7.26.0 — HORAIRES HYDRATRADE MIS À JOUR. Les horaires de trading HydraTrade
+//            passent de 05:00-18:00 (Paris) à 02:00-20:00 (Paris). Le système
+//            rejette maintenant les signaux générés en dehors de cette plage.
+//            Mise à jour : openHour: 2, closeHour: 20 (hardCloseHour: 22, vendredi: 21).
 // v7.25.3 — AUTO-SCAN ANALYSE COMPLÈTE. Le scan Auto toutes les 15 minutes
 //            appelle maintenant analyzeNow() pour faire une ANALYSE COMPLÈTE, 
 //            exactement comme si l'utilisateur cliquait "Analyser maintenant".
@@ -3341,7 +3345,7 @@ const DEFAULT_DAY_SCORES = {
 };
 window.PROP_FIRM = {
   tp: 150, sl: 118.75, account: 25000, defaultLot: 0.07,
-  openHour: 5, closeHour: 18, hardCloseHour: 22, fridayCloseHour: 21,
+  openHour: 2, closeHour: 20, hardCloseHour: 22, fridayCloseHour: 21,
   // Règle « A Caccia di Trader » : cycle de 4 tentatives max à lots croissants
   // (échelle ~0.07/0.14/0.25/0.44). Un TP à n'importe quel step nette ~+150$
   // (le gain couvre les pertes des steps précédents). 4 pertes consécutives
